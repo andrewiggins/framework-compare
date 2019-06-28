@@ -8,7 +8,7 @@ Implement a set of webpages of increasing complexity in a couple different frame
 - Svelte
 - Vue
 - React
-- lithtml
+- lit-html
 
 Others:
 
