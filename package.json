@@ -1,6 +1,7 @@
 {
   "name": "framework-compare",
   "version": "0.0.1",
+  "private": true,
   "description": "Compare implementations of some basic webpages in different frameworks",
   "main": "index.js",
   "scripts": {
@@ -15,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/andrewiggins/framework-compare/issues"
   },
-  "homepage": "https://github.com/andrewiggins/framework-compare#readme"
+  "homepage": "https://github.com/andrewiggins/framework-compare#readme",
+  "workspaces": [
+    "./frameworks/*"
+  ]
 }

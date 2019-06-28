@@ -1,0 +1,16 @@
+{
+  "name": "svelte",
+  "version": "0.0.1",
+  "license": "MIT",
+  "scripts": {
+    "build": "rollup -c rollup.config.js"
+  },
+  "dependencies": {
+    "rollup": "^1.16.2",
+    "rollup-plugin-node-resolve": "^5.1.0",
+    "rollup-plugin-svelte": "^5.1.0",
+    "rollup-plugin-terser": "^5.0.0",
+    "rollup-plugin-visualizer": "^2.4.3",
+    "svelte": "^3.6.1"
+  }
+}
