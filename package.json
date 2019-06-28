@@ -19,5 +19,9 @@
   "homepage": "https://github.com/andrewiggins/framework-compare#readme",
   "workspaces": [
     "./frameworks/*"
-  ]
+  ],
+  "devDependencies": {
+    "dot": "^1.1.2",
+    "spectre.css": "^0.5.8"
+  }
 }
