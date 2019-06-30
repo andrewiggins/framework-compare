@@ -11,6 +11,11 @@ const p = (...args) => path.join(__dirname, "..", ...args);
 
 const templateDir = p("scripts/views");
 
+const replaceExt = (fileName, newExt) => {
+	let newFilename = path.basename(fileName, path.extname(fileName)) + newExt;
+	return path.join(path.dirname(fileName), newFilename);
+};
+
 /**
  * @typedef Templates
  * @property {import('dot').RenderFunction} [root]
@@ -40,20 +45,36 @@ async function compileTemplates() {
 	return templates;
 }
 
+const getLinkName = app => app;
+const getFrameworkPath = framework => `frameworks/${framework}/dist`;
+const getAppHtmlPath = (fpath, app) =>
+	path.join(fpath, replaceExt(app, ".html"));
+
+/**
+ * @param {string[]} frameworks
+ */
+async function buildNav(frameworks) {
+	return await Promise.all(
+		frameworks.map(async framework => {
+			const frameworkPath = getFrameworkPath(framework);
+			const apps = await readdir(p(frameworkPath));
+			return {
+				text: framework,
+				links: apps.map(app => ({
+					text: getLinkName(app),
+					href: getAppHtmlPath(frameworkPath, app).replace(/\\/gi, "/")
+				}))
+			};
+		})
+	);
+}
+
 async function build() {
 	const templates = await compileTemplates();
 	const frameworks = await readdir(p("frameworks"));
+	const nav = await buildNav(frameworks);
 
 	// Root index.html
-	const nav = frameworks.map(name => ({
-		text: name,
-		links: [
-			{
-				text: "Hello World",
-				href: "#"
-			}
-		]
-	}));
 	const rootHtml = templates.root({ nav, title: "Framework Compare" });
 	await writeFile(p("index.html"), rootHtml, "utf8");
 }

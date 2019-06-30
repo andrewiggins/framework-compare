@@ -78,19 +78,27 @@
 				width: 12rem;
 			}
 
-			.sidebar .accordion-header {
+			.sidebar .section {
+				margin-bottom: .75rem;
+			}
+
+			.sidebar .section-header {
 				color: #455060;
 				font-size: 0.65rem;
 				font-weight: 600;
 				text-transform: uppercase;
+
+				/* From accordion-header */
+				display: block;
+				padding: 0.2rem 0.4rem;
 			}
 
-			.sidebar .accordion .menu .menu-item {
+			.sidebar .section .menu .menu-item {
 				font-size: 0.7rem;
 				padding-left: 1rem;
 			}
 
-			.docs-sidebar .accordion .menu .menu-item > a {
+			.sidebar .section .menu .menu-item > a {
 				/* background: 0 0; */
 				color: #66758c;
 				display: inline-block;
@@ -108,17 +116,30 @@
 
 			<div id="sidebar" class="sidebar off-canvas-sidebar">
 				<div class="brand">
-					<a href="">Framework Compare</a>
+					Framework Compare
 				</div>
 				<div class="nav">
+					<div class="section">
+						<div class="section-header c-hand">
+							<!-- <i class="icon icon-arrow-right mr-1"></i> -->
+							About
+						</div>
+						<div class="section-body">
+							<ul class="menu menu-nav">
+								<li class="menu-item">
+									<a href="">Summary</a>
+								</li>
+							</ul>
+						</div>
+					</div>
 					{{~it.nav :framework}}
-					<details class="accordion">
+					<details class="section accordion">
 						<!-- TODO: Add active accordion logic -->
-						<summary class="accordion-header c-hand">
+						<summary class="section-header accordion-header c-hand">
 							<i class="icon icon-arrow-right mr-1"></i>
 							{{=framework.text}}
 						</summary>
-						<div class="accordion-body">
+						<div class="section-body accordion-body">
 							<ul class="menu menu-nav">
 								{{~framework.links :link}}
 								<li class="menu-item">
@@ -136,7 +157,7 @@
 			<a class="off-canvas-overlay" href="#close"></a>
 
 			<div class="off-canvas-content">
-				{{#def.body}}
+				<div id="app"></div>
 			</div>
 		</div>
 	</body>
