@@ -18,7 +18,8 @@ const replaceExt = (fileName, newExt) => {
 
 /**
  * @typedef Templates
- * @property {import('dot').RenderFunction} [root]
+ * @property {import('dot').RenderFunction} [summary]
+ * @property {import('dot').RenderFunction} [app]
  * @returns {Promise<Templates>}
  */
 async function compileTemplates() {
@@ -75,8 +76,16 @@ async function build() {
 	const nav = await buildNav(frameworks);
 
 	// Root index.html
-	const rootHtml = templates.root({ nav, title: "Framework Compare" });
-	await writeFile(p("index.html"), rootHtml, "utf8");
+	const summaryHtml = templates.summary({
+		title: "Framework Compare",
+		nav,
+		headers: ["Preact", "Svelte"],
+		data: [
+			[ 'Hello World', 2382, 9034],
+			[ 'Hello World 2', 2833, 1239 ]
+		]
+	});
+	await writeFile(p("index.html"), summaryHtml, "utf8");
 }
 
 build();
