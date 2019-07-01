@@ -46,7 +46,9 @@ async function compileTemplates() {
 	return templates;
 }
 
-const getLinkName = app => app;
+/** @type {(app: string) => string} */
+const getLinkText = app =>
+	app[0].toUpperCase() + app.slice(1).replace(/([A-Z])/g, " $1");
 const getFrameworkPath = framework => `frameworks/${framework}/dist`;
 const getAppHtmlPath = (fpath, app) =>
 	path.join(fpath, replaceExt(app, ".html"));
@@ -58,12 +60,14 @@ async function buildNav(frameworks) {
 	return await Promise.all(
 		frameworks.map(async framework => {
 			const frameworkPath = getFrameworkPath(framework);
-			const apps = await readdir(p(frameworkPath));
+			const distFiles = await readdir(p(frameworkPath));
+			const jsFiles = distFiles.filter(file => path.extname(file) === ".js");
+			const appNames = jsFiles.map(jsFile => replaceExt(jsFile, ""));
 			return {
 				text: framework,
-				links: apps.map(app => ({
-					text: getLinkName(app),
-					href: getAppHtmlPath(frameworkPath, app).replace(/\\/gi, "/")
+				links: appNames.map(appName => ({
+					text: getLinkText(appName),
+					href: getAppHtmlPath(frameworkPath, appName).replace(/\\/gi, "/")
 				}))
 			};
 		})
@@ -80,10 +84,7 @@ async function build() {
 		title: "Framework Compare",
 		nav,
 		headers: ["Preact", "Svelte"],
-		data: [
-			[ 'Hello World', 2382, 9034],
-			[ 'Hello World 2', 2833, 1239 ]
-		]
+		data: [["Hello World", 2382, 9034], ["Hello World 2", 2833, 1239]]
 	});
 	await writeFile(p("index.html"), summaryHtml, "utf8");
 }
