@@ -47,16 +47,18 @@ async function compileTemplates() {
 }
 
 /** @type {(app: string) => string} */
-const getLinkText = app =>
+const getAppName = app =>
 	app[0].toUpperCase() + app.slice(1).replace(/([A-Z])/g, " $1");
 const getFrameworkPath = framework => `frameworks/${framework}/dist`;
 const getAppHtmlPath = (fpath, app) =>
 	path.join(fpath, replaceExt(app, ".html"));
 
 /**
- * @param {string[]} frameworks
+ * @typedef {Array<{ name: string; apps: Array<{ name: string, htmlPath: string, jsFile: string }> }>} FrameworkData
+ * @returns {Promise<FrameworkData>}
  */
-async function buildNav(frameworks) {
+async function buildFrameworkData() {
+	const frameworks = await readdir(p("frameworks"));
 	return await Promise.all(
 		frameworks.map(async framework => {
 			const frameworkPath = getFrameworkPath(framework);
@@ -64,20 +66,34 @@ async function buildNav(frameworks) {
 			const jsFiles = distFiles.filter(file => path.extname(file) === ".js");
 			const appNames = jsFiles.map(jsFile => replaceExt(jsFile, ""));
 			return {
-				text: framework,
-				links: appNames.map(appName => ({
-					text: getLinkText(appName),
-					href: getAppHtmlPath(frameworkPath, appName).replace(/\\/gi, "/")
+				name: framework,
+				apps: appNames.map((appName, i) => ({
+					name: getAppName(appName),
+					htmlPath: getAppHtmlPath(frameworkPath, appName).replace(/\\/gi, "/"),
+					jsFile: jsFiles[i]
 				}))
 			};
 		})
 	);
 }
 
+/**
+ * @param {FrameworkData} frameworks
+ */
+function buildNav(frameworks) {
+	return frameworks.map(framework => ({
+		text: framework.name,
+		links: framework.apps.map(app => ({
+			text: getAppName(app.name),
+			href: app.htmlPath
+		}))
+	}));
+}
+
 async function build() {
 	const templates = await compileTemplates();
-	const frameworks = await readdir(p("frameworks"));
-	const nav = await buildNav(frameworks);
+	const frameworkData = await buildFrameworkData();
+	const nav = buildNav(frameworkData);
 
 	// Root index.html
 	const summaryHtml = templates.summary({
