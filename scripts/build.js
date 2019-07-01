@@ -3,6 +3,7 @@ const fs = require("fs");
 const util = require("util");
 
 const dot = require("dot");
+const gzipSize = require("gzip-size");
 
 const readFile = util.promisify(fs.readFile);
 const writeFile = util.promisify(fs.writeFile);
@@ -52,9 +53,10 @@ const getAppName = app =>
 const getFrameworkPath = framework => `frameworks/${framework}/dist`;
 const getAppHtmlPath = (fpath, app) =>
 	path.join(fpath, replaceExt(app, ".html"));
+const getAppJsPath = (fpath, app) => path.join(fpath, app);
 
 /**
- * @typedef {Array<{ name: string; apps: Array<{ name: string, htmlPath: string, jsFile: string }> }>} FrameworkData
+ * @typedef {Array<{ name: string; apps: Array<{ name: string; htmlUrl: string; jsFile: string; gzipSize: number; }> }>} FrameworkData
  * @returns {Promise<FrameworkData>}
  */
 async function buildFrameworkData() {
@@ -65,14 +67,24 @@ async function buildFrameworkData() {
 			const distFiles = await readdir(p(frameworkPath));
 			const jsFiles = distFiles.filter(file => path.extname(file) === ".js");
 			const appNames = jsFiles.map(jsFile => replaceExt(jsFile, ""));
-			return {
-				name: framework,
-				apps: appNames.map((appName, i) => ({
-					name: getAppName(appName),
-					htmlPath: getAppHtmlPath(frameworkPath, appName).replace(/\\/gi, "/"),
-					jsFile: jsFiles[i]
-				}))
-			};
+
+			const name = framework;
+			const apps = await Promise.all(
+				appNames.map(async (appName, i) => {
+					const htmlPath = getAppHtmlPath(frameworkPath, appName);
+					const jsPath = getAppJsPath(frameworkPath, jsFiles[i]);
+					const jsContents = await readFile(p(jsPath));
+
+					return {
+						name: getAppName(appName),
+						htmlUrl: htmlPath.replace(/\\/gi, "/"),
+						jsFile: jsPath.replace(/\\/gi, "/"),
+						gzipSize: await gzipSize(jsContents)
+					};
+				})
+			);
+
+			return { name, apps };
 		})
 	);
 }
@@ -85,7 +97,7 @@ function buildNav(frameworks) {
 		text: framework.name,
 		links: framework.apps.map(app => ({
 			text: getAppName(app.name),
-			href: app.htmlPath
+			href: app.htmlUrl
 		}))
 	}));
 }
