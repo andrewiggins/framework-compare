@@ -54,9 +54,11 @@ const getFrameworkPath = framework => `frameworks/${framework}/dist`;
 const getAppHtmlPath = (fpath, app) =>
 	path.join(fpath, replaceExt(app, ".html"));
 const getAppJsPath = (fpath, app) => path.join(fpath, app);
+const capitalize = s => s.charAt(0).toUpperCase() + s.slice(1);
 
 /**
- * @typedef {Array<{ name: string; apps: Array<{ name: string; htmlUrl: string; jsFile: string; gzipSize: number; }> }>} FrameworkData
+ * @typedef {{ name: string; htmlUrl: string; jsFile: string; gzipSize: number; }} AppData
+ * @typedef {Array<{ name: string; apps: AppData[] }>} FrameworkData
  * @returns {Promise<FrameworkData>}
  */
 async function buildFrameworkData() {
@@ -102,19 +104,53 @@ function buildNav(frameworks) {
 	}));
 }
 
+/**
+ * @param {Templates} templates
+ * @param {*} nav
+ * @param {FrameworkData} frameworkData
+ */
+async function buildSummaryView(templates, nav, frameworkData) {
+	/** @type {Record<string, Record<string, AppData>>} */
+	let apps = {};
+	for (let framework of frameworkData) {
+		for (let app of framework.apps) {
+			if (!(app.name in apps)) {
+				apps[app.name] = {};
+			}
+
+			apps[app.name][framework.name] = app;
+		}
+	}
+
+	const frameworks = frameworkData.map(f => f.name);
+
+	/** @type {Array<Array<string | number>>} */
+	const data = [];
+	for (let appName of Object.keys(apps)) {
+		/** @type {Array<string | number>} */
+		const row = [appName];
+		for (let framework of frameworks) {
+			row.push(apps[appName][framework].gzipSize);
+		}
+
+		data.push(row);
+	}
+
+	const summaryHtml = templates.summary({
+		title: "Framework Compare",
+		nav,
+		headers: frameworks.map(f => capitalize(f)),
+		data
+	});
+	await writeFile(p("index.html"), summaryHtml, "utf8");
+}
+
 async function build() {
 	const templates = await compileTemplates();
 	const frameworkData = await buildFrameworkData();
 	const nav = buildNav(frameworkData);
 
-	// Root index.html
-	const summaryHtml = templates.summary({
-		title: "Framework Compare",
-		nav,
-		headers: ["Preact", "Svelte"],
-		data: [["Hello World", 2382, 9034], ["Hello World 2", 2833, 1239]]
-	});
-	await writeFile(p("index.html"), summaryHtml, "utf8");
+	await buildSummaryView(templates, nav, frameworkData);
 }
 
 build();
