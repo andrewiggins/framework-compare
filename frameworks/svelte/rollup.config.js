@@ -11,5 +11,8 @@ module.exports = {
 		dir: frameworkOutput("svelte"),
 		format: "es"
 	},
-	plugins: [nodeResolve(), svelte(), terser()]
+	plugins: [nodeResolve(), svelte(), terser()],
+	watch: {
+		clearScreen: false
+	}
 };

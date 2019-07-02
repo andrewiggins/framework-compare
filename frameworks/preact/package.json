@@ -1,9 +1,11 @@
 {
-  "name": "preact-samples",
+  "name": "preact-apps",
+  "private": true,
   "version": "0.0.1",
   "license": "MIT",
   "scripts": {
-    "build": "rollup -c rollup.config.js"
+    "build": "rollup -c rollup.config.js",
+    "watch": "rollup -c rollup.config.js --watch"
   },
   "dependencies": {
     "preact": "^10.0.0-beta.3",

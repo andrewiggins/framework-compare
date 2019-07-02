@@ -12,10 +12,14 @@ export default {
 		format: "iife"
 	},
 	plugins: [
+		// @ts-ignore
 		nodeResolve(),
 		buble({
 			jsx: "h"
 		}),
 		terser()
-	]
+	],
+	watch: {
+		clearScreen: false
+	}
 };
