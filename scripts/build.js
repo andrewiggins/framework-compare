@@ -1,13 +1,11 @@
 const path = require("path");
-const fs = require("fs");
+const fs = require("fs").promises;
 const util = require("util");
 
 const dot = require("dot");
 const gzipSize = require("gzip-size");
 
-const readFile = util.promisify(fs.readFile);
-const writeFile = util.promisify(fs.writeFile);
-const readdir = util.promisify(fs.readdir);
+const { readFile, writeFile, copyFile, readdir, stat, mkdir } = fs;
 const p = (...args) => path.join(__dirname, "..", ...args);
 
 const templateDir = p("scripts/views");
