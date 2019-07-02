@@ -18,12 +18,17 @@ const replaceExt = (fileName, newExt) => {
 };
 
 /**
+ * @param {FrameworkData} frameworkData
  * @typedef Templates
  * @property {import('dot').RenderFunction} [summary]
  * @property {import('dot').RenderFunction} [app]
  * @returns {Promise<Templates>}
  */
-async function compileTemplates() {
+async function compileTemplates(frameworkData) {
+	const navData = buildNav(frameworkData);
+	const navRawTemplate = await readFile(p("scripts/nav.html"), "utf8");
+	const navHtml = dot.compile(navRawTemplate)({ nav: navData });
+
 	const layout = await readFile(p("scripts/layout.html"), "utf8");
 	const templateNames = await readdir(templateDir);
 	const templateSettings = {
@@ -39,6 +44,7 @@ async function compileTemplates() {
 			layout,
 			templateSettings,
 			{
+				nav: navHtml,
 				body: templateStr
 			}
 		);
@@ -106,10 +112,9 @@ function buildNav(frameworks) {
 
 /**
  * @param {Templates} templates
- * @param {*} nav
  * @param {FrameworkData} frameworkData
  */
-async function buildSummaryView(templates, nav, frameworkData) {
+async function buildSummaryView(templates, frameworkData) {
 	/** @type {Record<string, Record<string, AppData>>} */
 	let apps = {};
 	for (let framework of frameworkData) {
@@ -138,7 +143,6 @@ async function buildSummaryView(templates, nav, frameworkData) {
 
 	const summaryHtml = templates.summary({
 		title: "Framework Compare",
-		nav,
 		headers: frameworks.map(f => capitalize(f)),
 		data
 	});
@@ -146,11 +150,10 @@ async function buildSummaryView(templates, nav, frameworkData) {
 }
 
 async function build() {
-	const templates = await compileTemplates();
 	const frameworkData = await buildFrameworkData();
-	const nav = buildNav(frameworkData);
+	const templates = await compileTemplates(frameworkData);
 
-	await buildSummaryView(templates, nav, frameworkData);
+	await buildSummaryView(templates, frameworkData);
 }
 
 build();

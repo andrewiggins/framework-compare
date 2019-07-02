@@ -118,40 +118,7 @@
 				<div class="brand">
 					Framework Compare
 				</div>
-				<div class="nav">
-					<div class="section">
-						<div class="section-header c-hand">
-							<!-- <i class="icon icon-arrow-right mr-1"></i> -->
-							About
-						</div>
-						<div class="section-body">
-							<ul class="menu menu-nav">
-								<li class="menu-item">
-									<a href="">Summary</a>
-								</li>
-							</ul>
-						</div>
-					</div>
-					{{~it.nav :framework}}
-					<details class="section accordion">
-						<!-- TODO: Add active accordion logic -->
-						<summary class="section-header accordion-header c-hand">
-							<i class="icon icon-arrow-right mr-1"></i>
-							{{=framework.text}}
-						</summary>
-						<div class="section-body accordion-body">
-							<ul class="menu menu-nav">
-								{{~framework.links :link}}
-								<li class="menu-item">
-									<!-- TODO: Add active link logic -->
-									<a href="{{=link.href}}">{{=link.text}}</a>
-								</li>
-								{{~}}
-							</ul>
-						</div>
-					</details>
-					{{~}}
-				</div>
+				{{#def.nav}}
 			</div>
 
 			<a class="off-canvas-overlay" href="#close"></a>
