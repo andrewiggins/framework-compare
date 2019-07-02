@@ -1,4 +1,5 @@
-import { h } from "preact";
+import { h, Fragment } from "preact";
+import { PageHeader } from "./PageHeader";
 
 const capitalize = s => s.charAt(0).toUpperCase() + s.slice(1);
 
@@ -39,24 +40,27 @@ export function SummaryPage(props) {
 	}
 
 	return (
-		<table>
-			<thead>
-				<tr>
-					<th>App GUI</th>
-					{headers.map(header => (
-						<th>{header}</th>
-					))}
-				</tr>
-			</thead>
-			<tbody>
-				{data.map(row => (
+		<Fragment>
+			<PageHeader title="Summary" />
+			<table>
+				<thead>
 					<tr>
-						{row.map(cell => (
-							<td>{cell}</td>
+						<th>App GUI</th>
+						{headers.map(header => (
+							<th>{header}</th>
 						))}
 					</tr>
-				))}
-			</tbody>
-		</table>
+				</thead>
+				<tbody>
+					{data.map(row => (
+						<tr>
+							{row.map(cell => (
+								<td>{cell}</td>
+							))}
+						</tr>
+					))}
+				</tbody>
+			</table>
+		</Fragment>
 	);
 }

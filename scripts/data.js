@@ -1,7 +1,9 @@
 const path = require("path");
 const { readFile, readdir } = require("fs").promises;
-const gzipSize = require("gzip-size");
+const getGzipSize = require("gzip-size");
+const getBrotliSize = require("brotli-size");
 const {
+	capitalize,
 	outputPath,
 	toUrl,
 	getFrameworkPath,
@@ -18,7 +20,7 @@ const getAppName = app =>
 	app[0].toUpperCase() + app.slice(1).replace(/([A-Z])/g, " $1");
 
 /**
- * @typedef {{ framework: string; name: string; htmlUrl: string; jsUrl: string; gzipSize: number; }} AppData
+ * @typedef {{ framework: string; name: string; htmlUrl: string; jsUrl: string; gzipSize: number; brotliSize: number; }} AppData
  * @typedef {Array<{ name: string; apps: AppData[] }>} FrameworkData
  * @returns {Promise<FrameworkData>}
  */
@@ -37,17 +39,23 @@ async function buildFrameworkData() {
 					const jsPath = getFrameworkPath(framework, jsFiles[i]);
 					const jsContents = await readFile(outputPath(jsPath));
 
+					const [gzipSize, brotliSize] = await Promise.all([
+						getGzipSize(jsContents),
+						getBrotliSize(jsContents)
+					]);
+
 					return {
-						framework,
+						framework: capitalize(framework),
 						name: getAppName(appName),
 						htmlUrl: toUrl(htmlPath),
 						jsUrl: toUrl(jsPath),
-						gzipSize: await gzipSize(jsContents)
+						gzipSize,
+						brotliSize
 					};
 				})
 			);
 
-			return { name: framework, apps };
+			return { name: capitalize(framework), apps };
 		})
 	);
 }

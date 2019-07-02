@@ -119,7 +119,7 @@ async function buildAppViews(renderPage, AppPage, frameworkData) {
 			)} - Framework Compare`;
 
 			const appSrc = toUrl(path.relative(path.dirname(app.htmlUrl), app.jsUrl));
-			const page = h(AppPage, { appSrc });
+			const page = h(AppPage, { app, appSrc });
 			const appHtml = renderPage(page, { url: app.htmlUrl, title });
 
 			const htmlPath = outputPath(app.htmlUrl);
