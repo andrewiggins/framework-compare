@@ -15,6 +15,22 @@ const replaceExt = (fileName, newExt) => {
 	return path.join(path.dirname(fileName), newFilename);
 };
 
+async function ensureDir(path) {
+	let stats;
+	try {
+		stats = await stat(path);
+	} catch (e) {
+		if (e.code == "ENOENT") {
+			await mkdir(path, { recursive: true });
+			stats = await stat(path);
+		}
+	}
+
+	if (!stats.isDirectory) {
+		throw new Error("Path is not a directory");
+	}
+}
+
 /**
  * @param {FrameworkData} frameworkData
  * @typedef Templates
@@ -144,13 +160,33 @@ async function buildSummaryView(templates, frameworkData) {
 		headers: frameworks.map(f => capitalize(f)),
 		data
 	});
-	await writeFile(p("index.html"), summaryHtml, "utf8");
+	await writeFile(p("dist/index.html"), summaryHtml, "utf8");
+}
+
+/**
+ * @param {(...args: string[]) => string} getOutputPath
+ */
+async function copyStatics(getOutputPath) {
+	const spectreFiles = [
+		"spectre.min.css",
+		"spectre-exp.min.css",
+		"spectre-icons.min.css"
+	];
+
+	const spectreSrc = (...args) => p("node_modules/spectre.css/dist", ...args);
+	await Promise.all(
+		spectreFiles.map(file => copyFile(spectreSrc(file), getOutputPath(file)))
+	);
 }
 
 async function build() {
 	const frameworkData = await buildFrameworkData();
 	const templates = await compileTemplates(frameworkData);
 
+	const getOutputPath = (...args) => p("dist", ...args);
+	ensureDir(getOutputPath());
+
+	await copyStatics(getOutputPath);
 	await buildSummaryView(templates, frameworkData);
 }
 
