@@ -6,6 +6,9 @@ const outputPath = (...args) => p("dist", ...args);
 const capitalize = s => s.charAt(0).toUpperCase() + s.slice(1);
 const toUrl = s => s.replace(/\\/gi, "/");
 
+const getFrameworkPath = (...args) => path.join("frameworks", ...args);
+const frameworkOutput = (...args) => outputPath(getFrameworkPath(...args));
+
 async function ensureDir(path) {
 	let stats;
 	try {
@@ -27,5 +30,7 @@ module.exports = {
 	outputPath,
 	toUrl,
 	capitalize,
+	getFrameworkPath,
+	frameworkOutput,
 	ensureDir
 };

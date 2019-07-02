@@ -103,7 +103,6 @@ async function copyStatics() {
  * @param {import('./data').AppData} app
  */
 async function buildAppView(renderPage, AppPage, app) {
-	// TODO: Fix appSrc by changing rollup configs' output dir
 	// TODO: Set active nav
 
 	const title = `${app.name} - ${capitalize(

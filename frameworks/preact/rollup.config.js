@@ -1,13 +1,14 @@
-import nodeResolve from "rollup-plugin-node-resolve";
-import buble from "rollup-plugin-buble";
-import { terser } from "rollup-plugin-terser";
+const nodeResolve = require("rollup-plugin-node-resolve");
+const buble = require("rollup-plugin-buble");
+const { terser } = require("rollup-plugin-terser");
+const { frameworkOutput } = require("../../scripts/util");
 
 export default {
 	input: {
 		helloWorld: "./src/hello-world/index.js"
 	},
 	output: {
-		dir: "dist",
+		dir: frameworkOutput("preact"),
 		format: "iife"
 	},
 	plugins: [
