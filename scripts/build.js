@@ -6,7 +6,18 @@ const dot = require("dot");
 const gzipSize = require("gzip-size");
 
 const { readFile, writeFile, copyFile, readdir, stat, mkdir } = fs;
+
+const toUrl = s => s.replace(/\\/gi, "/");
 const p = (...args) => path.join(__dirname, "..", ...args);
+const outputPath = (...args) => p("dist", ...args);
+const getRootPath = htmlPath => {
+	let url = toUrl(path.relative(path.dirname(htmlPath), outputPath()));
+	if (url !== '') {
+		url += '/'
+	}
+
+	return url;
+};
 
 const templateDir = p("scripts/views");
 
@@ -34,8 +45,8 @@ async function ensureDir(path) {
 /**
  * @param {FrameworkData} frameworkData
  * @typedef Templates
- * @property {import('dot').RenderFunction} [summary]
- * @property {import('dot').RenderFunction} [app]
+ * @property {import('dot').RenderFunction} summary
+ * @property {import('dot').RenderFunction} app
  * @returns {Promise<Templates>}
  */
 async function compileTemplates(frameworkData) {
@@ -50,7 +61,7 @@ async function compileTemplates(frameworkData) {
 		strip: false
 	};
 
-	const templates = {};
+	let templates = /** @type {Templates} */ ({});
 	for (let templateName of templateNames) {
 		let templatePath = path.join(templateDir, templateName);
 		let templateStr = await readFile(templatePath, "utf8");
@@ -77,7 +88,7 @@ const getAppJsPath = (fpath, app) => path.join(fpath, app);
 const capitalize = s => s.charAt(0).toUpperCase() + s.slice(1);
 
 /**
- * @typedef {{ name: string; htmlUrl: string; jsFile: string; gzipSize: number; }} AppData
+ * @typedef {{ framework: string; name: string; htmlUrl: string; jsUrl: string; gzipSize: number; }} AppData
  * @typedef {Array<{ name: string; apps: AppData[] }>} FrameworkData
  * @returns {Promise<FrameworkData>}
  */
@@ -98,9 +109,10 @@ async function buildFrameworkData() {
 					const jsContents = await readFile(p(jsPath));
 
 					return {
+						framework: name,
 						name: getAppName(appName),
-						htmlUrl: htmlPath.replace(/\\/gi, "/"),
-						jsFile: jsPath.replace(/\\/gi, "/"),
+						htmlUrl: toUrl(htmlPath),
+						jsUrl: toUrl(jsPath),
 						gzipSize: await gzipSize(jsContents)
 					};
 				})
@@ -155,18 +167,17 @@ async function buildSummaryView(templates, frameworkData) {
 		data.push(row);
 	}
 
+	const htmlPath = outputPath("index.html");
 	const summaryHtml = templates.summary({
 		title: "Framework Compare",
+		rootPath: getRootPath(htmlPath),
 		headers: frameworks.map(f => capitalize(f)),
 		data
 	});
-	await writeFile(p("dist/index.html"), summaryHtml, "utf8");
+	await writeFile(htmlPath, summaryHtml, "utf8");
 }
 
-/**
- * @param {(...args: string[]) => string} getOutputPath
- */
-async function copyStatics(getOutputPath) {
+async function copyStatics() {
 	const spectreFiles = [
 		"spectre.min.css",
 		"spectre-exp.min.css",
@@ -175,19 +186,39 @@ async function copyStatics(getOutputPath) {
 
 	const spectreSrc = (...args) => p("node_modules/spectre.css/dist", ...args);
 	await Promise.all(
-		spectreFiles.map(file => copyFile(spectreSrc(file), getOutputPath(file)))
+		spectreFiles.map(file => copyFile(spectreSrc(file), outputPath(file)))
 	);
+}
+
+/**
+ * @param {Templates} templates
+ * @param {AppData} app
+ */
+async function buildAppView(templates, app) {
+	// TODO: Fix appSrc
+	// TODO: Set active nav
+
+	const htmlPath = outputPath(app.htmlUrl);
+	const title = `${app.name} - ${capitalize(app.framework)} - Framework Compare`;
+	const appHtml = templates.app({
+		title,
+		rootPath: getRootPath(htmlPath),
+		appSrc: app.jsUrl
+	});
+
+	await ensureDir(path.dirname(htmlPath));
+	await writeFile(htmlPath, appHtml, "utf8");
 }
 
 async function build() {
 	const frameworkData = await buildFrameworkData();
 	const templates = await compileTemplates(frameworkData);
 
-	const getOutputPath = (...args) => p("dist", ...args);
-	ensureDir(getOutputPath());
+	await ensureDir(outputPath());
 
-	await copyStatics(getOutputPath);
+	await copyStatics();
 	await buildSummaryView(templates, frameworkData);
+	await buildAppView(templates, frameworkData[0].apps[0]);
 }
 
 build();
