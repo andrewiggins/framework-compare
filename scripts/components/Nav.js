@@ -5,12 +5,12 @@ import { h } from "preact";
  */
 export const Nav = props => (
 	<div class="nav">
-		<div class="section">
-			<div class="section-header c-hand">
-				{/* <i class="icon icon-arrow-right mr-1"></i> */}
+		<details class="section accordion">
+			<summary class="section-header accordion-header c-hand">
+				<i class="icon icon-arrow-right mr-1"></i>
 				About
-			</div>
-			<div class="section-body">
+			</summary>
+			<div class="section-body accordion-body">
 				<ul class="menu menu-nav">
 					<li class="menu-item">
 						{/* TODO: Generate this URL path */}
@@ -18,7 +18,8 @@ export const Nav = props => (
 					</li>
 				</ul>
 			</div>
-		</div>
+		</details>
+		{/* TODO: Add divider */}
 		{props.data.map(framework => (
 			<details class="section accordion">
 				{/* TODO: Add active accordion logic */}

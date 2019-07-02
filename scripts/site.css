@@ -77,9 +77,3 @@ a:visited {
 	font-size: 0.7rem;
 	padding-left: 1rem;
 }
-
-.sidebar .section .menu .menu-item > a {
-	/* background: 0 0; */
-	color: #66758c;
-	display: inline-block;
-}
