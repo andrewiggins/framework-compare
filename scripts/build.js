@@ -33,6 +33,7 @@ async function compileComponents() {
 			format: /** @type {import('rollup').ModuleFormat} */ ("commonjs")
 		},
 		plugins: [
+			// @ts-ignore
 			nodeResolve(),
 			buble({
 				jsx: "h",
@@ -100,22 +101,32 @@ async function copyStatics() {
 /**
  * @param {Renderer} renderPage
  * @param {Components["AppPage"]} AppPage
- * @param {import('./data').AppData} app
+ * @param {import('./data').FrameworkData} frameworkData
  */
-async function buildAppView(renderPage, AppPage, app) {
-	// TODO: Set active nav
+async function buildAppViews(renderPage, AppPage, frameworkData) {
+	const allApps = frameworkData.reduce(
+		(apps, framework) => apps.concat(framework.apps),
+		[]
+	);
 
-	const title = `${app.name} - ${capitalize(
-		app.framework
-	)} - Framework Compare`;
+	await Promise.all(
+		allApps.map(async app => {
+			// TODO: Set active nav
+			// TODO: Fix nav links (maybe I should use an HTTP server and absolute links...)
 
-	const appSrc = toUrl(path.relative(path.dirname(app.htmlUrl), app.jsUrl));
-	const page = h(AppPage, { appSrc });
-	const appHtml = renderPage(page, { url: app.htmlUrl, title });
+			const title = `${app.name} - ${capitalize(
+				app.framework
+			)} - Framework Compare`;
 
-	const htmlPath = outputPath(app.htmlUrl);
-	await ensureDir(path.dirname(htmlPath));
-	await writeFile(htmlPath, appHtml, "utf8");
+			const appSrc = toUrl(path.relative(path.dirname(app.htmlUrl), app.jsUrl));
+			const page = h(AppPage, { appSrc });
+			const appHtml = renderPage(page, { url: app.htmlUrl, title });
+
+			const htmlPath = outputPath(app.htmlUrl);
+			await ensureDir(path.dirname(htmlPath));
+			await writeFile(htmlPath, appHtml, "utf8");
+		})
+	);
 }
 
 async function build() {
@@ -127,7 +138,7 @@ async function build() {
 
 	await copyStatics();
 	await buildSummaryView(renderPage, components.SummaryPage, frameworkData);
-	await buildAppView(renderPage, components.AppPage, frameworkData[0].apps[0]);
+	await buildAppViews(renderPage, components.AppPage, frameworkData);
 }
 
 build().catch(e => console.error(e));
