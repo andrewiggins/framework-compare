@@ -1,0 +1,21 @@
+{
+  "name": "scripts",
+  "private": true,
+  "version": "0.0.1",
+  "license": "MIT",
+  "dependencies": {
+    "preact": "^10.0.0-beta.3",
+    "preact-router": "^2.6.1",
+    "spectre.css": "^0.5.8"
+  },
+  "devDependencies": {
+    "brotli-size": "^0.1.0",
+    "gzip-size": "^5.1.1",
+    "nodemon": "^1.19.1",
+    "preact-render-to-string": "^5.0.4",
+    "rollup": "^1.16.3",
+    "rollup-plugin-buble": "^0.19.6",
+    "rollup-plugin-node-resolve": "^5.2.0",
+    "serve": "^11.0.2"
+  }
+}
