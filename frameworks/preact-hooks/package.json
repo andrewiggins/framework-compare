@@ -1,0 +1,20 @@
+{
+  "name": "preact-hooks-apps",
+  "private": true,
+  "version": "0.0.1",
+  "license": "MIT",
+  "scripts": {
+    "build": "rollup -c rollup.config.js",
+    "watch": "rollup -c rollup.config.js --watch"
+  },
+  "dependencies": {
+    "preact": "^10.0.0-beta.3"
+  },
+  "devDependencies": {
+    "rollup": "^1.16.3",
+    "rollup-plugin-buble": "^0.19.6",
+    "rollup-plugin-node-resolve": "^5.2.0",
+    "rollup-plugin-terser": "^5.0.0",
+    "rollup-plugin-visualizer": "^2.4.3"
+  }
+}

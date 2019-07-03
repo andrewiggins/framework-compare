@@ -18,7 +18,7 @@ const replaceExt = (fileName, newExt) => {
 };
 
 /** @type {(app: string) => string} */
-const getAppName = app => toTitleCase(app.replace(/-/g, " "));
+const getDisplayName = app => toTitleCase(app.replace(/-/g, " "));
 
 /**
  * @typedef {{ framework: string; name: string; htmlUrl: string; jsUrl: string; gzipSize: number; brotliSize: number; }} AppData
@@ -46,8 +46,8 @@ async function buildFrameworkData() {
 					]);
 
 					return {
-						framework: toTitleCase(framework),
-						name: getAppName(appName),
+						framework: getDisplayName(framework),
+						name: getDisplayName(appName),
 						htmlUrl: toUrl(htmlPath),
 						jsUrl: toUrl(jsPath),
 						gzipSize,
@@ -56,7 +56,7 @@ async function buildFrameworkData() {
 				})
 			);
 
-			return { name: toTitleCase(framework), apps };
+			return { name: getDisplayName(framework), apps };
 		})
 	);
 }
