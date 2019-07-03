@@ -1,8 +1,6 @@
 import { h, Fragment } from "preact";
 import { PageHeader } from "./PageHeader";
 
-const capitalize = s => s.charAt(0).toUpperCase() + s.slice(1);
-
 /**
  * @param {{ frameworkData: import('../data').FrameworkData }} props
  */
@@ -16,7 +14,7 @@ export function SummaryPage(props) {
 
 	for (let framework of frameworkData) {
 		frameworks.push(framework.name);
-		headers.push(capitalize(framework.name));
+		headers.push(framework.name);
 
 		for (let app of framework.apps) {
 			if (!(app.name in apps)) {
@@ -33,7 +31,13 @@ export function SummaryPage(props) {
 		/** @type {Array<string | number>} */
 		const row = [appName];
 		for (let framework of frameworks) {
-			row.push("" + apps[appName][framework].gzipSize + " B");
+			const appData = apps[appName][framework];
+			if (appData) {
+				row.push("" + appData.gzipSize + " B");
+			}
+			else {
+				row.push("N/A");
+			}
 		}
 
 		data.push(row);

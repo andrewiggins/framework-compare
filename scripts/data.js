@@ -1,13 +1,15 @@
 const path = require("path");
-const { readFile, readdir } = require("fs").promises;
+const { readFile } = require("fs").promises;
 const getGzipSize = require("gzip-size");
 const getBrotliSize = require("brotli-size");
 const {
-	capitalize,
+	toTitleCase,
 	outputPath,
 	toUrl,
 	getFrameworkPath,
-	frameworkOutput
+	frameworkOutput,
+	listDirs,
+	listFiles
 } = require("./util");
 
 const replaceExt = (fileName, newExt) => {
@@ -16,8 +18,7 @@ const replaceExt = (fileName, newExt) => {
 };
 
 /** @type {(app: string) => string} */
-const getAppName = app =>
-	app[0].toUpperCase() + app.slice(1).replace(/([A-Z])/g, " $1");
+const getAppName = app => toTitleCase(app.replace(/-/g, " "));
 
 /**
  * @typedef {{ framework: string; name: string; htmlUrl: string; jsUrl: string; gzipSize: number; brotliSize: number; }} AppData
@@ -25,10 +26,10 @@ const getAppName = app =>
  * @returns {Promise<FrameworkData>}
  */
 async function buildFrameworkData() {
-	const frameworks = await readdir(frameworkOutput());
+	const frameworks = await listDirs(frameworkOutput());
 	return await Promise.all(
 		frameworks.map(async framework => {
-			const distFiles = await readdir(frameworkOutput(framework));
+			const distFiles = await listFiles(frameworkOutput(framework));
 			const jsFiles = distFiles.filter(file => path.extname(file) === ".js");
 			const appNames = jsFiles.map(jsFile => replaceExt(jsFile, ""));
 
@@ -45,7 +46,7 @@ async function buildFrameworkData() {
 					]);
 
 					return {
-						framework: capitalize(framework),
+						framework: toTitleCase(framework),
 						name: getAppName(appName),
 						htmlUrl: toUrl(htmlPath),
 						jsUrl: toUrl(jsPath),
@@ -55,7 +56,7 @@ async function buildFrameworkData() {
 				})
 			);
 
-			return { name: capitalize(framework), apps };
+			return { name: toTitleCase(framework), apps };
 		})
 	);
 }

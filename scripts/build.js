@@ -8,7 +8,7 @@ const { h } = require("preact");
 const { render } = require("preact-render-to-string");
 
 const { buildFrameworkData } = require("./data");
-const { p, outputPath, capitalize, toUrl, ensureDir } = require("./util");
+const { p, outputPath, toUrl, ensureDir } = require("./util");
 
 /**
  * @typedef {import('./components/build')} Components
@@ -102,10 +102,7 @@ async function buildAppViews(renderPage, AppPage, frameworkData) {
 
 	await Promise.all(
 		allApps.map(async app => {
-			const title = `${app.name} - ${capitalize(
-				app.framework
-			)} - Framework Compare`;
-
+			const title = `${app.name} - ${app.framework} - Framework Compare`;
 			const appSrc = toUrl(path.relative(path.dirname(app.htmlUrl), app.jsUrl));
 			const page = h(AppPage, { app, appSrc });
 			const appHtml = renderPage(page, { url: app.htmlUrl, title });

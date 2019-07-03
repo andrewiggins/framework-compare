@@ -1,25 +1,31 @@
+const path = require("path");
 const nodeResolve = require("rollup-plugin-node-resolve");
 const buble = require("rollup-plugin-buble");
 const { terser } = require("rollup-plugin-terser");
-const { frameworkOutput } = require("../../scripts/util");
+const { frameworkOutput, listDirsSync } = require("../../scripts/util");
 
-export default {
-	input: {
-		helloWorld: "./src/hello-world/index.js"
-	},
-	output: {
-		dir: frameworkOutput("preact"),
-		format: "iife"
-	},
-	plugins: [
-		// @ts-ignore
-		nodeResolve(),
-		buble({
-			jsx: "h"
-		}),
-		terser()
-	],
-	watch: {
-		clearScreen: false
-	}
-};
+function generateConfig(input) {
+	const outputFile = path.basename(path.dirname(input)) + ".js";
+	return {
+		input,
+		output: {
+			file: frameworkOutput("preact", outputFile),
+			format: "iife"
+		},
+		plugins: [
+			// @ts-ignore
+			nodeResolve(),
+			buble({
+				jsx: "h"
+			}),
+			terser()
+		],
+		watch: {
+			clearScreen: false
+		}
+	};
+}
+
+module.exports = listDirsSync("./src").map(appFolder =>
+	generateConfig(`./src/${appFolder}/index.js`)
+);
