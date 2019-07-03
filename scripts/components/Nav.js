@@ -1,4 +1,5 @@
 import { h } from "preact";
+import { appSorter } from "./util";
 
 const active = "active";
 
@@ -34,7 +35,7 @@ export const Nav = ({ data, url }) => (
 				</summary>
 				<div class="section-body accordion-body">
 					<ul class="menu menu-nav">
-						{framework.apps.map(app => (
+						{framework.apps.sort(appSorter).map(app => (
 							<li class="menu-item">
 								<a
 									href={"/" + app.htmlUrl}

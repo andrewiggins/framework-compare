@@ -1,5 +1,6 @@
 import { h, Fragment } from "preact";
 import { PageHeader } from "./PageHeader";
+import { appSorter } from "./util";
 
 /**
  * @param {{ frameworkData: import('../data').FrameworkData }} props
@@ -27,7 +28,7 @@ export function SummaryPage(props) {
 
 	/** @type {Array<Array<string | number>>} */
 	const data = [];
-	for (let appName of Object.keys(apps)) {
+	for (let appName of Object.keys(apps).sort(appSorter)) {
 		/** @type {Array<string | number>} */
 		const row = [appName];
 		for (let framework of frameworks) {
@@ -36,7 +37,7 @@ export function SummaryPage(props) {
 				row.push("" + appData.gzipSize + " B");
 			}
 			else {
-				row.push("N/A");
+				row.push("—");
 			}
 		}
 
