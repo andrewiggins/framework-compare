@@ -4,7 +4,6 @@ import { Nav } from "./Nav";
 /**
  * @typedef Props
  * @property {string} title
- * @property {string} rootPath
  * @property {string} siteCss
  * @property {string} url
  * @property {import('../data').FrameworkData} data
@@ -12,7 +11,7 @@ import { Nav } from "./Nav";
  * @param {Props} props
  */
 export function Layout(props) {
-	const { rootPath = "", title = "Framework Compare" } = props;
+	const { title = "Framework Compare" } = props;
 
 	return (
 		<html lang="en">
@@ -21,10 +20,10 @@ export function Layout(props) {
 				<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 				<meta http-equiv="X-UA-Compatible" content="ie=edge" />
 				<title>{title}</title>
-				<link rel="stylesheet" href={rootPath + "spectre.min.css"} />
-				<link rel="stylesheet" href={rootPath + "spectre-exp.min.css"} />
-				<link rel="stylesheet" href={rootPath + "spectre-icons.min.css"} />
-				<link rel="stylesheet" href={rootPath + "site.css"} />
+				<link rel="stylesheet" href="/spectre.min.css" />
+				<link rel="stylesheet" href="/spectre-exp.min.css" />
+				<link rel="stylesheet" href="/spectre-icons.min.css" />
+				<link rel="stylesheet" href="/site.css" />
 			</head>
 			<body>
 				<div class="off-canvas off-canvas-sidebar-show">

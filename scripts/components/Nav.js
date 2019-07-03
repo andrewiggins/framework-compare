@@ -13,8 +13,7 @@ export const Nav = props => (
 			<div class="section-body accordion-body">
 				<ul class="menu menu-nav">
 					<li class="menu-item">
-						{/* TODO: Generate this URL path */}
-						<a href="">Summary</a>
+						<a href="/">Summary</a>
 					</li>
 				</ul>
 			</div>
@@ -32,7 +31,7 @@ export const Nav = props => (
 						{framework.apps.map(app => (
 							<li class="menu-item">
 								{/* TODO: Add active link logic */}
-								<a href={app.htmlUrl}>{app.name}</a>
+								<a href={"/" + app.htmlUrl}>{app.name}</a>
 							</li>
 						))}
 					</ul>

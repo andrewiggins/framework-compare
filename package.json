@@ -5,7 +5,8 @@
   "description": "Compare implementations of some basic webpages in different frameworks",
   "main": "index.js",
   "scripts": {
-    "build": "yarn workspaces run build && node ./scripts/build.js"
+    "build": "yarn workspaces run build && node ./scripts/build.js",
+    "dev": "serve dist/"
   },
   "repository": {
     "type": "git",
@@ -29,6 +30,7 @@
     "rollup": "^1.16.3",
     "rollup-plugin-buble": "^0.19.6",
     "rollup-plugin-node-resolve": "^5.2.0",
+    "serve": "^11.0.2",
     "spectre.css": "^0.5.8"
   }
 }

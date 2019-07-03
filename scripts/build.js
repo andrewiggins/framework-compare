@@ -10,17 +10,6 @@ const { render } = require("preact-render-to-string");
 const { buildFrameworkData } = require("./data");
 const { p, outputPath, capitalize, toUrl, ensureDir } = require("./util");
 
-const getRootPath = pageUrl => {
-	let url = toUrl(
-		path.relative(path.dirname(outputPath(pageUrl)), outputPath())
-	);
-	if (url !== "") {
-		url += "/";
-	}
-
-	return url;
-};
-
 /**
  * @typedef {import('./components/build')} Components
  * @returns {Promise<Components>}
@@ -63,8 +52,7 @@ const createRenderer = (components, frameworkData) => (page, layoutProps) => {
 		Layout,
 		{
 			...layoutProps,
-			data: frameworkData,
-			rootPath: getRootPath(layoutProps.url)
+			data: frameworkData
 		},
 		page
 	);
@@ -112,7 +100,6 @@ async function buildAppViews(renderPage, AppPage, frameworkData) {
 	await Promise.all(
 		allApps.map(async app => {
 			// TODO: Set active nav
-			// TODO: Fix nav links (maybe I should use an HTTP server and absolute links...)
 
 			const title = `${app.name} - ${capitalize(
 				app.framework
