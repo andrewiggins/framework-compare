@@ -1,27 +1,33 @@
 import { h } from "preact";
 
+const active = "active";
+
 /**
- * @param {{ data: import('../data').FrameworkData; }} props
+ * @param {{ url: string; data: import('../data').FrameworkData; }} props
  */
-export const Nav = props => (
+export const Nav = ({ data, url }) => (
 	<div class="nav">
-		<details class="section accordion">
+		<details class="section accordion" open={!url.includes("/")}>
 			<summary class="section-header accordion-header c-hand">
-				<i class="icon icon-arrow-right mr-1"></i>
+				<i class="icon icon-arrow-right mr-1" />
 				About
 			</summary>
 			<div class="section-body accordion-body">
 				<ul class="menu menu-nav">
 					<li class="menu-item">
-						<a href="/">Summary</a>
+						<a href="/" class={url === "index.html" ? active : null}>
+							Summary
+						</a>
 					</li>
 				</ul>
 			</div>
 		</details>
-		{/* TODO: Add divider */}
-		{props.data.map(framework => (
-			<details class="section accordion">
-				{/* TODO: Add active accordion logic */}
+		<hr />
+		{data.map(framework => (
+			<details
+				class="section accordion"
+				open={url.toLowerCase().includes(framework.name.toLowerCase())}
+			>
 				<summary class="section-header accordion-header c-hand">
 					<i class="icon icon-arrow-right mr-1" />
 					{framework.name}
@@ -30,8 +36,12 @@ export const Nav = props => (
 					<ul class="menu menu-nav">
 						{framework.apps.map(app => (
 							<li class="menu-item">
-								{/* TODO: Add active link logic */}
-								<a href={"/" + app.htmlUrl}>{app.name}</a>
+								<a
+									href={"/" + app.htmlUrl}
+									class={app.htmlUrl == url ? active : null}
+								>
+									{app.name}
+								</a>
 							</li>
 						))}
 					</ul>

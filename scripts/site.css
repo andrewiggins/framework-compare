@@ -49,6 +49,7 @@ a:visited {
 }
 
 .sidebar .nav {
+	/* Copied from spectre docs site and modified for our design */
 	bottom: 1.5rem;
 	-webkit-overflow-scrolling: touch;
 	overflow-y: auto;
@@ -56,6 +57,10 @@ a:visited {
 	position: fixed;
 	top: 2.9rem;
 	width: 12rem;
+
+	/* Some overrides to support hr divider */
+	display: block;
+	margin: 0;
 }
 
 .sidebar .section {

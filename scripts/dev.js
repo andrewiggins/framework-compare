@@ -48,6 +48,8 @@ function watchScripts() {
 	runNode(p("node_modules/nodemon/bin/nodemon.js"), [
 		"--watch",
 		p("scripts"),
+		"--ext",
+		"js,mjs,json,css",
 		"--ignore",
 		p("scripts/components/index.js"),
 		p("scripts/build.js")

@@ -99,8 +99,6 @@ async function buildAppViews(renderPage, AppPage, frameworkData) {
 
 	await Promise.all(
 		allApps.map(async app => {
-			// TODO: Set active nav
-
 			const title = `${app.name} - ${capitalize(
 				app.framework
 			)} - Framework Compare`;
