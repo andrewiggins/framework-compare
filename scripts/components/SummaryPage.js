@@ -33,7 +33,7 @@ export function SummaryPage(props) {
 		/** @type {Array<string | number>} */
 		const row = [appName];
 		for (let framework of frameworks) {
-			row.push(apps[appName][framework].gzipSize);
+			row.push("" + apps[appName][framework].gzipSize + " B");
 		}
 
 		data.push(row);
@@ -42,7 +42,7 @@ export function SummaryPage(props) {
 	return (
 		<Fragment>
 			<PageHeader title="Summary" />
-			<table>
+			<table class="table table-striped table-hover">
 				<thead>
 					<tr>
 						<th>App GUI</th>

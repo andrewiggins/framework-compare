@@ -89,6 +89,8 @@ a:visited {
 
 .page-header {
 	display: flex;
+	border-bottom: 1px solid #3b4351;
+	margin-bottom: 1rem;
 }
 
 .page-title {
