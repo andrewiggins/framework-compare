@@ -6,7 +6,8 @@
   "main": "index.js",
   "scripts": {
     "build": "yarn workspaces run build && node ./scripts/build.js",
-    "dev": "serve dist/"
+    "dev": "node ./scripts/dev.js",
+    "serve": "serve dist/"
   },
   "repository": {
     "type": "git",
@@ -24,6 +25,7 @@
   "devDependencies": {
     "brotli-size": "^0.1.0",
     "gzip-size": "^5.1.1",
+    "nodemon": "^1.19.1",
     "preact": "^10.0.0-beta.3",
     "preact-render-to-string": "^5.0.4",
     "preact-router": "^2.6.1",
