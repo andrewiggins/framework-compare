@@ -5,10 +5,15 @@ Implement a set of webpages of increasing complexity in a couple different frame
 ## Frameworks to consider
 
 - Preact
+- Preact + Hooks
+- Preact + Compat
 - Svelte
 - Vue
+- Vue + Hooks
 - React
+- React + Hooks
 - lit-html
+- lit-html + WC
 
 Others:
 
@@ -25,6 +30,7 @@ Others:
 - Static Hello World
 - 7 GUIs (Based on https://eugenkiss.github.io/7guis/)
 - Simple TODO
+- Tic-Tac-Toe (https://github.com/jesseskinner/svelte-tic-tac-toe)
 
 Also check out https://hackernoon.com/towards-a-better-gui-programming-benchmark-397aca3542b8
 

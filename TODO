@@ -1,0 +1,8 @@
+* Add tests verifying each implementation of an app returns the expected markup
+* Determine what to do about styles
+	* Could require apps that have styles to render pre-defined markup using classes for styles provided externally
+	* Build basic style imports into every framework
+* Define library for common utilities across apps (e.g. spreadsheet grammar)
+	* common/ folder in src
+	* lib/ workspace
+* Add app and framework filtering to summary table
