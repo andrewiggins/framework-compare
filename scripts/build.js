@@ -68,7 +68,10 @@ const createRenderer = (components, frameworkData) => (page, layoutProps) => {
 async function buildSummaryView(renderPage, SummaryPage, frameworkData) {
 	const url = "index.html";
 	const page = h(SummaryPage, { frameworkData });
-	const summaryHtml = renderPage(page, { url });
+	const summaryHtml = renderPage(page, {
+		title: "Summary - Framework Compare",
+		url
+	});
 	await writeFile(outputPath("index.html"), summaryHtml, "utf8");
 }
 
