@@ -69,16 +69,24 @@ async function main() {
 	const availableFrameworks = await readdir(p("frameworks"));
 
 	const tasks = [];
-	if (toWatch.indexOf("scripts") !== -1) {
+	if (toWatch.includes("all")) {
 		tasks.push(watchScripts);
-		toWatch.splice(toWatch.indexOf("scripts"), 1);
-	}
-
-	for (let framework of toWatch) {
-		if (availableFrameworks.indexOf(framework) !== -1) {
+		for (let framework of availableFrameworks) {
 			tasks.push(() => watchFramework(framework));
-		} else {
-			throw new Error(`Unknown framework given to watch: "${framework}"`);
+		}
+	}
+	else {
+		if (toWatch.includes("scripts")) {
+			tasks.push(watchScripts);
+			toWatch.splice(toWatch.indexOf("scripts"), 1);
+		}
+
+		for (let framework of toWatch) {
+			if (availableFrameworks.includes(framework)) {
+				tasks.push(() => watchFramework(framework));
+			} else {
+				throw new Error(`Unknown framework given to watch: "${framework}"`);
+			}
 		}
 	}
 
