@@ -1,4 +1,4 @@
-const sorted = ["Hello World", "7GUIs Counter"];
+const sorted = ["Hello World", "7GUIs Counter", "7GUIs Temp Converter", "7GUIs Flight Booker"];
 
 /**
  * @param {import('../data').AppData | string} app1

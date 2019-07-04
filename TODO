@@ -1,3 +1,4 @@
+* Add brotli/gzip radio option to summary page
 * Add tests verifying each implementation of an app returns the expected markup
 * Determine what to do about styles
 	* Could require apps that have styles to render pre-defined markup using classes for styles provided externally
