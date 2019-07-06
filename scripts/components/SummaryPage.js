@@ -27,45 +27,59 @@ export function SummaryPage(props) {
 	}
 
 	/** @type {Array<Array<string | number>>} */
-	const data = [];
+	const gzipData = [];
+	const brotliData = [];
 	for (let appName of Object.keys(apps).sort(appSorter)) {
 		/** @type {Array<string | number>} */
-		const row = [appName];
+		const gzipRow = [appName];
+		const brotliRow = [appName];
 		for (let framework of frameworks) {
 			const appData = apps[appName][framework];
 			if (appData) {
-				row.push("" + appData.gzipSize + " B");
-			}
-			else {
-				row.push("—");
+				gzipRow.push("" + appData.gzipSize + " B");
+				brotliRow.push("" + appData.brotliSize + " B");
+			} else {
+				brotliRow.push("—");
+				gzipRow.push("—");
 			}
 		}
 
-		data.push(row);
+		gzipData.push(gzipRow);
+		brotliData.push(brotliRow);
 	}
+
+	const allData = [
+		{ name: "brotli-data", data: brotliData },
+		{ name: "gzip-data", data: gzipData }
+	];
 
 	return (
 		<Fragment>
 			<PageHeader title="Summary" />
-			<table class="table table-striped table-hover">
-				<thead>
-					<tr>
-						<th>App GUI</th>
-						{headers.map(header => (
-							<th>{header}</th>
-						))}
-					</tr>
-				</thead>
-				<tbody>
-					{data.map(row => (
-						<tr>
-							{row.map(cell => (
-								<td>{cell}</td>
+			{allData.map(({ name, data }) => (
+				<Fragment>
+					<h2>{name.split("-")[0]}</h2>
+					<table key={name} id={name} class="table table-striped table-hover" style="margin: 1rem 0">
+						<thead>
+							<tr>
+								<th>App GUI</th>
+								{headers.map(header => (
+									<th>{header}</th>
+								))}
+							</tr>
+						</thead>
+						<tbody>
+							{data.map(row => (
+								<tr>
+									{row.map(cell => (
+										<td>{cell}</td>
+									))}
+								</tr>
 							))}
-						</tr>
-					))}
-				</tbody>
-			</table>
+						</tbody>
+					</table>
+				</Fragment>
+			))}
 		</Fragment>
 	);
 }
