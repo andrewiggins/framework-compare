@@ -1,0 +1,38 @@
+<!-- https://eugenkiss.github.io/7guis/tasks#timer -->
+
+<script>
+	import { onDestroy } from "svelte";
+
+	let elapsed = 0;
+	let duration = 5000;
+
+	let last_time = performance.now();
+	let frame;
+
+	$: if (elapsed < duration) {
+		frame = requestAnimationFrame(time => {
+			elapsed += Math.min(time - last_time, duration - elapsed);
+			last_time = time;
+		});
+	}
+
+	function reset() {
+		elapsed = 0;
+		last_time = performance.now();
+	}
+
+	onDestroy(() => cancelAnimationFrame(frame));
+</script>
+
+<label>
+	Elapsed time:
+	<progress value="{elapsed / duration}"></progress>
+</label>
+<div>{(elapsed / 1000).toFixed(1)}s</div>
+<label>
+	Duration:
+	<input type="range" bind:value="{duration}" min="1" max="20000" />
+</label>
+<div>
+	<button class="btn btn-primary" on:click="{reset}">Reset</button>
+</div>
