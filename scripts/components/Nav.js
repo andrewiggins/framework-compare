@@ -1,5 +1,5 @@
 import { h } from "preact";
-import { appSorter, relativeUrl } from "./util";
+import { appSorter, relativeUrl, getFramework } from "./util";
 
 const active = "active";
 
@@ -43,7 +43,7 @@ export const Nav = ({ data, url }) => (
 		{data.map(framework => (
 			<details
 				class="section accordion"
-				open={url.toLowerCase().includes(framework.name.toLowerCase())}
+				open={getFramework(url) === framework.name}
 			>
 				<summary class="section-header accordion-header c-hand">
 					<i class="icon icon-arrow-right mr-1" />

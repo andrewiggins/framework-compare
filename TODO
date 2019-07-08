@@ -11,3 +11,4 @@
 	* lib/ workspace
 * Add app and framework filtering to summary table
 * Add option to show nav by App instead of by Framework
+* Consider showing source files inline under app

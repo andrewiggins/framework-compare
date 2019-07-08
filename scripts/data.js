@@ -3,8 +3,7 @@ const { readFile } = require("fs").promises;
 const getGzipSize = require("gzip-size");
 const getBrotliSize = require("brotli-size");
 const {
-	toTitleCase,
-	outputPath,
+	getDisplayName,
 	toUrl,
 	frameworkOutput,
 	listDirs,
@@ -15,9 +14,6 @@ const replaceExt = (fileName, newExt) => {
 	let newFilename = path.basename(fileName, path.extname(fileName)) + newExt;
 	return path.join(path.dirname(fileName), newFilename);
 };
-
-/** @type {(app: string) => string} */
-const getDisplayName = app => toTitleCase(app.replace(/-/g, " "));
 
 /**
  * @typedef {{ framework: string; name: string; htmlUrl: string; jsUrl: string; gzipSize: number; brotliSize: number; }} AppData

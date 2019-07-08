@@ -29,3 +29,22 @@ export function appSorter(app1, app2) {
 export function relativeUrl(currentUrl, url) {
 	return path.relative(path.dirname(currentUrl), url).replace(/\\/g, "/");
 }
+
+const toTitleCase = str => {
+	return str.replace(/\w\S*/g, txt => {
+		return txt.charAt(0).toUpperCase() + txt.substr(1);
+	});
+};
+
+/** @type {(app: string) => string} */
+const getDisplayName = app => toTitleCase(app.replace(/-/g, " "));
+
+const frameworkRegex = /\/frameworks\/([A-Za-z0-9_\-]+)\//i;
+
+/**
+ * @param {string} url
+ */
+export function getFramework(url) {
+	const match = url.match(frameworkRegex);
+	return match && getDisplayName(match[1]);
+}

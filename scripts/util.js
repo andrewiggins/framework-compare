@@ -29,6 +29,9 @@ const toUrl = s => path.relative(p(), s).replace(/\\/gi, "/");
 
 const frameworkOutput = (...args) => outputPath("frameworks", ...args);
 
+/** @type {(app: string) => string} */
+const getDisplayName = app => toTitleCase(app.replace(/-/g, " "));
+
 async function ensureDir(path) {
 	let stats;
 	try {
@@ -56,5 +59,6 @@ module.exports = {
 	toUrl,
 	toTitleCase,
 	frameworkOutput,
+	getDisplayName,
 	ensureDir
 };
