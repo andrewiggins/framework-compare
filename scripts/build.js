@@ -1,5 +1,4 @@
-const path = require("path");
-const { writeFile, copyFile } = require("fs").promises;
+const { copyFile } = require("fs").promises;
 
 const rollup = require("rollup");
 const nodeResolve = require("rollup-plugin-node-resolve");
@@ -8,7 +7,10 @@ const { h } = require("preact");
 const { render } = require("preact-render-to-string");
 
 const { buildFrameworkData } = require("./data");
-const { p, outputPath, toUrl, ensureDir } = require("./util");
+const { p, outputPath, ensureDir } = require("./util");
+
+const { buildSummaryView } = require('./routes/summary');
+const { buildAppViews } = require('./routes/appViews');
 
 /**
  * @typedef {import('./components/build')} Components
@@ -60,21 +62,6 @@ const createRenderer = (components, frameworkData) => (page, layoutProps) => {
 	return "<!DOCTYPE html>\n" + render(markup, {}, { pretty: true });
 };
 
-/**
- * @param {Renderer} renderPage
- * @param {Components["SummaryPage"]} SummaryPage
- * @param {import('./data').FrameworkData} frameworkData
- */
-async function buildSummaryView(renderPage, SummaryPage, frameworkData) {
-	const url = "index.html";
-	const page = h(SummaryPage, { frameworkData });
-	const summaryHtml = renderPage(page, {
-		title: "Summary - Framework Compare",
-		url
-	});
-	await writeFile(outputPath("index.html"), summaryHtml, "utf8");
-}
-
 async function copyStatics() {
 	const spectreFiles = [
 		"spectre.min.css",
@@ -87,31 +74,6 @@ async function copyStatics() {
 		...spectreFiles.map(file => copyFile(spectreSrc(file), outputPath(file))),
 		copyFile(p("scripts/site.css"), outputPath("site.css"))
 	]);
-}
-
-/**
- * @param {Renderer} renderPage
- * @param {Components["AppPage"]} AppPage
- * @param {import('./data').FrameworkData} frameworkData
- */
-async function buildAppViews(renderPage, AppPage, frameworkData) {
-	const allApps = frameworkData.reduce(
-		(apps, framework) => apps.concat(framework.apps),
-		[]
-	);
-
-	await Promise.all(
-		allApps.map(async app => {
-			const title = `${app.name} - ${app.framework} - Framework Compare`;
-			const appSrc = toUrl(path.relative(path.dirname(app.htmlUrl), app.jsUrl));
-			const page = h(AppPage, { app, appSrc });
-			const appHtml = renderPage(page, { url: app.htmlUrl, title });
-
-			const htmlPath = outputPath(app.htmlUrl);
-			await ensureDir(path.dirname(htmlPath));
-			await writeFile(htmlPath, appHtml, "utf8");
-		})
-	);
 }
 
 async function build() {

@@ -1,4 +1,5 @@
-* Add brotli/gzip radio option to summary page
+* Fix mobile stylings
+* Add brotli/gzip radio option to summary page (power radios using /scripts/bundles/summary.js)
 * Add tests verifying each implementation of an app returns the expected markup
 * Determine what to do about styles
 	* Could require apps that have styles to render pre-defined markup using classes for styles provided externally
@@ -7,3 +8,4 @@
 	* common/ folder in src
 	* lib/ workspace
 * Add app and framework filtering to summary table
+* Add option to show nav by App instead of by Framework
