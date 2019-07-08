@@ -17,10 +17,10 @@ export const Layout = props => (
 			<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 			<meta http-equiv="X-UA-Compatible" content="ie=edge" />
 			<title>{props.title || "Framework Compare"}</title>
-			<link rel="stylesheet" href="/spectre.min.css" />
-			<link rel="stylesheet" href="/spectre-exp.min.css" />
-			<link rel="stylesheet" href="/spectre-icons.min.css" />
-			<link rel="stylesheet" href="/site.css" />
+			<link rel="stylesheet" href="/dist/spectre.min.css" />
+			<link rel="stylesheet" href="/dist/spectre-exp.min.css" />
+			<link rel="stylesheet" href="/dist/spectre-icons.min.css" />
+			<link rel="stylesheet" href="/dist/site.css" />
 		</head>
 		<body>
 			<div class="off-canvas off-canvas-sidebar-show">

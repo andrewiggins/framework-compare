@@ -3,23 +3,36 @@ import { appSorter } from "./util";
 
 const active = "active";
 
+const aboutSection = {
+	name: "About",
+	pages: [
+		{ name: "Introduction", url: "index.html" },
+		{ name: "Summary", url: "dist/summary.html" }
+	]
+};
+
 /**
  * @param {{ url: string; data: import('../data').FrameworkData; }} props
  */
 export const Nav = ({ data, url }) => (
 	<div class="nav">
-		<details class="section accordion" open={!url.includes("/")}>
+		<details
+			class="section accordion"
+			open={aboutSection.pages.map(page => page.url).includes(url)}
+		>
 			<summary class="section-header accordion-header c-hand">
 				<i class="icon icon-arrow-right mr-1" />
-				About
+				{aboutSection.name}
 			</summary>
 			<div class="section-body accordion-body">
 				<ul class="menu menu-nav">
-					<li class="menu-item">
-						<a href="/" class={url === "index.html" ? active : null}>
-							Summary
-						</a>
-					</li>
+					{aboutSection.pages.map(page => (
+						<li class="menu-item">
+							<a href={"/" + page.url} class={url === page.url ? active : null}>
+								{page.name}
+							</a>
+						</li>
+					))}
 				</ul>
 			</div>
 		</details>

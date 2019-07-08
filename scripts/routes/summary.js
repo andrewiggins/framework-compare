@@ -1,6 +1,7 @@
 const { writeFile } = require("fs").promises;
+const path = require("path");
 const { h } = require("preact");
-const { outputPath } = require("../util");
+const { p, outputPath, toUrl } = require("../util");
 
 /**
  * @param {import('../build').Renderer} renderPage
@@ -8,13 +9,13 @@ const { outputPath } = require("../util");
  * @param {import('../data').FrameworkData} frameworkData
  */
 async function buildSummaryView(renderPage, SummaryPage, frameworkData) {
-	const url = "index.html";
+	const file = outputPath("summary.html");
 	const page = h(SummaryPage, { frameworkData });
 	const summaryHtml = renderPage(page, {
 		title: "Summary - Framework Compare",
-		url
+		url: toUrl(path.relative(p(), file))
 	});
-	await writeFile(outputPath("index.html"), summaryHtml, "utf8");
+	await writeFile(file, summaryHtml, "utf8");
 }
 
 module.exports = {

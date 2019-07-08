@@ -1,7 +1,7 @@
-const { writeFile } = require('fs').promises
-const path = require('path');
-const { h } = require('preact');
-const { toUrl, outputPath, ensureDir } = require('../util');
+const { writeFile } = require("fs").promises;
+const path = require("path");
+const { h } = require("preact");
+const { toUrl, outputPath, ensureDir } = require("../util");
 
 /**
  * @param {import('../build').Renderer} renderPage
@@ -9,6 +9,7 @@ const { toUrl, outputPath, ensureDir } = require('../util');
  * @param {import('../data').FrameworkData} frameworkData
  */
 async function buildAppViews(renderPage, AppPage, frameworkData) {
+	/** @type {Array<import('../data').AppData>} */
 	const allApps = frameworkData.reduce(
 		(apps, framework) => apps.concat(framework.apps),
 		[]
@@ -21,7 +22,7 @@ async function buildAppViews(renderPage, AppPage, frameworkData) {
 			const page = h(AppPage, { app, appSrc });
 			const appHtml = renderPage(page, { url: app.htmlUrl, title });
 
-			const htmlPath = outputPath(app.htmlUrl);
+			const htmlPath = app.htmlUrl;
 			await ensureDir(path.dirname(htmlPath));
 			await writeFile(htmlPath, appHtml, "utf8");
 		})

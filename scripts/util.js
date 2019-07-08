@@ -25,10 +25,9 @@ const toTitleCase = str => {
 
 const p = (...args) => path.join(__dirname, "..", ...args);
 const outputPath = (...args) => p("dist", ...args);
-const toUrl = s => s.replace(/\\/gi, "/");
+const toUrl = s => path.relative(p(), s).replace(/\\/gi, "/");
 
-const getFrameworkPath = (...args) => path.join("frameworks", ...args);
-const frameworkOutput = (...args) => outputPath(getFrameworkPath(...args));
+const frameworkOutput = (...args) => outputPath("frameworks", ...args);
 
 async function ensureDir(path) {
 	let stats;
@@ -38,6 +37,8 @@ async function ensureDir(path) {
 		if (e.code == "ENOENT") {
 			await mkdir(path, { recursive: true });
 			stats = await stat(path);
+		} else {
+			throw e;
 		}
 	}
 
@@ -54,7 +55,6 @@ module.exports = {
 	outputPath,
 	toUrl,
 	toTitleCase,
-	getFrameworkPath,
 	frameworkOutput,
 	ensureDir
 };

@@ -6,6 +6,7 @@
 
 dist/
 scripts/components/index.js
+.vscode/
 
 
 ##################################################

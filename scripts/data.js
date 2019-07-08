@@ -6,7 +6,6 @@ const {
 	toTitleCase,
 	outputPath,
 	toUrl,
-	getFrameworkPath,
 	frameworkOutput,
 	listDirs,
 	listFiles
@@ -36,9 +35,9 @@ async function buildFrameworkData() {
 			const apps = await Promise.all(
 				appNames.map(async (appName, i) => {
 					const htmlFile = replaceExt(appName, ".html");
-					const htmlPath = getFrameworkPath(framework, htmlFile);
-					const jsPath = getFrameworkPath(framework, jsFiles[i]);
-					const jsContents = await readFile(outputPath(jsPath));
+					const htmlPath = frameworkOutput(framework, htmlFile);
+					const jsPath = frameworkOutput(framework, jsFiles[i]);
+					const jsContents = await readFile(jsPath);
 
 					const [gzipSize, brotliSize] = await Promise.all([
 						getGzipSize(jsContents),

@@ -9,8 +9,9 @@ const { render } = require("preact-render-to-string");
 const { buildFrameworkData } = require("./data");
 const { p, outputPath, ensureDir } = require("./util");
 
-const { buildSummaryView } = require('./routes/summary');
-const { buildAppViews } = require('./routes/appViews');
+const { buildIntroPage } = require("./routes/intro");
+const { buildSummaryView } = require("./routes/summary");
+const { buildAppViews } = require("./routes/appViews");
 
 /**
  * @typedef {import('./components/build')} Components
@@ -84,6 +85,7 @@ async function build() {
 	await ensureDir(outputPath());
 
 	await copyStatics();
+	await buildIntroPage(renderPage, components.IntroPage);
 	await buildSummaryView(renderPage, components.SummaryPage, frameworkData);
 	await buildAppViews(renderPage, components.AppPage, frameworkData);
 }

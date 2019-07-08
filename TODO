@@ -1,3 +1,5 @@
+* Fill in Intro
+* Write up conclusion
 * Fix mobile stylings
 * Add brotli/gzip radio option to summary page (power radios using /scripts/bundles/summary.js)
 * Add tests verifying each implementation of an app returns the expected markup
