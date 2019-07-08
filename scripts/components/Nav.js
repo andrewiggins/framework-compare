@@ -1,5 +1,5 @@
 import { h } from "preact";
-import { appSorter } from "./util";
+import { appSorter, relativeUrl } from "./util";
 
 const active = "active";
 
@@ -28,7 +28,10 @@ export const Nav = ({ data, url }) => (
 				<ul class="menu menu-nav">
 					{aboutSection.pages.map(page => (
 						<li class="menu-item">
-							<a href={"/" + page.url} class={url === page.url ? active : null}>
+							<a
+								href={relativeUrl(url, page.url)}
+								class={url === page.url ? active : null}
+							>
 								{page.name}
 							</a>
 						</li>
@@ -51,7 +54,7 @@ export const Nav = ({ data, url }) => (
 						{framework.apps.sort(appSorter).map(app => (
 							<li class="menu-item">
 								<a
-									href={"/" + app.htmlUrl}
+									href={relativeUrl(url, app.htmlUrl)}
 									class={app.htmlUrl == url ? active : null}
 								>
 									{app.name}

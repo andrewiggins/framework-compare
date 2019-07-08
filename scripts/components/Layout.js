@@ -1,5 +1,6 @@
 import { h } from "preact";
 import { Nav } from "./Nav";
+import { relativeUrl } from "./util";
 
 /**
  * @typedef Props
@@ -17,10 +18,10 @@ export const Layout = props => (
 			<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 			<meta http-equiv="X-UA-Compatible" content="ie=edge" />
 			<title>{props.title || "Framework Compare"}</title>
-			<link rel="stylesheet" href="/dist/spectre.min.css" />
-			<link rel="stylesheet" href="/dist/spectre-exp.min.css" />
-			<link rel="stylesheet" href="/dist/spectre-icons.min.css" />
-			<link rel="stylesheet" href="/dist/site.css" />
+			<link rel="stylesheet" href={relativeUrl(props.url, "dist/spectre.min.css")} />
+			<link rel="stylesheet" href={relativeUrl(props.url, "dist/spectre-exp.min.css")} />
+			<link rel="stylesheet" href={relativeUrl(props.url, "dist/spectre-icons.min.css")} />
+			<link rel="stylesheet" href={relativeUrl(props.url, "dist/site.css")} />
 		</head>
 		<body>
 			<div class="off-canvas off-canvas-sidebar-show">

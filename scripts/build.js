@@ -26,7 +26,9 @@ async function compileComponents() {
 		},
 		plugins: [
 			// @ts-ignore
-			nodeResolve(),
+			nodeResolve({
+				preferBuiltIns: true
+			}),
 			buble({
 				jsx: "h",
 				transforms: {
