@@ -1,6 +1,11 @@
 * Fill in Intro
 * Write up conclusion
-* Fix mobile stylings
+* Consider having one page per app with a framework selector? with standalone page option?
+* Add Compare page
+	* plus button to add multiple frameworks of one app to view source and Compare
+* Consider showing source files inline under app
+	* Perhaps add toggle for source and js output? Particularly useful for compiler frameworks (Vue, Svelte)
+	* Add link to framework repl if exists
 * Add brotli/gzip radio option to summary page (power radios using /scripts/bundles/summary.js)
 * Add tests verifying each implementation of an app returns the expected markup
 * Determine what to do about styles
@@ -11,4 +16,3 @@
 	* lib/ workspace
 * Add app and framework filtering to summary table
 * Add option to show nav by App instead of by Framework
-* Consider showing source files inline under app

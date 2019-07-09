@@ -31,6 +31,8 @@ Others:
 - 7 GUIs (Based on https://eugenkiss.github.io/7guis/)
 - Simple TODO
 - Tic-Tac-Toe (https://github.com/jesseskinner/svelte-tic-tac-toe)
+- News site clone?
+- Github repo list?
 
 Also check out https://hackernoon.com/towards-a-better-gui-programming-benchmark-397aca3542b8
 

@@ -17,10 +17,14 @@ async function buildAppViews(renderPage, AppPage, frameworkData) {
 
 	await Promise.all(
 		allApps.map(async app => {
-			const title = `${app.name} - ${app.framework} - Framework Compare`;
+			const title = `${app.name} - ${app.framework}`;
 			const appSrc = toUrl(path.relative(path.dirname(app.htmlUrl), app.jsUrl));
 			const page = h(AppPage, { app, appSrc });
-			const appHtml = renderPage(page, { url: app.htmlUrl, title });
+			const appHtml = renderPage(page, {
+				url: app.htmlUrl,
+				title,
+				bodyClass: "app-page"
+			});
 
 			const htmlPath = app.htmlUrl;
 			await ensureDir(path.dirname(htmlPath));

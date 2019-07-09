@@ -55,11 +55,15 @@ export function SummaryPage(props) {
 
 	return (
 		<Fragment>
-			<PageHeader title="Summary" />
 			{allData.map(({ name, data }) => (
 				<Fragment>
 					<h2>{name.split("-")[0]}</h2>
-					<table key={name} id={name} class="table table-striped table-hover" style="margin: 1rem 0">
+					<table
+						key={name}
+						id={name}
+						class="table table-striped table-hover table-scroll"
+						style="margin: 1rem 0"
+					>
 						<thead>
 							<tr>
 								<th>App GUI</th>

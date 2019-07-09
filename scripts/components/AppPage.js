@@ -6,11 +6,16 @@ import { PageHeader } from "./PageHeader";
  */
 export const AppPage = ({ app, appSrc }) => (
 	<Fragment>
-		<PageHeader title={`${app.framework} - ${app.name}`}>
-			<div>Gzip: {app.gzipSize} B</div>
-			<div>Brotli: {app.brotliSize} B</div>
-		</PageHeader>
-		<div id="app" />
+		<div class="panel">
+			<div class="panel-header"></div>
+			<div class="panel-body">
+				<div id="app" />
+			</div>
+			<div class="panel-footer">
+				<div>Gzip: {app.gzipSize} B</div>
+				<div>Brotli: {app.brotliSize} B</div>
+			</div>
+		</div>
 		<script src={appSrc} type="text/javascript" />
 	</Fragment>
 );

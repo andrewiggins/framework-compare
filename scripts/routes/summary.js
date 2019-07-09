@@ -12,7 +12,7 @@ async function buildSummaryView(renderPage, SummaryPage, frameworkData) {
 	const file = outputPath("summary.html");
 	const page = h(SummaryPage, { frameworkData });
 	const summaryHtml = renderPage(page, {
-		title: "Summary - Framework Compare",
+		title: "Summary",
 		url: toUrl(path.relative(p(), file))
 	});
 	await writeFile(file, summaryHtml, "utf8");

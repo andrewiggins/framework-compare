@@ -11,7 +11,7 @@ async function buildIntroPage(renderPage, IntroPage) {
 	const file = p("index.html");
 	const page = h(IntroPage, {});
 	const introHtml = renderPage(page, {
-		title: "Introduction - Framework Compare",
+		title: "Introduction",
 		url: toUrl(path.relative(p(), file))
 	});
 	await writeFile(file, introHtml, "utf8");

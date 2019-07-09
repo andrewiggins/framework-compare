@@ -1,3 +1,9 @@
+/*******************************
+
+Global styles
+
+********************************/
+
 html,
 body {
 	height: 100%;
@@ -7,34 +13,11 @@ a:visited {
 	color: #5755d9;
 }
 
-/* .navbar {
-	height: 3.8rem;
-	position: fixed;
-	right: 0;
-	top: 0;
-	z-index: 100;
-}
-@media (max-width: 960px) {
-	.navbar {
-		-webkit-backdrop-filter: blur(5px);
-		backdrop-filter: blur(5px);
-		background: rgba(247, 248, 249, 0.65);
-		left: 0;
-	}
-} */
+/*******************************
 
-/* .off-canvas .off-canvas-content {
-	padding: 0 4rem;
-	width: calc(100vw - 12rem);
-}
+Sidebar nav styles
 
-@media (max-width: 960px) {
-	.off-canvas .off-canvas-content {
-		min-width: auto;
-		padding: 0 1.5rem;
-		width: 100%;
-	}
-} */
+********************************/
 
 .sidebar {
 	width: 12rem;
@@ -54,7 +37,6 @@ a:visited {
 	-webkit-overflow-scrolling: touch;
 	overflow-y: auto;
 	padding: 0.5rem 0.7rem;
-	position: fixed;
 	top: 2.9rem;
 	width: 12rem;
 
@@ -83,16 +65,87 @@ a:visited {
 	padding-left: 1rem;
 }
 
+/*******************************
+
+Spectre off-canvas overrides
+
+********************************/
+
+.off-canvas {
+	height: auto;
+	min-height: 100%;
+}
+
 .off-canvas .off-canvas-toggle {
-	top: 0.8rem; /* Override to align with page header */
+	left: 1.5rem;
+}
+
+.off-canvas .off-canvas-content {
+	width: 100%;
+	padding: 0 1.5rem;
+}
+
+@media (max-width: 600px) {
+	.off-canvas .off-canvas-toggle {
+		left: 0.5rem;
+	}
+
+	.off-canvas .off-canvas-content {
+		padding: 0 0.5rem;
+	}
+}
+
+/*******************************
+
+Page styles
+
+********************************/
+
+.page-wrapper {
+	display: flex;
+	flex-direction: column;
+	min-height: 100vh;
 }
 
 .page-header {
 	display: flex;
-	border-bottom: 1px solid #3b4351;
+	flex-flow: row wrap;
+	/* position: sticky; */
+	/* top: 0; */
+	/* backdrop-filter: blur(5px); */
+	/* background: rgba(247,248,249,.65); */
+
+	padding-top: 1rem;
 	margin-bottom: 1rem;
+	border-bottom: 1px solid #3b4351;
 }
 
 .page-title {
 	flex: 1;
+}
+
+@media (max-width: 960px) {
+	.page-header {
+		position: static;
+		padding-left: 2.8rem;
+    padding-top: 0.3rem;
+	}
+
+	.page-title {
+		font-size: 1.6rem;
+	}
+}
+
+.page-contents {
+	flex: 1;
+}
+
+.page-footer {
+	color: #bcc3ce;
+	margin-top: 0.5rem;
+}
+
+.page-footer a,
+.page-footer a:visited {
+	color: #66758c;
 }
