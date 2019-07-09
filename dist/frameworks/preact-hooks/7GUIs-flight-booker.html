@@ -1,2 +1,151 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta http-equiv="X-UA-Compatible" content="ie=edge" /><title>7GUIs Flight Booker - Preact Hooks - Framework Compare</title><link rel="stylesheet" href="../../spectre.min.css" /><link rel="stylesheet" href="../../spectre-exp.min.css" /><link rel="stylesheet" href="../../spectre-icons.min.css" /><link rel="stylesheet" href="../../site.css" /></head><body class="app-page"><div class="off-canvas off-canvas-sidebar-show"><div class="navbar"><a class="off-canvas-toggle btn btn-primary btn-action" href="#sidebar"><i class="icon icon-menu"></i></a></div><div id="sidebar" class="sidebar off-canvas-sidebar"><div class="brand">Framework Compare</div><div class="nav"><details class="section accordion"><summary class="section-header accordion-header c-hand"><i class="icon icon-arrow-right mr-1"></i>About</summary><div class="section-body accordion-body"><ul class="menu menu-nav"><li class="menu-item"><a href="../../../index.html">Introduction</a></li><li class="menu-item"><a href="../../summary.html">Summary</a></li></ul></div></details><hr /><details class="section accordion"><summary class="section-header accordion-header c-hand"><i class="icon icon-arrow-right mr-1"></i>Preact</summary><div class="section-body accordion-body"><ul class="menu menu-nav"><li class="menu-item"><a href="../preact/hello-world.html">Hello World</a></li><li class="menu-item"><a href="../preact/7GUIs-counter.html">7GUIs Counter</a></li><li class="menu-item"><a href="../preact/7GUIs-temp-converter.html">7GUIs Temp Converter</a></li><li class="menu-item"><a href="../preact/7GUIs-flight-booker.html">7GUIs Flight Booker</a></li><li class="menu-item"><a href="../preact/7GUIs-timer.html">7GUIs Timer</a></li></ul></div></details><details class="section accordion" open><summary class="section-header accordion-header c-hand"><i class="icon icon-arrow-right mr-1"></i>Preact Hooks</summary><div class="section-body accordion-body"><ul class="menu menu-nav"><li class="menu-item"><a href="hello-world.html">Hello World</a></li><li class="menu-item"><a href="7GUIs-counter.html">7GUIs Counter</a></li><li class="menu-item"><a href="7GUIs-temp-converter.html">7GUIs Temp Converter</a></li><li class="menu-item"><a href="7GUIs-flight-booker.html" class="active">7GUIs Flight Booker</a></li><li class="menu-item"><a href="7GUIs-timer.html">7GUIs Timer</a></li></ul></div></details><details class="section accordion"><summary class="section-header accordion-header c-hand"><i class="icon icon-arrow-right mr-1"></i>Svelte</summary><div class="section-body accordion-body"><ul class="menu menu-nav"><li class="menu-item"><a href="../svelte/hello-world.html">Hello World</a></li><li class="menu-item"><a href="../svelte/7GUIs-counter.html">7GUIs Counter</a></li><li class="menu-item"><a href="../svelte/7GUIs-temp-converter.html">7GUIs Temp Converter</a></li><li class="menu-item"><a href="../svelte/7GUIs-flight-booker.html">7GUIs Flight Booker</a></li><li class="menu-item"><a href="../svelte/7GUIs-timer.html">7GUIs Timer</a></li></ul></div></details></div></div><a class="off-canvas-overlay" href="#close"></a><div class="page-wrapper off-canvas-content"><div class="page-header"><h1 class="page-title">7GUIs Flight Booker - Preact Hooks</h1></div><div class="page-contents"><div class="panel"><div class="panel-header"></div><div class="panel-body"><div id="app"></div></div><div class="panel-footer"><div>Gzip: 4046 B</div><div>Brotli: 3670 B</div></div></div><script src="7GUIs-flight-booker.js" type="text/javascript"></script></div><footer class="page-footer"><p>Built with <span class="text-error">♥</span> by <a href="https://twitter.com/andre_wiggins" target="_blank">Andre Wiggins</a>. Styled using <a href="https://picturepan2.github.io/spectre/" target="_blank">Spectre.css</a></p></footer></div></div></body></html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>7GUIs Flight Booker - Preact Hooks - Framework Compare</title>
+    <link rel="stylesheet" href="../../spectre.min.css" />
+    <link rel="stylesheet" href="../../spectre-exp.min.css" />
+    <link rel="stylesheet" href="../../spectre-icons.min.css" />
+    <link rel="stylesheet" href="../../site.css" />
+  </head>
+  <body class="app-page">
+    <div class="off-canvas off-canvas-sidebar-show">
+      <div class="navbar">
+        <a class="off-canvas-toggle btn btn-primary btn-action" href="#sidebar"
+          ><i class="icon icon-menu"></i
+        ></a>
+      </div>
+      <div id="sidebar" class="sidebar off-canvas-sidebar">
+        <div class="brand">Framework Compare</div>
+        <div class="nav">
+          <details class="section accordion"
+            ><summary class="section-header accordion-header c-hand"
+              ><i class="icon icon-arrow-right mr-1"></i>About</summary
+            >
+            <div class="section-body accordion-body">
+              <ul class="menu menu-nav">
+                <li class="menu-item">
+                  <a href="../../../index.html">Introduction</a>
+                </li>
+                <li class="menu-item">
+                  <a href="../../summary.html">Summary</a>
+                </li>
+              </ul>
+            </div></details
+          >
+          <hr />
+          <details class="section accordion"
+            ><summary class="section-header accordion-header c-hand"
+              ><i class="icon icon-arrow-right mr-1"></i>Preact</summary
+            >
+            <div class="section-body accordion-body">
+              <ul class="menu menu-nav">
+                <li class="menu-item">
+                  <a href="../preact/hello-world.html">Hello World</a>
+                </li>
+                <li class="menu-item">
+                  <a href="../preact/7GUIs-counter.html">7GUIs Counter</a>
+                </li>
+                <li class="menu-item">
+                  <a href="../preact/7GUIs-temp-converter.html"
+                    >7GUIs Temp Converter</a
+                  >
+                </li>
+                <li class="menu-item">
+                  <a href="../preact/7GUIs-flight-booker.html"
+                    >7GUIs Flight Booker</a
+                  >
+                </li>
+                <li class="menu-item">
+                  <a href="../preact/7GUIs-timer.html">7GUIs Timer</a>
+                </li>
+              </ul>
+            </div></details
+          ><details class="section accordion" open
+            ><summary class="section-header accordion-header c-hand"
+              ><i class="icon icon-arrow-right mr-1"></i>Preact Hooks</summary
+            >
+            <div class="section-body accordion-body">
+              <ul class="menu menu-nav">
+                <li class="menu-item">
+                  <a href="hello-world.html">Hello World</a>
+                </li>
+                <li class="menu-item">
+                  <a href="7GUIs-counter.html">7GUIs Counter</a>
+                </li>
+                <li class="menu-item">
+                  <a href="7GUIs-temp-converter.html">7GUIs Temp Converter</a>
+                </li>
+                <li class="menu-item">
+                  <a href="7GUIs-flight-booker.html" class="active"
+                    >7GUIs Flight Booker</a
+                  >
+                </li>
+                <li class="menu-item">
+                  <a href="7GUIs-timer.html">7GUIs Timer</a>
+                </li>
+              </ul>
+            </div></details
+          ><details class="section accordion"
+            ><summary class="section-header accordion-header c-hand"
+              ><i class="icon icon-arrow-right mr-1"></i>Svelte</summary
+            >
+            <div class="section-body accordion-body">
+              <ul class="menu menu-nav">
+                <li class="menu-item">
+                  <a href="../svelte/hello-world.html">Hello World</a>
+                </li>
+                <li class="menu-item">
+                  <a href="../svelte/7GUIs-counter.html">7GUIs Counter</a>
+                </li>
+                <li class="menu-item">
+                  <a href="../svelte/7GUIs-temp-converter.html"
+                    >7GUIs Temp Converter</a
+                  >
+                </li>
+                <li class="menu-item">
+                  <a href="../svelte/7GUIs-flight-booker.html"
+                    >7GUIs Flight Booker</a
+                  >
+                </li>
+                <li class="menu-item">
+                  <a href="../svelte/7GUIs-timer.html">7GUIs Timer</a>
+                </li>
+              </ul>
+            </div></details
+          >
+        </div>
+      </div>
+      <a class="off-canvas-overlay" href="#close"></a>
+      <div class="page-wrapper off-canvas-content">
+        <div class="page-header">
+          <h1 class="page-title">7GUIs Flight Booker - Preact Hooks</h1>
+        </div>
+        <div class="page-contents">
+          <div class="panel">
+            <div class="panel-header"></div>
+            <div class="panel-body"><div id="app"></div></div>
+            <div class="panel-footer">
+              <div>Gzip: 4046 B</div>
+              <div>Brotli: 3670 B</div>
+            </div>
+          </div>
+          <script src="7GUIs-flight-booker.js" type="text/javascript"></script>
+        </div>
+        <footer class="page-footer">
+          <p>
+            Built with <span class="text-error">♥</span> by
+            <a href="https://twitter.com/andre_wiggins" target="_blank"
+              >Andre Wiggins</a
+            >. Styled using
+            <a href="https://picturepan2.github.io/spectre/" target="_blank"
+              >Spectre.css</a
+            >
+          </p>
+        </footer>
+      </div>
+    </div>
+  </body>
+</html>

@@ -16,6 +16,7 @@
     "gzip-size": "^5.1.1",
     "nodemon": "^1.19.1",
     "preact-render-to-string": "^5.0.4",
+    "prettier": "^1.18.2",
     "rollup": "^1.16.3",
     "rollup-plugin-buble": "^0.19.6",
     "rollup-plugin-node-resolve": "^5.2.0",

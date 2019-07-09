@@ -5,6 +5,7 @@ const nodeResolve = require("rollup-plugin-node-resolve");
 const buble = require("rollup-plugin-buble");
 const { h } = require("preact");
 const { render } = require("preact-render-to-string");
+const prettier = require("prettier");
 
 const { buildFrameworkData } = require("./data");
 const { p, outputPath, ensureDir } = require("./util");
@@ -62,7 +63,8 @@ const createRenderer = (components, frameworkData) => (page, layoutProps) => {
 		page
 	);
 
-	return "<!DOCTYPE html>\n" + render(markup, {}, { pretty: true });
+	const html = "<!DOCTYPE html>\n" + render(markup, {});
+	return prettier.format(html, { parser: "html" });
 };
 
 async function copyStatics() {
