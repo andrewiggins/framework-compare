@@ -11,10 +11,6 @@
     "svelte": "^3.6.1"
   },
   "devDependencies": {
-    "rollup": "^1.16.3",
-    "rollup-plugin-node-resolve": "^5.2.0",
-    "rollup-plugin-svelte": "^5.1.0",
-    "rollup-plugin-terser": "^5.0.0",
-    "rollup-plugin-visualizer": "^2.4.3"
+    "rollup-plugin-svelte": "^5.1.0"
   }
 }

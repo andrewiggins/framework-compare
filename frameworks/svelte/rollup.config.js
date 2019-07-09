@@ -1,33 +1,9 @@
-const path = require("path");
-const nodeResolve = require("rollup-plugin-node-resolve");
 const svelte = require("rollup-plugin-svelte");
-const { terser } = require("rollup-plugin-terser");
-const { frameworkOutput, listDirsSync } = require("../../scripts/util");
+const { listDirsSync } = require("../../scripts/util");
+const { generateConfig } = require("../bundleHelpers");
 
-/**
- * @param {string} input
- */
-function generateConfig(input) {
-	const outputFile = path.basename(path.dirname(input)) + ".js";
-	return {
-		input,
-		output: {
-			file: frameworkOutput("svelte", outputFile),
-			format: "iife",
-			compact: true
-		},
-		plugins: [
-			// @ts-ignore
-			nodeResolve(),
-			svelte(),
-			terser()
-		],
-		watch: {
-			clearScreen: false
-		}
-	};
-}
+const plugins = () => [svelte()];
 
 module.exports = listDirsSync("./src").map(appFolder =>
-	generateConfig(`./src/${appFolder}/index.js`)
+	generateConfig("svelte", `./src/${appFolder}/index.js`, "production", plugins)
 );

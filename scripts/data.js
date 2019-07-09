@@ -25,8 +25,8 @@ async function buildFrameworkData() {
 	return await Promise.all(
 		frameworks.map(async framework => {
 			const distFiles = await listFiles(frameworkOutput(framework));
-			const jsFiles = distFiles.filter(file => path.extname(file) === ".js");
-			const appNames = jsFiles.map(jsFile => replaceExt(jsFile, ""));
+			const jsFiles = distFiles.filter(file => file.endsWith(".min.js"));
+			const appNames = jsFiles.map(jsFile => jsFile.replace(".min.js", ""));
 
 			const apps = await Promise.all(
 				appNames.map(async (appName, i) => {

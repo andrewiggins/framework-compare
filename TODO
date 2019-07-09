@@ -1,5 +1,7 @@
 * Fill in Intro
 * Write up conclusion
+* Add CONTRIBUTING guide
+
 * Consider having one page per app with a framework selector? with standalone page option?
 * Add Compare page
 	* plus button to add multiple frameworks of one app to view source and Compare
@@ -8,6 +10,8 @@
 	* Add link to framework repl if exists
 * Add brotli/gzip radio option to summary page (power radios using /scripts/bundles/summary.js)
 * Add tests verifying each implementation of an app returns the expected markup
+* Add rollup-plugin-visualizer html to output
+
 * Determine what to do about styles
 	* Could require apps that have styles to render pre-defined markup using classes for styles provided externally
 	* Build basic style imports into every framework
