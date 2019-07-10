@@ -126,12 +126,14 @@ async function buildVendorCss() {
 		spectreFiles.map(spectreSrcPath).map(filePath => readFile(filePath, "utf8"))
 	)).join("\n");
 
-	const result = await runPostCss(
-		[uncss({ html: outputPath("**/*.html") })],
-		vendorSrc,
-		{ from }
-	);
-	await writeFile(to, result.css, "utf8");
+	// const result = await runPostCss(
+	// 	[uncss({ html: [p("index.html"), outputPath("**/*.html")] })],
+	// 	vendorSrc,
+	// 	{ from }
+	// );
+	// await writeFile(to, result.css, "utf8");
+
+	await writeFile(to, vendorSrc, "utf8");
 }
 
 async function build() {
