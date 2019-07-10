@@ -1,4 +1,4 @@
-const { copyFile } = require("fs").promises;
+const { writeFile, readFile, copyFile } = require("fs").promises;
 
 const rollup = require("rollup");
 const nodeResolve = require("rollup-plugin-node-resolve");
@@ -6,6 +6,9 @@ const buble = require("rollup-plugin-buble");
 const { h } = require("preact");
 const { render } = require("preact-render-to-string");
 const prettier = require("prettier");
+const postcss = require("postcss");
+const reporter = require("postcss-reporter/lib/formatter")();
+const cssnano = require("cssnano");
 
 const { buildFrameworkData } = require("./data");
 const { p, outputPath, ensureDir } = require("./util");
@@ -67,6 +70,39 @@ const createRenderer = (components, frameworkData) => (page, layoutProps) => {
 	return prettier.format(html, { parser: "html" });
 };
 
+async function buildSiteCss() {
+	const cssInputFile = p("./scripts/site.css");
+	const cssOutputFile = outputPath("site.min.css");
+	const css = await readFile(cssInputFile, "utf8");
+
+	let result;
+	try {
+		result = await postcss([cssnano()]).process(css, {
+			from: cssInputFile,
+			to: cssOutputFile
+		});
+	} catch (error) {
+		if (error.name === "CssSyntaxError") {
+			process.stderr.write(error.message + error.showSourceCode());
+		} else {
+			throw error;
+		}
+	}
+
+	await writeFile(cssOutputFile, result.css, "utf8");
+
+	const messages = result.warnings();
+	if (messages.length) {
+		console.warn(
+			reporter(
+				Object.assign({}, result, {
+					messages
+				})
+			)
+		);
+	}
+}
+
 async function copyStatics() {
 	const spectreFiles = [
 		"spectre.min.css",
@@ -77,7 +113,7 @@ async function copyStatics() {
 	const spectreSrc = (...args) => p("node_modules/spectre.css/dist", ...args);
 	await Promise.all([
 		...spectreFiles.map(file => copyFile(spectreSrc(file), outputPath(file))),
-		copyFile(p("scripts/site.css"), outputPath("site.css"))
+		buildSiteCss()
 	]);
 }
 
@@ -88,10 +124,12 @@ async function build() {
 
 	await ensureDir(outputPath());
 
-	await copyStatics();
-	await buildIntroPage(renderPage, components.IntroPage);
-	await buildSummaryView(renderPage, components.SummaryPage, frameworkData);
-	await buildAppViews(renderPage, components.AppPage, frameworkData);
+	await Promise.all([
+		buildIntroPage(renderPage, components.IntroPage),
+		buildSummaryView(renderPage, components.SummaryPage, frameworkData),
+		buildAppViews(renderPage, components.AppPage, frameworkData),
+		copyStatics()
+	]);
 }
 
 build().catch(e => console.error(e));

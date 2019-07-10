@@ -35,7 +35,7 @@ export const Layout = props => (
 				rel="stylesheet"
 				href={relativeUrl(props.url, "dist/spectre-icons.min.css")}
 			/>
-			<link rel="stylesheet" href={relativeUrl(props.url, "dist/site.css")} />
+			<link rel="stylesheet" href={relativeUrl(props.url, "dist/site.min.css")} />
 		</head>
 		<body class={props.bodyClass}>
 			<div class="off-canvas off-canvas-sidebar-show">
