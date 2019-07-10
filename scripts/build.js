@@ -9,6 +9,7 @@ const prettier = require("prettier");
 const postcss = require("postcss");
 const reporter = require("postcss-reporter/lib/formatter")();
 const cssnano = require("cssnano");
+const uncss = require("postcss-uncss");
 
 const { buildFrameworkData } = require("./data");
 const { p, outputPath, ensureDir } = require("./util");
@@ -70,17 +71,15 @@ const createRenderer = (components, frameworkData) => (page, layoutProps) => {
 	return prettier.format(html, { parser: "html" });
 };
 
-async function buildSiteCss() {
-	const cssInputFile = p("./scripts/site.css");
-	const cssOutputFile = outputPath("site.min.css");
-	const css = await readFile(cssInputFile, "utf8");
-
+/**
+ * @param {import('postcss').AcceptedPlugin[]} plugins
+ * @param {string} css
+ * @param {import('postcss').ProcessOptions} [options]
+ */
+async function runPostCss(plugins, css, options) {
 	let result;
 	try {
-		result = await postcss([cssnano()]).process(css, {
-			from: cssInputFile,
-			to: cssOutputFile
-		});
+		result = await postcss(plugins).process(css, options);
 	} catch (error) {
 		if (error.name === "CssSyntaxError") {
 			process.stderr.write(error.message + error.showSourceCode());
@@ -88,8 +87,6 @@ async function buildSiteCss() {
 			throw error;
 		}
 	}
-
-	await writeFile(cssOutputFile, result.css, "utf8");
 
 	const messages = result.warnings();
 	if (messages.length) {
@@ -101,35 +98,68 @@ async function buildSiteCss() {
 			)
 		);
 	}
+
+	return result;
 }
 
-async function copyStatics() {
+async function buildSiteCss() {
+	const from = p("./scripts/site.css");
+	const to = outputPath("site.min.css");
+	const css = await readFile(from, "utf8");
+
+	const result = await runPostCss([cssnano()], css, { from, to });
+	await writeFile(to, result.css, "utf8");
+}
+
+async function buildVendorCss() {
 	const spectreFiles = [
 		"spectre.min.css",
 		"spectre-exp.min.css",
 		"spectre-icons.min.css"
 	];
 
-	const spectreSrc = (...args) => p("node_modules/spectre.css/dist", ...args);
-	await Promise.all([
-		...spectreFiles.map(file => copyFile(spectreSrc(file), outputPath(file))),
-		buildSiteCss()
-	]);
+	const spectreSrcPath = file => p("node_modules/spectre.css/dist", file);
+	const from = spectreSrcPath(spectreFiles[0]);
+	const to = outputPath("spectre-custom.min.css");
+
+	const vendorSrc = (await Promise.all(
+		spectreFiles.map(spectreSrcPath).map(filePath => readFile(filePath, "utf8"))
+	)).join("\n");
+
+	const result = await runPostCss(
+		[uncss({ html: outputPath("**/*.html") })],
+		vendorSrc,
+		{ from }
+	);
+	await writeFile(to, result.css, "utf8");
 }
 
 async function build() {
-	const frameworkData = await buildFrameworkData();
-	const components = await compileComponents();
+	const stage1 = "Compiling components and data";
+	console.time(stage1);
+	const [frameworkData, components] = await Promise.all([
+		buildFrameworkData(),
+		compileComponents(),
+		ensureDir(outputPath())
+	]);
+	console.timeEnd(stage1);
+
 	const renderPage = createRenderer(components, frameworkData);
 
-	await ensureDir(outputPath());
-
+	const stage2 = "Building HTML";
+	console.time(stage2);
 	await Promise.all([
 		buildIntroPage(renderPage, components.IntroPage),
 		buildSummaryView(renderPage, components.SummaryPage, frameworkData),
-		buildAppViews(renderPage, components.AppPage, frameworkData),
-		copyStatics()
+		buildAppViews(renderPage, components.AppPage, frameworkData)
 	]);
+	console.timeEnd(stage2);
+
+	// Uses built HTML to remove unused CSS
+	const stage3 = "Building CSS";
+	console.time(stage3);
+	await Promise.all([buildVendorCss(), buildSiteCss()]);
+	console.timeEnd(stage3);
 }
 
 build().catch(e => console.error(e));
