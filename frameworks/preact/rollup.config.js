@@ -1,9 +1,5 @@
 const buble = require("rollup-plugin-buble");
-const { listDirsSync } = require("../../scripts/util");
-const { generateConfig } = require("../bundleHelpers");
+const { generateConfigs } = require("../bundleHelpers");
 
 const plugins = () => [buble({ jsx: "h" })];
-
-module.exports = listDirsSync("./src").map(appFolder =>
-	generateConfig("preact", `./src/${appFolder}/index.js`, "production", plugins)
-);
+module.exports = generateConfigs("preact", plugins);

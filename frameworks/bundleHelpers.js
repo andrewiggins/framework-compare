@@ -1,7 +1,18 @@
 const path = require("path");
 const nodeResolve = require("rollup-plugin-node-resolve");
 const { terser } = require("rollup-plugin-terser");
-const { frameworkOutput } = require("../scripts/util");
+const { listDirsSync, frameworkOutput } = require("../scripts/util");
+
+function generateConfigs(frameworkName, plugins) {
+	return listDirsSync("./src").map(appFolder =>
+		generateConfig(
+			frameworkName,
+			`./src/${appFolder}/index.js`,
+			"production",
+			plugins
+		)
+	);
+}
 
 /**
  * @typedef {"development" | "production"} Environment
@@ -34,4 +45,4 @@ function generateConfig(frameworkName, input, environment, customPlugins) {
 	};
 }
 
-module.exports = { generateConfig };
+module.exports = { generateConfigs };
