@@ -23,7 +23,7 @@
     "prettier": "^1.18.2",
     "rollup": "^1.16.3",
     "rollup-plugin-buble": "^0.19.6",
-    "serve": "^11.0.2",
+    "serve": "^11.1.0",
     "uncss": "^0.17.0"
   }
 }
