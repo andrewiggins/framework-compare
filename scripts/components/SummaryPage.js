@@ -1,6 +1,6 @@
 import { h, Fragment } from "preact";
-import { PageHeader } from "./PageHeader";
 import { appSorter } from "./util";
+import prettyBytes from "pretty-bytes";
 
 /**
  * @param {{ frameworkData: import('../data').FrameworkData }} props
@@ -32,12 +32,13 @@ export function SummaryPage(props) {
 	for (let appName of Object.keys(apps).sort(appSorter)) {
 		/** @type {Array<string | number>} */
 		const gzipRow = [appName];
+		/** @type {Array<string | number>} */
 		const brotliRow = [appName];
 		for (let framework of frameworks) {
 			const appData = apps[appName][framework];
 			if (appData) {
-				gzipRow.push("" + appData.gzipSize + " B");
-				brotliRow.push("" + appData.brotliSize + " B");
+				gzipRow.push(prettyBytes(appData.gzipSize));
+				brotliRow.push(prettyBytes(appData.brotliSize));
 			} else {
 				brotliRow.push("—");
 				gzipRow.push("—");

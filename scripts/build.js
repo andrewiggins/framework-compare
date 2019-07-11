@@ -2,6 +2,7 @@ const { writeFile, readFile, copyFile } = require("fs").promises;
 
 const rollup = require("rollup");
 const nodeResolve = require("rollup-plugin-node-resolve");
+const commonjs = require("rollup-plugin-commonjs");
 const buble = require("rollup-plugin-buble");
 const { h } = require("preact");
 const { render } = require("preact-render-to-string");
@@ -30,15 +31,17 @@ async function compileComponents() {
 			format: /** @type {import('rollup').ModuleFormat} */ ("commonjs")
 		},
 		plugins: [
-			// @ts-ignore
-			nodeResolve({
-				preferBuiltIns: true
-			}),
 			buble({
 				jsx: "h",
 				transforms: {
 					dangerousForOf: true
 				}
+			}),
+			//@ts-ignore
+			commonjs(),
+			// @ts-ignore
+			nodeResolve({
+				preferBuiltIns: true
 			})
 		]
 	};

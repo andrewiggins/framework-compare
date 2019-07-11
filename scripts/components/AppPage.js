@@ -1,5 +1,5 @@
 import { h, Fragment } from "preact";
-import { PageHeader } from "./PageHeader";
+import prettyBytes from "pretty-bytes";
 
 /**
  * @param {{ app: import('../data').AppData; appSrc: string }} props
@@ -12,8 +12,8 @@ export const AppPage = ({ app, appSrc }) => (
 				<div id="app" />
 			</div>
 			<div class="panel-footer">
-				<div>Gzip: {app.gzipSize} B</div>
-				<div>Brotli: {app.brotliSize} B</div>
+				<div>Gzip: {prettyBytes(app.gzipSize)}</div>
+				<div>Brotli: {prettyBytes(app.brotliSize)}</div>
 			</div>
 		</div>
 		<script src={appSrc} type="text/javascript" />

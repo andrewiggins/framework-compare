@@ -1,6 +1,3 @@
-* Format sizes using prettyBytes
-* Convert preact from h to createElement
-
 * Fill in Intro
 	* Using rollup to keep bundler overhead to a minimum
 	* In actuality, apps may have separate vendor and app bundles for caching reasons. This project is mainly intended to demonstrate cumulative size differences between frameworks. Actual sizes may vary based on bundler used and how app is bundled.
