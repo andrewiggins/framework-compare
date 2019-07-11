@@ -13,7 +13,7 @@ Implement a set of webpages of increasing complexity in a couple different frame
 - React
 - React + Hooks
 - lit-html
-- lit-html + WC
+- lit-html + WC (lit-element?)
 
 Others:
 
@@ -24,6 +24,7 @@ Others:
 - angular
 - mithril
 - ember/glimmer
+- stencil?
 
 ## Webpages
 

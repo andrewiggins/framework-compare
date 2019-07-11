@@ -10,7 +10,7 @@ class App extends React.Component {
 	render() {
 		return (
 			<>
-				<input type="number" value={this.state.value} />
+				<div>{this.state.value}</div>
 				<button onClick={() => this.setState({ value: this.state.value + 1 })}>
 					count
 				</button>

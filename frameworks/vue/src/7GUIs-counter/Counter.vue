@@ -1,6 +1,6 @@
 <template>
   <div>
-    <input type="number" v-model.number="count" />
+    <div>{{ count }}</div>
     <button v-on:click="count += 1">count</button>
   </div>
 </template>

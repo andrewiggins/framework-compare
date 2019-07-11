@@ -9,7 +9,7 @@ class App extends Component {
 	render(props, state) {
 		return (
 			<Fragment>
-				<input type="number" value={state.value} />
+				<div>{state.value}</div>
 				<button onClick={() => this.setState({ value: state.value + 1 })}>
 					count
 				</button>
