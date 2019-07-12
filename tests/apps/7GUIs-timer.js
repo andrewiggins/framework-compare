@@ -1,11 +1,10 @@
 import { delay, getAppHtml, appSel, toHtmlString } from "../util";
 
 /**
- * @param {string} frameworkName
  * @param {() => Promise<any>} appSetup
  */
-export default function run(frameworkName, appSetup) {
-	describe(`${frameworkName} - Timer`, () => {
+export default function run(appSetup) {
+	describe("Timer", () => {
 		const progressSel = appSel("progress");
 		const elapsedSel = appSel("div.elapsed");
 		const durationInputSel = appSel("input[type=range]");
@@ -25,7 +24,7 @@ export default function run(frameworkName, appSetup) {
 					x: rect.x,
 					y: rect.y,
 					width: rect.width,
-					height: rect.height,
+					height: rect.height
 				};
 			});
 

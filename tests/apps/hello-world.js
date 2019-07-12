@@ -1,11 +1,10 @@
 import { getAppHtml } from "../util";
 
 /**
- * @param {string} frameworkName
  * @param {() => Promise<any>} appSetup
  */
-export default function run(frameworkName, appSetup) {
-	describe(`${frameworkName} - Hello World`, () => {
+export default function run(appSetup) {
+	describe("Hello World", () => {
 		beforeEach(async () => {
 			await appSetup();
 		});

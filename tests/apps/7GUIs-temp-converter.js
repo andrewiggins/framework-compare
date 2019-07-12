@@ -1,11 +1,10 @@
 import { getAppHtml, appSel, backspaceInput } from "../util";
 
 /**
- * @param {string} frameworkName
  * @param {() => Promise<any>} appSetup
  */
-export default function run(frameworkName, appSetup) {
-	describe(`${frameworkName} - 7GUIs Temp Converter`, () => {
+export default function run(appSetup) {
+	describe("7GUIs Temp Converter", () => {
 		const cInputSel = appSel("input:first-child");
 		const fInputSel = appSel("input:last-child");
 

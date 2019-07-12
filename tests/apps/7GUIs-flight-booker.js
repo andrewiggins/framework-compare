@@ -1,11 +1,10 @@
 import { getAppHtml, toHtmlString, appSel } from "../util";
 
 /**
- * @param {string} frameworkName
  * @param {() => Promise<any>} appSetup
  */
-export default function run(frameworkName, appSetup) {
-	describe(`${frameworkName} - 7GUIs Flight Booker`, () => {
+export default function run(appSetup) {
+	describe("7GUIs Flight Booker", () => {
 		const tripTypeSel = appSel("#trip-type");
 		const departingSel = appSel("#departing-date");
 		const returningSel = appSel("#returning-date");
