@@ -5,8 +5,14 @@ function App() {
 	const [count, setCount] = useState(0);
 	return (
 		<Fragment>
-			<div>{count}</div>
-			<button onClick={() => setCount(count + 1)}>count</button>
+			<button
+				class="btn badge"
+				data-badge={count}
+				style="margin-top: .5rem"
+				onClick={() => setCount(count + 1)}
+			>
+				count: {count}
+			</button>
 		</Fragment>
 	);
 }

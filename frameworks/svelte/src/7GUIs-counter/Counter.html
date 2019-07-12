@@ -2,5 +2,11 @@
 	let count = 0;
 </script>
 
-<div>{ count }</div>
-<button on:click="{() => count += 1}">count</button>
+<button
+	class="btn badge"
+	data-badge="{count}"
+	style="margin-top: .5rem"
+	on:click="{() => count += 1}"
+>
+	count: {count}
+</button>

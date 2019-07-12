@@ -10,9 +10,13 @@ class App extends React.Component {
 	render() {
 		return (
 			<>
-				<div>{this.state.value}</div>
-				<button onClick={() => this.setState({ value: this.state.value + 1 })}>
-					count
+				<button
+					className="btn badge"
+					data-badge={this.state.value}
+					style={{ marginTop: ".5rem" }}
+					onClick={() => this.setState({ value: this.state.value + 1 })}
+				>
+					count: {this.state.value}
 				</button>
 			</>
 		);

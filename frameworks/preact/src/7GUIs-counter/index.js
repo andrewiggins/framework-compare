@@ -9,9 +9,13 @@ class App extends Component {
 	render(props, state) {
 		return (
 			<Fragment>
-				<div>{state.value}</div>
-				<button onClick={() => this.setState({ value: state.value + 1 })}>
-					count
+				<button
+					class="btn badge"
+					data-badge={state.value}
+					style="margin-top: .5rem"
+					onClick={() => this.setState({ value: state.value + 1 })}
+				>
+					count: {state.value}
 				</button>
 			</Fragment>
 		);

@@ -1,7 +1,11 @@
 <template>
   <div>
-    <div>{{ count }}</div>
-    <button v-on:click="count += 1">count</button>
+    <button
+      class="btn badge"
+      style="margin-top: .5rem"
+      v-on:click="count += 1"
+      v-bind:data-badge="count"
+    >count: {{ count }}</button>
   </div>
 </template>
 
