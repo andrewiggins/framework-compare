@@ -1,0 +1,19 @@
+{
+  "presets": [
+    [
+      "@babel/preset-env",
+      {
+        "targets": {
+          "node": "current"
+        }
+      }
+    ],
+    [
+      "@babel/preset-react",
+      {
+        "pragma": "toHtmlString",
+        "pragmaFrag": "toHtmlString.Fragment"
+      }
+    ]
+  ]
+}

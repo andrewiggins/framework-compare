@@ -4,14 +4,8 @@ Implement a set of webpages of increasing complexity in a couple different frame
 
 ## Frameworks to consider
 
-- Preact
-- Preact + Hooks
 - Preact + Compat
-- Svelte
-- Vue
 - Vue + Hooks
-- React
-- React + Hooks
 - lit-html
 - lit-html + WC (lit-element?)
 
