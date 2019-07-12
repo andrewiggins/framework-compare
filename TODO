@@ -4,7 +4,6 @@
 * Write up conclusion
 * Add CONTRIBUTING guide
 
-* Restyle counter (badge and button content) and temp converter
 * Add tests verifying each implementation of an app returns the expected markup
 	* For Vue, implement getFrameworkFragment(frameworkName) that returns either toHTMLString.Fragment or div depending on if frameworkName supports Fragments
 * Consider changing flight booker to do input validation to demonstrate how that flow works...

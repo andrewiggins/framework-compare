@@ -25,7 +25,7 @@ export default function run(frameworkName, appSetup) {
 						<label class="form-label" for="trip-type">
 							Trip type
 						</label>
-						<select class="form-select" id="trip-type">
+						<select id="trip-type" class="form-select">
 							<option value={oneWayType}>one-way flight</option>
 							<option value={returnType}>return flight</option>
 						</select>
@@ -34,17 +34,17 @@ export default function run(frameworkName, appSetup) {
 						<label class="form-label" for="departing-date">
 							Departing
 						</label>
-						<input class="form-input" id="departing-date" type="date" />
+						<input id="departing-date" class="form-input" type="date" />
 					</div>
 					<div class="form-group">
 						<label class="form-label" for="returning-date">
 							Returning
 						</label>
 						<input
-							class="form-input"
-							disabled=""
 							id="returning-date"
+							class="form-input"
 							type="date"
+							disabled=""
 						/>
 					</div>
 					<div class="form-group">

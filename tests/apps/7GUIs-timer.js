@@ -20,7 +20,7 @@ export default function run(frameworkName, appSetup) {
 					</label>
 					<div>0.0s</div>
 					<label>
-						Duration: <input max="20000" min="1" type="range" />
+						Duration: <input type="range" min="1" max="20000" />
 					</label>
 					<div>
 						<button class="btn btn-primary">Reset</button>
