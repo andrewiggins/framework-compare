@@ -46,7 +46,7 @@ class App extends Component {
 				<label>
 					Elapsed time: <progress value={state.elapsed / state.duration} />
 				</label>
-				<div>{(state.elapsed / 1000).toFixed(1)}s</div>
+				<div class="elapsed">{(state.elapsed / 1000).toFixed(1)}s</div>
 				<label>
 					Duration:{" "}
 					<input

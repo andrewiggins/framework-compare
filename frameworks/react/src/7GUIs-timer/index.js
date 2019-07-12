@@ -47,7 +47,7 @@ class App extends React.Component {
 				<label>
 					Elapsed time: <progress value={this.state.elapsed / this.state.duration} />
 				</label>
-				<div>{(this.state.elapsed / 1000).toFixed(1)}s</div>
+				<div className="elapsed">{(this.state.elapsed / 1000).toFixed(1)}s</div>
 				<label>
 					Duration:{" "}
 					<input

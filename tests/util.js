@@ -3,6 +3,10 @@ import { JSDOM } from "jsdom";
 
 const { document } = new JSDOM(`<!DOCTYPE html><p>Hello world</p>`).window;
 
+export function delay(ms) {
+	return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 /**
  * @param {string} [sel]
  */

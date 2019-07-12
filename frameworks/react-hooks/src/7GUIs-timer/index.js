@@ -20,7 +20,7 @@ function App() {
 			<label>
 				Elapsed time: <progress value={elapsed / duration} />
 			</label>
-			<div>{(elapsed / 1000).toFixed(1)}s</div>
+			<div className="elapsed">{(elapsed / 1000).toFixed(1)}s</div>
 			<label>
 				Duration:{" "}
 				<input

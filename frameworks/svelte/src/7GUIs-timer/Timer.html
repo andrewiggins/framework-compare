@@ -28,7 +28,7 @@
 	Elapsed time:
 	<progress value="{elapsed / duration}"></progress>
 </label>
-<div>{(elapsed / 1000).toFixed(1)}s</div>
+<div class="elapsed">{(elapsed / 1000).toFixed(1)}s</div>
 <label>
 	Duration:
 	<input type="range" bind:value="{duration}" min="1" max="20000" />
