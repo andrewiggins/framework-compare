@@ -26,6 +26,7 @@
   ],
   "devDependencies": {
     "@types/jest": "^24.0.15",
+    "html-minifier": "^4.0.0",
     "jest": "^24.8.0",
     "jest-puppeteer": "^4.2.0",
     "puppeteer": "^1.18.1",
