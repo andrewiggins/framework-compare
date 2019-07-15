@@ -20,11 +20,12 @@ class App extends React.Component {
 			now - this.state.lastRenderTime,
 			this.state.duration - this.state.elapsed
 		);
+
+		this.frame = null;
 		this.setState({
 			elapsed: this.state.elapsed + timeToAdd,
 			lastRenderTime: now
 		});
-		this.frame = null;
 	}
 
 	componentDidMount() {
@@ -55,7 +56,7 @@ class App extends React.Component {
 						min="1"
 						max="20000"
 						value={this.state.duration}
-						onInput={e => this.setState({ duration: e.target.value })}
+						onChange={e => this.setState({ duration: e.target.value })}
 					/>
 				</label>
 				<div>
