@@ -40,7 +40,6 @@ export default function run(appSetup) {
 
 		it("renders the correct HTML", async () => {
 			let html = await getAppHtml();
-			html = html.replace(/progress value="[0-9\.]+"/, "progress");
 			await expect(html).toEqual(
 				<>
 					<label>
@@ -88,8 +87,8 @@ export default function run(appSetup) {
 			await page.click(resetSel);
 
 			[progress, elapsed] = await getProgress(page);
-			expect(progress).toBeLessThan(0.1);
-			expect(elapsed).toBeLessThan(0.1);
+			expect(progress).toBeLessThanOrEqual(0.1);
+			expect(elapsed).toBeLessThanOrEqual(0.1);
 		});
 
 		it("decreasing the duration immediately updates the progress", async () => {

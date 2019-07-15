@@ -25,8 +25,8 @@ export default function run(appSetup) {
 							Trip type
 						</label>
 						<select id="trip-type" class="form-select">
-							<option value={oneWayType}>one-way flight</option>
-							<option value={returnType}>return flight</option>
+							<option>one-way flight</option>
+							<option>return flight</option>
 						</select>
 					</div>
 					<div class="form-group">

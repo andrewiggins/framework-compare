@@ -12,8 +12,9 @@ export function delay(ms) {
  */
 export const appSel = sel => (sel ? `#app ${sel}` : "#app");
 
-export function getAppHtml() {
-	return page.$eval(appSel(), el => el.innerHTML);
+export async function getAppHtml() {
+	const html = await page.$eval(appSel(), el => el.innerHTML);
+	return html.replace(/ value="[0-9a-zA-z_\-\.]*"/g, "");
 }
 
 export function repoRoot(...args) {
