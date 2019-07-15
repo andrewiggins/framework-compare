@@ -4,19 +4,19 @@ import ReactDOM from "react-dom";
 class App extends React.Component {
 	constructor(props) {
 		super(props);
-		this.state = { c: null, f: null };
+		this.state = { c: "", f: "" };
 	}
 
 	setBothFromC(value) {
 		this.setState({
-			c: +value,
+			c: value,
 			f: +(32 + (9 / 5) * value).toFixed(1)
 		});
 	}
 
 	setBothFromF(value) {
 		this.setState({
-			f: +value,
+			f: value,
 			c: +((5 / 9) * (value - 32)).toFixed(1)
 		});
 	}

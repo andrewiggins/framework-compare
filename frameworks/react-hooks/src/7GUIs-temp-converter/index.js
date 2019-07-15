@@ -2,16 +2,16 @@ import React, { useState, Fragment } from "react";
 import ReactDOM from "react-dom";
 
 function App() {
-	const [f, setF] = useState(null);
-	const [c, setC] = useState(null);
+	const [f, setF] = useState("");
+	const [c, setC] = useState("");
 
 	function setBothFromC(value) {
-		setC(+value);
+		setC(value);
 		setF(+(32 + (9 / 5) * value).toFixed(1));
 	}
 
 	function setBothFromF(value) {
-		setF(+value);
+		setF(value);
 		setC(+((5 / 9) * (value - 32)).toFixed(1));
 	}
 
@@ -19,13 +19,13 @@ function App() {
 		<Fragment>
 			<input
 				value={c}
-				onInput={e => setBothFromC(e.target.value)}
+				onChange={e => setBothFromC(e.target.value)}
 				type="number"
 			/>{" "}
 			°c ={" "}
 			<input
 				value={f}
-				onInput={e => setBothFromF(e.target.value)}
+				onChange={e => setBothFromF(e.target.value)}
 				type="number"
 			/>{" "}
 			°f

@@ -8,14 +8,14 @@ class App extends Component {
 
 	setBothFromC(value) {
 		this.setState({
-			c: +value,
+			c: value,
 			f: +(32 + (9 / 5) * value).toFixed(1)
 		});
 	}
 
 	setBothFromF(value) {
 		this.setState({
-			f: +value,
+			f: value,
 			c: +((5 / 9) * (value - 32)).toFixed(1)
 		});
 	}

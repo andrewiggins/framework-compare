@@ -6,12 +6,12 @@ function App() {
 	const [c, setC] = useState(null);
 
 	function setBothFromC(value) {
-		setC(+value);
+		setC(value);
 		setF(+(32 + (9 / 5) * value).toFixed(1));
 	}
 
 	function setBothFromF(value) {
-		setF(+value);
+		setF(value);
 		setC(+((5 / 9) * (value - 32)).toFixed(1));
 	}
 
