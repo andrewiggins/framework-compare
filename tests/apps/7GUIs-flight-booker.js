@@ -115,7 +115,7 @@ export default function run(appSetup) {
 				 */
 				async function dialogHandler(dialog) {
 					try {
-						await expect(dialog.message()).toMatch(/one-way trip flight/);
+						await expect(dialog.message()).toMatch(/one-way flight/);
 						await dialog.dismiss();
 						page.off("dialog", dialogHandler);
 
@@ -139,7 +139,7 @@ export default function run(appSetup) {
 				 */
 				async function dialogHandler(dialog) {
 					try {
-						await expect(dialog.message()).toMatch(/round trip flight/);
+						await expect(dialog.message()).toMatch(/return flight/);
 						await dialog.dismiss();
 						page.off("dialog", dialogHandler);
 

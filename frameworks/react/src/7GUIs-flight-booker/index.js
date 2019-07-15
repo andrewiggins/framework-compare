@@ -31,9 +31,9 @@ class App extends React.Component {
 	}
 
 	bookFlight() {
-		const type = this.state.tripType === returnFlight ? "round" : "one-way";
+		const type = this.state.tripType === returnFlight ? "return" : "one-way";
 
-		let message = `You have booked a ${type} trip flight, departing ${this.state.departing.toDateString()}`;
+		let message = `You have booked a ${type} flight, departing ${this.state.departing.toDateString()}`;
 		if (this.state.tripType == returnFlight) {
 			message += ` and returning ${this.state.returning.toDateString()}`;
 		}

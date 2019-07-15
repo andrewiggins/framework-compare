@@ -26,9 +26,9 @@ function App() {
 	const [returning, setReturning] = useState(initial);
 
 	function bookFlight() {
-		const type = tripType === returnFlight ? "round" : "one-way";
+		const type = tripType === returnFlight ? "return" : "one-way";
 
-		let message = `You have booked a ${type} trip flight, departing ${departing.toDateString()}`;
+		let message = `You have booked a ${type} flight, departing ${departing.toDateString()}`;
 		if (tripType == returnFlight) {
 			message += ` and returning ${returning.toDateString()}`;
 		}
