@@ -1,17 +1,18 @@
 import { getAppHtml, toHtmlString, appSel } from "../util";
 
 /**
+ * @param {string} frameworkName
  * @param {() => Promise<any>} appSetup
  */
-export default function run(appSetup) {
+export default function run(frameworkName, appSetup) {
 	describe("7GUIs Flight Booker", () => {
 		const tripTypeSel = appSel("#trip-type");
 		const departingSel = appSel("#departing-date");
 		const returningSel = appSel("#returning-date");
 		const bookSel = appSel("button");
 
-		const oneWayType = "one-way";
-		const returnType = "return";
+		const oneWayType = frameworkName === "svelte" ? "false" : "one-way";
+		const returnType = frameworkName === "svelte" ? "true" : "return";
 
 		beforeEach(async () => {
 			await appSetup();
@@ -56,7 +57,7 @@ export default function run(appSetup) {
 		it("initializes with one-way flight selected", async () => {
 			// Default trip type is one-way
 			const tripType = await page.$eval(tripTypeSel, el => el.value);
-			expect(tripType).toEqual("one-way");
+			expect(tripType).toEqual(oneWayType);
 
 			// departing is enabled and non-empty
 			const [departingValue, isDepartingDisabled] = await page.$eval(
@@ -152,7 +153,7 @@ export default function run(appSetup) {
 				page.on("dialog", dialogHandler);
 			});
 
-			await page.select(tripTypeSel, "return");
+			await page.select(tripTypeSel, returnType);
 			await page.click(bookSel);
 			return dialogPromise;
 		});

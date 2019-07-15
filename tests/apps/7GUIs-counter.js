@@ -1,9 +1,10 @@
 import { getAppHtml, toHtmlString } from "../util";
 
 /**
+ * @param {string} frameworkName
  * @param {() => Promise<any>} appSetup
  */
-export default function run(appSetup) {
+export default function run(frameworkName, appSetup) {
 	describe("7GUIs Counter", () => {
 		const getMarkup = count => (
 			<button class="btn badge" data-badge={count} style="margin-top: 0.5rem;">

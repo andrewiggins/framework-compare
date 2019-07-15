@@ -38,16 +38,16 @@
 
 <!-- https://github.com/eugenkiss/7guis/wiki#flight-booker -->
 <div class="form-group">
-	<label class="form-label" for="trip-type">Trip type</label>
-	<select id="trip-type" class="form-select" bind:value="{isReturn}">
+	<label class="form-label" for="trip-type">Trip type</label
+	><select id="trip-type" class="form-select" bind:value="{isReturn}">
 		<option value="{false}">one-way flight</option>
 		<option value="{true}">return flight</option>
 	</select>
 </div>
 
 <div class="form-group">
-	<label class="form-label" for="departing-date">Departing</label>
-	<input
+	<label class="form-label" for="departing-date">Departing</label
+	><input
 		id="departing-date"
 		class="form-input"
 		type="date"
@@ -56,8 +56,8 @@
 </div>
 
 <div class="form-group">
-	<label class="form-label" for="returning-date">Returning</label>
-	<input
+	<label class="form-label" for="returning-date">Returning</label
+	><input
 		id="returning-date"
 		class="form-input"
 		type="date"
@@ -70,7 +70,7 @@
 	<button
 		class="btn btn-primary"
 		on:click="{bookFlight}"
-		disabled="{isReturn && (startDate >= endDate)}"
+		disabled="{isReturn && (endDate < startDate)}"
 	>
 		book
 	</button>

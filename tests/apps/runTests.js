@@ -7,31 +7,31 @@ import runTimerTests from "../apps/7GUIs-timer";
 
 export function runTests(frameworkName) {
 	describe(frameworkName, () => {
-		runHelloWorldTests(() => {
+		runHelloWorldTests(frameworkName, () => {
 			return page.goto(
 				repoRoot(`dist/frameworks/${frameworkName}/hello-world.html`)
 			);
 		});
 
-		runCounterTests(() => {
+		runCounterTests(frameworkName, () => {
 			return page.goto(
 				repoRoot(`dist/frameworks/${frameworkName}/7GUIs-counter.html`)
 			);
 		});
 
-		runTempConverterTests(() => {
+		runTempConverterTests(frameworkName, () => {
 			return page.goto(
 				repoRoot(`dist/frameworks/${frameworkName}/7GUIs-temp-converter.html`)
 			);
 		});
 
-		runFlightBookerTests(() => {
+		runFlightBookerTests(frameworkName, () => {
 			return page.goto(
 				repoRoot(`dist/frameworks/${frameworkName}/7GUIs-flight-booker.html`)
 			);
 		});
 
-		runTimerTests(() => {
+		runTimerTests(frameworkName, () => {
 			return page.goto(
 				repoRoot(`dist/frameworks/${frameworkName}/7GUIs-timer.html`)
 			);

@@ -1,9 +1,10 @@
-import { delay, getAppHtml, appSel, toHtmlString } from "../util";
+import { delay, getAppHtml, appSel, toHtmlString, minifyHtml } from "../util";
 
 /**
+ * @param {string} frameworkName
  * @param {() => Promise<any>} appSetup
  */
-export default function run(appSetup) {
+export default function run(frameworkName, appSetup) {
 	describe("Timer", () => {
 		const progressSel = appSel("progress");
 		const elapsedSel = appSel("div.elapsed");
@@ -46,18 +47,20 @@ export default function run(appSetup) {
 			});
 
 			await expect(html).toEqual(
-				<>
-					<label>
-						Elapsed time: <progress />
-					</label>
-					<div class="elapsed">0.0s</div>
-					<label>
-						Duration: <input type="range" min="1" max="20000" />
-					</label>
-					<div>
-						<button class="btn btn-primary">Reset</button>
-					</div>
-				</>
+				minifyHtml(
+					<>
+						<label>
+							Elapsed time: <progress />
+						</label>
+						<div class="elapsed">0.0s</div>
+						<label>
+							Duration: <input type="range" min="1" max="20000" />
+						</label>
+						<div>
+							<button class="btn btn-primary">Reset</button>
+						</div>
+					</>
+				)
 			);
 		});
 

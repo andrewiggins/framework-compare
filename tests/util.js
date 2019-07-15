@@ -8,6 +8,12 @@ export function delay(ms) {
 	return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+export function minifyHtml(html) {
+	return minify(html, {
+		collapseWhitespace: true
+	});
+}
+
 /**
  * @param {string} [sel]
  */
@@ -15,7 +21,7 @@ export const appSel = sel => (sel ? `#app ${sel}` : "#app");
 
 export async function getAppHtml() {
 	const html = await page.$eval(appSel(), el => el.innerHTML);
-	return minify(html.replace(/ value="[0-9a-zA-z_\-\.]*"/g, ""));
+	return minifyHtml(html.replace(/ value="[0-9a-zA-z_\-\.]*"/g, ""));
 }
 
 export function repoRoot(...args) {
