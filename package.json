@@ -36,6 +36,9 @@
     "rollup-plugin-visualizer": "^2.4.4"
   },
   "jest": {
-    "preset": "jest-puppeteer"
+    "preset": "jest-puppeteer",
+    "transform": {
+      "^.+\\.[t|j]sx?$": "<rootDir>/tests/babelTransformer.js"
+    }
   }
 }
