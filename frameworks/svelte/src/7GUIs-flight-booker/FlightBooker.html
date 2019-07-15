@@ -1,5 +1,7 @@
 <script>
 	const tomorrow = new Date(Date.now() + 86400000);
+	const oneWayFlight = "one-way";
+	const returnFlight = "return";
 
 	let start = [
 		tomorrow.getFullYear(),
@@ -8,13 +10,13 @@
 	].join("-");
 
 	let end = start;
-	let isReturn = false;
+	let tripType = oneWayFlight;
 
 	$: startDate = convertToDate(start);
 	$: endDate = convertToDate(end);
 
 	function bookFlight() {
-		const type = isReturn ? "return" : "one-way";
+		const type = tripType == returnFlight ? "return" : "one-way";
 
 		let message = `You have booked a ${type} flight, leaving ${startDate.toDateString()}`;
 		if (type === "return") {
@@ -39,9 +41,9 @@
 <!-- https://github.com/eugenkiss/7guis/wiki#flight-booker -->
 <div class="form-group">
 	<label class="form-label" for="trip-type">Trip type</label
-	><select id="trip-type" class="form-select" bind:value="{isReturn}">
-		<option value="{false}">one-way flight</option>
-		<option value="{true}">return flight</option>
+	><select id="trip-type" class="form-select" bind:value="{tripType}">
+		<option value="{oneWayFlight}">one-way flight</option>
+		<option value="{returnFlight}">return flight</option>
 	</select>
 </div>
 
@@ -62,7 +64,7 @@
 		class="form-input"
 		type="date"
 		bind:value="{end}"
-		disabled="{!isReturn}"
+		disabled="{tripType == oneWayFlight}"
 	/>
 </div>
 
@@ -70,7 +72,7 @@
 	<button
 		class="btn btn-primary"
 		on:click="{bookFlight}"
-		disabled="{isReturn && (endDate < startDate)}"
+		disabled="{tripType == returnFlight && (endDate < startDate)}"
 	>
 		book
 	</button>

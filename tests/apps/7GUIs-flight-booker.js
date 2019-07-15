@@ -11,8 +11,8 @@ export default function run(frameworkName, appSetup) {
 		const returningSel = appSel("#returning-date");
 		const bookSel = appSel("button");
 
-		const oneWayType = frameworkName === "svelte" ? "false" : "one-way";
-		const returnType = frameworkName === "svelte" ? "true" : "return";
+		const oneWayType = "one-way";
+		const returnType = "return";
 
 		beforeEach(async () => {
 			await appSetup();
