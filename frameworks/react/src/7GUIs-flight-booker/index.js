@@ -46,7 +46,7 @@ class App extends React.Component {
 	}
 
 	render() {
-		const {
+		let {
 			tripType,
 			departing,
 			departingError,
@@ -54,10 +54,16 @@ class App extends React.Component {
 			returningError
 		} = this.state;
 
-		const isBookDisabled =
-			departingError ||
-			returningError ||
-			(tripType == returnFlight && returning < departing);
+		if (
+			departingError == null &&
+			returningError == null &&
+			tripType == returnFlight &&
+			returning < departing
+		) {
+			returningError = "Returning date must be on or after departing date.";
+		}
+
+		const isBookDisabled = departingError || returningError;
 
 		return (
 			<>

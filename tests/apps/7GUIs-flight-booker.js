@@ -100,18 +100,26 @@ export default function run(frameworkName, appSetup) {
 			expect(isReturnDisabled).toEqual(true);
 		});
 
-		it("disables the book button if the return flight input is strictly before the departing flight", async () => {
+		it("displays an error and disables the book button if the return flight input is strictly before the departing flight", async () => {
 			await page.select(tripTypeSel, returnType);
-			let isReturnDisabled = await page.$eval(returningSel, el => el.disabled);
+			const isReturnDisabled = await page.$eval(
+				returningSel,
+				el => el.disabled
+			);
 			expect(isReturnDisabled).toEqual(false);
 
 			await backspaceInput(returningSel);
-			await page.type(returningSel, "2018/07/10");
+			await page.type(returningSel, "2018-07-10");
 			const returnDate = await page.$eval(returningSel, el => el.value);
-			let isBookDisabled = await page.$eval(bookSel, el => el.disabled);
+			const isBookDisabled = await page.$eval(bookSel, el => el.disabled);
+			const errorMessage = await page.$eval(
+				returningErrorSel,
+				el => el.textContent
+			);
 
-			expect(returnDate).toEqual("2018/07/10");
+			expect(returnDate).toEqual("2018-07-10");
 			expect(isBookDisabled).toEqual(true);
+			expect(errorMessage).toMatch(/after departing date/);
 		});
 
 		it("displays an error message and disables book button if the departing date is invalid", async () => {

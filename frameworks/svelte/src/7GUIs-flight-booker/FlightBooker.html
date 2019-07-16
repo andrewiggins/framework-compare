@@ -9,6 +9,14 @@
 
 	$: departingError = getErrorMessage(departing);
 	$: returningError = getErrorMessage(returning);
+	$: if (
+		departingError == null &&
+		returningError == null &&
+		tripType == returnFlight &&
+		returning < departing
+	) {
+		returningError = "Returning date must be on or after departing date.";
+	}
 
 	let tripType = oneWayFlight;
 

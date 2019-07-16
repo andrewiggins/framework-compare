@@ -27,12 +27,18 @@ function useDate(initialDate) {
 function App() {
 	const [tripType, setTripType] = useState(oneWayFlight);
 	const [departing, departingError, setDeparting] = useDate(initialDate);
-	const [returning, returningError, setReturning] = useDate(initialDate);
+	let [returning, returningError, setReturning] = useDate(initialDate);
 
-	const isBookDisabled =
-		departingError ||
-		returningError ||
-		(tripType == returnFlight && returning < departing);
+	if (
+		departingError == null &&
+		returningError == null &&
+		tripType == returnFlight &&
+		returning < departing
+	) {
+		returningError = "Returning date must be on or after departing date.";
+	}
+
+	const isBookDisabled = departingError || returningError;
 
 	function bookFlight() {
 		const type = tripType === returnFlight ? "return" : "one-way";

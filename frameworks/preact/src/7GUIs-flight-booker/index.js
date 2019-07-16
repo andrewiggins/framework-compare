@@ -45,10 +45,17 @@ class App extends Component {
 	}
 
 	render(props, state) {
-		const isBookDisabled =
-			state.departingError ||
-			state.returningError ||
-			(state.tripType == returnFlight && state.returning < state.departing);
+		let returningError = state.returningError;
+		if (
+			state.departingError == null &&
+			returningError == null &&
+			state.tripType == returnFlight &&
+			state.returning < state.departing
+		) {
+			returningError = "Returning date must be on or after departing date.";
+		}
+
+		const isBookDisabled = state.departingError || returningError;
 
 		return (
 			<Fragment>
@@ -81,7 +88,7 @@ class App extends Component {
 						<p class="form-input-hint">{state.departingError}</p>
 					)}
 				</div>
-				<div class={"form-group" + (state.returningError ? " has-error" : "")}>
+				<div class={"form-group" + (returningError ? " has-error" : "")}>
 					<label class="form-label" for="returning-date">
 						Returning
 					</label>
@@ -93,9 +100,7 @@ class App extends Component {
 						onInput={e => this.updateDate("returning", e.target.value)}
 						disabled={state.tripType !== returnFlight}
 					/>
-					{state.returningError && (
-						<p class="form-input-hint">{state.returningError}</p>
-					)}
+					{returningError && <p class="form-input-hint">{returningError}</p>}
 				</div>
 				<div class="form-group">
 					<button
