@@ -1,36 +1,45 @@
 import { h, render, Fragment } from "preact";
 import { useState } from "preact/hooks";
+import { today, validateDate } from "../../../../lib/date";
 
-const initial = new Date();
+const initialDate = today();
 const oneWayFlight = "one-way";
 const returnFlight = "return";
 
-function convertToDate(str) {
-	const split = str.split("-");
-	return new Date(+split[0], +split[1] - 1, +split[2]);
-}
+function useDate(initialDate) {
+	const [date, setDate] = useState(initialDate);
+	const [error, setError] = useState(null);
 
-function convertToDateString(fullDate) {
-	let month = fullDate.getMonth() + 1;
-	let date = fullDate.getDate();
-	return [
-		fullDate.getFullYear(),
-		month < 10 ? "0" + month : month,
-		date < 10 ? "0" + date : date
-	].join("-");
+	function updateDate(newDate) {
+		setDate(newDate);
+
+		try {
+			validateDate(newDate);
+			setError(null);
+		} catch (error) {
+			setError(error.message);
+		}
+	}
+
+	return [date, error, updateDate];
 }
 
 function App() {
 	const [tripType, setTripType] = useState(oneWayFlight);
-	const [departing, setDeparting] = useState(initial);
-	const [returning, setReturning] = useState(initial);
+	const [departing, departingError, setDeparting] = useDate(initialDate);
+	const [returning, returningError, setReturning] = useDate(initialDate);
+
+	const isBookDisabled =
+		departingError ||
+		returningError ||
+		(tripType == returnFlight && returning < departing);
 
 	function bookFlight() {
 		const type = tripType === returnFlight ? "return" : "one-way";
 
-		let message = `You have booked a ${type} flight, departing ${departing.toDateString()}`;
+		let message = `You have booked a ${type} flight, departing ${departing}`;
 		if (tripType == returnFlight) {
-			message += ` and returning ${returning.toDateString()}`;
+			message += ` and returning ${returning}`;
 		}
 
 		alert(message);
@@ -52,34 +61,36 @@ function App() {
 					<option value={returnFlight}>return flight</option>
 				</select>
 			</div>
-			<div class="form-group">
+			<div class={"form-group" + (departingError ? " has-error" : "")}>
 				<label class="form-label" for="departing-date">
 					Departing
 				</label>
 				<input
 					id="departing-date"
 					class="form-input"
-					type="date"
-					value={convertToDateString(departing)}
-					onInput={e => setDeparting(convertToDate(e.target.value))}
+					type="text"
+					value={departing}
+					onInput={e => setDeparting(e.target.value)}
 				/>
+				{departingError && <p class="form-input-hint">{departingError}</p>}
 			</div>
-			<div class="form-group">
+			<div class={"form-group" + (returningError ? " has-error" : "")}>
 				<label class="form-label" for="returning-date">
 					Returning
 				</label>
 				<input
 					id="returning-date"
 					class="form-input"
-					type="date"
-					value={convertToDateString(returning)}
-					onInput={e => setReturning(convertToDate(e.target.value))}
+					type="text"
+					value={returning}
+					onInput={e => setReturning(e.target.value)}
 					disabled={tripType !== returnFlight}
 				/>
+				{returningError && <p class="form-input-hint">{returningError}</p>}
 			</div>
 			<div class="form-group">
 				<button
-					disabled={tripType == returnFlight && returning < departing}
+					disabled={isBookDisabled}
 					onClick={bookFlight}
 					class="btn btn-primary"
 				>

@@ -1,24 +1,10 @@
 import React from "react";
 import ReactDOM from "react-dom";
+import { today, validateDate } from "../../../../lib/date";
 
-const initial = new Date();
+const initial = today();
 const oneWayFlight = "one-way";
 const returnFlight = "return";
-
-function convertToDate(str) {
-	const split = str.split("-");
-	return new Date(+split[0], +split[1] - 1, +split[2]);
-}
-
-function convertToDateString(fullDate) {
-	let month = fullDate.getMonth() + 1;
-	let date = fullDate.getDate();
-	return [
-		fullDate.getFullYear(),
-		month < 10 ? "0" + month : month,
-		date < 10 ? "0" + date : date
-	].join("-");
-}
 
 class App extends React.Component {
 	constructor(props) {
@@ -26,23 +12,53 @@ class App extends React.Component {
 		this.state = {
 			tripType: oneWayFlight,
 			departing: initial,
-			returning: initial
+			departingError: null,
+			returning: initial,
+			returningError: null
 		};
+	}
+
+	updateDate(dateType, newDate) {
+		let errorMsg = null;
+		try {
+			validateDate(newDate);
+		} catch (error) {
+			errorMsg = error.message;
+		}
+
+		this.setState({
+			[dateType]: newDate,
+			[dateType + "Error"]: errorMsg
+		});
 	}
 
 	bookFlight() {
 		const type = this.state.tripType === returnFlight ? "return" : "one-way";
 
-		let message = `You have booked a ${type} flight, departing ${this.state.departing.toDateString()}`;
+		let message = `You have booked a ${type} flight, departing ${
+			this.state.departing
+		}`;
 		if (this.state.tripType == returnFlight) {
-			message += ` and returning ${this.state.returning.toDateString()}`;
+			message += ` and returning ${this.state.returning}`;
 		}
 
 		alert(message);
 	}
 
 	render() {
-		const { tripType, departing, returning } = this.state;
+		const {
+			tripType,
+			departing,
+			departingError,
+			returning,
+			returningError
+		} = this.state;
+
+		const isBookDisabled =
+			departingError ||
+			returningError ||
+			(tripType == returnFlight && returning < departing);
+
 		return (
 			<>
 				<div className="form-group">
@@ -59,41 +75,36 @@ class App extends React.Component {
 						<option value={returnFlight}>return flight</option>
 					</select>
 				</div>
-				<div className="form-group">
+				<div className={"form-group" + (departingError ? " has-error" : "")}>
 					<label className="form-label" htmlFor="departing-date">
 						Departing
 					</label>
 					<input
 						id="departing-date"
 						className="form-input"
-						type="date"
-						value={convertToDateString(departing)}
-						onInput={e =>
-							this.setState({ departing: convertToDate(e.target.value) })
-						}
+						type="text"
+						value={departing}
+						onInput={e => this.updateDate("departing", e.target.value)}
 					/>
+					{departingError && <p class="form-input-hint">{departingError}</p>}
 				</div>
-				<div className="form-group">
+				<div className={"form-group" + (returningError ? " has-error" : "")}>
 					<label className="form-label" htmlFor="returning-date">
 						Returning
 					</label>
 					<input
 						id="returning-date"
 						className="form-input"
-						type="date"
-						value={convertToDateString(returning)}
-						onInput={e =>
-							this.setState({ returning: convertToDate(e.target.value) })
-						}
+						type="text"
+						value={returning}
+						onInput={e => this.updateDate("returning", e.target.value)}
 						disabled={tripType !== returnFlight}
 					/>
+					{returningError && <p class="form-input-hint">{returningError}</p>}
 				</div>
 				<div className="form-group">
 					<button
-						disabled={
-							tripType == returnFlight &&
-							returning < departing
-						}
+						disabled={isBookDisabled}
 						onClick={() => this.bookFlight()}
 						className="btn btn-primary"
 					>

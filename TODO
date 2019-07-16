@@ -6,16 +6,13 @@
 
 * Add tests verifying each implementation of an app returns the expected markup
 	* For Vue, implement getFrameworkFragment(frameworkName) that returns either toHTMLString.Fragment or div depending on if frameworkName supports Fragments
-* Consider changing flight booker to do input validation to demonstrate how that flow works...
-	* Would also make it easier to test since using date input in puppeteer is hard
-	* Perhaps require dates to match yyyy-mm-dd format (ISO format?) using regex /([0-9]{4})-([0-9]{2})-([0-9]{2})/ + simplified validation logic (month <= 12, day <= 31). Perhaps incorrect values are marked as invalid for date values that don't match parsed date after passing into Date constructor
 
-* Consider having one page per app with a framework selector? with standalone page option?
-* Add Compare page
-	* plus button to add multiple frameworks of one app to view source and Compare
 * Consider showing source files inline under app
 	* Perhaps add toggle for source and js output? Particularly useful for compiler frameworks (Vue, Svelte)
 	* Add link to framework repl if exists
+* Consider having one page per app with a framework selector? with standalone page option?
+* Add Compare page
+	* plus button to add multiple frameworks of one app to view source and Compare
 * Add brotli/gzip radio option to summary page (power radios using /scripts/bundles/summary.js)
 * Add rollup-plugin-visualizer html to output
 

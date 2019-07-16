@@ -1,4 +1,4 @@
-import { getAppHtml, toHtmlString, appSel } from "../util";
+import { getAppHtml, toHtmlString, appSel, backspaceInput } from "../util";
 
 /**
  * @param {string} frameworkName
@@ -10,6 +10,12 @@ export default function run(frameworkName, appSetup) {
 		const departingSel = appSel("#departing-date");
 		const returningSel = appSel("#returning-date");
 		const bookSel = appSel("button");
+		const departingErrorSel = appSel(
+			".form-group.has-error #departing-date+.form-input-hint"
+		);
+		const returningErrorSel = appSel(
+			".form-group.has-error #returning-date+.form-input-hint"
+		);
 
 		const oneWayType = "one-way";
 		const returnType = "return";
@@ -34,7 +40,7 @@ export default function run(frameworkName, appSetup) {
 						<label class="form-label" for="departing-date">
 							Departing
 						</label>
-						<input id="departing-date" class="form-input" type="date" />
+						<input id="departing-date" class="form-input" type="text" />
 					</div>
 					<div class="form-group">
 						<label class="form-label" for="returning-date">
@@ -43,7 +49,7 @@ export default function run(frameworkName, appSetup) {
 						<input
 							id="returning-date"
 							class="form-input"
-							type="date"
+							type="text"
 							disabled=""
 						/>
 					</div>
@@ -94,19 +100,46 @@ export default function run(frameworkName, appSetup) {
 			expect(isReturnDisabled).toEqual(true);
 		});
 
-		it.skip("disables the book button if the return flight input is strictly before the departing flight", async () => {
-			// TODO: Interacting with date controls in Chrome is bad. Change these to text fields
-
+		it("disables the book button if the return flight input is strictly before the departing flight", async () => {
 			await page.select(tripTypeSel, returnType);
 			let isReturnDisabled = await page.$eval(returningSel, el => el.disabled);
 			expect(isReturnDisabled).toEqual(false);
 
-			await page.type(returningSel, "07/10/2018");
+			await backspaceInput(returningSel);
+			await page.type(returningSel, "2018/07/10");
 			const returnDate = await page.$eval(returningSel, el => el.value);
 			let isBookDisabled = await page.$eval(bookSel, el => el.disabled);
 
-			expect(returnDate).toEqual("07/10/2018");
+			expect(returnDate).toEqual("2018/07/10");
 			expect(isBookDisabled).toEqual(true);
+		});
+
+		it("displays an error message and disables book button if the departing date is invalid", async () => {
+			let errorContainer = await page.$(departingErrorSel);
+			expect(errorContainer).toBe(null);
+
+			await page.type(departingSel, "a");
+			let errorMsg = await page.$eval(departingErrorSel, e => e.textContent);
+			let isBookDisabled = await page.$eval(bookSel, el => el.disabled);
+
+			expect(isBookDisabled).toBe(true);
+			expect(errorMsg).toMatch(/YYYY-MM-DD/);
+		});
+
+		it("displays an error message and disables book button if the returning date is invalid", async () => {
+			await page.select(tripTypeSel, returnType);
+			let isReturnDisabled = await page.$eval(returningSel, el => el.disabled);
+			expect(isReturnDisabled).toEqual(false);
+
+			let errorContainer = await page.$(departingErrorSel);
+			expect(errorContainer).toBe(null);
+
+			await page.type(returningSel, "a");
+			let errorMsg = await page.$eval(returningErrorSel, e => e.textContent);
+			let isBookDisabled = await page.$eval(bookSel, el => el.disabled);
+
+			expect(isBookDisabled).toBe(true);
+			expect(errorMsg).toMatch(/YYYY-MM-DD/);
 		});
 
 		it("booking a one-way flight displays the correct message", async () => {
