@@ -7,7 +7,7 @@
     "build": "node build.js"
   },
   "dependencies": {
-    "preact": "^10.0.0-beta.3",
+    "preact": "^10.0.0-rc.0",
     "preact-router": "^2.6.1",
     "spectre.css": "^0.5.8"
   },
