@@ -55,7 +55,7 @@ function App() {
 	}
 
 	return (
-		<Fragment>
+		<>
 			<div className="form-group">
 				<label className="form-label" htmlFor="trip-type">
 					Trip type
@@ -106,7 +106,7 @@ function App() {
 					book
 				</button>
 			</div>
-		</Fragment>
+		</>
 	);
 }
 

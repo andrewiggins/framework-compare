@@ -22,7 +22,7 @@ class App extends Component {
 
 	render(props, state) {
 		return (
-			<Fragment>
+			<>
 				<input
 					value={state.c}
 					onInput={e => this.setBothFromC(e.target.value)}
@@ -35,7 +35,7 @@ class App extends Component {
 					type="number"
 				/>{" "}
 				°f
-			</Fragment>
+			</>
 		);
 	}
 }

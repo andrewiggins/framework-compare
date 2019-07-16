@@ -1,4 +1,4 @@
-import { createElement, Fragment, render } from "preact";
+import { createElement, render } from "preact";
 import { useState } from "preact/hooks";
 
 function App() {

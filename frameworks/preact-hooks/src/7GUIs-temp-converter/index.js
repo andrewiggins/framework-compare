@@ -16,7 +16,7 @@ function App() {
 	}
 
 	return (
-		<Fragment>
+		<>
 			<input
 				value={c}
 				onInput={e => setBothFromC(e.target.value)}
@@ -29,7 +29,7 @@ function App() {
 				type="number"
 			/>{" "}
 			°f
-		</Fragment>
+		</>
 	);
 }
 

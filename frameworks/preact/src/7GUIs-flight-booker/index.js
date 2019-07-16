@@ -58,7 +58,7 @@ class App extends Component {
 		const isBookDisabled = state.departingError || returningError;
 
 		return (
-			<Fragment>
+			<>
 				<div class="form-group">
 					<label class="form-label" for="trip-type">
 						Trip type
@@ -111,7 +111,7 @@ class App extends Component {
 						book
 					</button>
 				</div>
-			</Fragment>
+			</>
 		);
 	}
 }

@@ -43,7 +43,7 @@ class App extends Component {
 
 	render(props, state) {
 		return (
-			<Fragment>
+			<>
 				<label>
 					Elapsed time: <progress value={state.elapsed / state.duration} />
 				</label>
@@ -71,7 +71,7 @@ class App extends Component {
 						Reset
 					</button>
 				</div>
-			</Fragment>
+			</>
 		);
 	}
 }

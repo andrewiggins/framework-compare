@@ -16,7 +16,7 @@ function App() {
 	}, [elapsed, duration, lastRenderTime]);
 
 	return (
-		<Fragment>
+		<>
 			<label>
 				Elapsed time: <progress value={elapsed / duration} />
 			</label>
@@ -42,7 +42,7 @@ function App() {
 					Reset
 				</button>
 			</div>
-		</Fragment>
+		</>
 	);
 }
 

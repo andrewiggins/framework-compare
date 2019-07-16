@@ -4,8 +4,6 @@
 * Write up conclusion
 * Add CONTRIBUTING guide
 
-* Use babel for Preact and domFrag pragma
-
 * Consider showing source files inline under app
 	* Perhaps add toggle for source and js output? Particularly useful for compiler frameworks (Vue, Svelte)
 	* Add link to framework repl if exists
