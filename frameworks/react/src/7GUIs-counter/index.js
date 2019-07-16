@@ -9,16 +9,14 @@ class App extends React.Component {
 
 	render() {
 		return (
-			<>
-				<button
-					className="btn badge"
-					data-badge={this.state.value}
-					style={{ marginTop: ".5rem" }}
-					onClick={() => this.setState({ value: this.state.value + 1 })}
-				>
-					count: {this.state.value}
-				</button>
-			</>
+			<button
+				className="btn badge"
+				data-badge={this.state.value}
+				style={{ marginTop: ".5rem" }}
+				onClick={() => this.setState({ value: this.state.value + 1 })}
+			>
+				count: {this.state.value}
+			</button>
 		);
 	}
 }

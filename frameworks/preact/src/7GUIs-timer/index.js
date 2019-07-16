@@ -1,4 +1,4 @@
-import { h, render, Fragment, Component } from "preact";
+import { createElement, render, Fragment, Component } from "preact";
 
 class App extends Component {
 	constructor() {

@@ -1,4 +1,4 @@
-import { h, render, Fragment, Component } from "preact";
+import { createElement, render, Fragment, Component } from "preact";
 import { today, validateDate } from "../../../../lib/date";
 
 const initialDate = today();

@@ -1,5 +1,5 @@
-const buble = require("rollup-plugin-buble");
+const babel = require("rollup-plugin-babel");
 const { generateConfigs } = require("../bundleHelpers");
 
-const plugins = () => [buble({ jsx: "h" })];
+const plugins = () => [babel()];
 module.exports = generateConfigs("preact", plugins);

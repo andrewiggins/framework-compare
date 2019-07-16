@@ -11,6 +11,9 @@
     "preact": "^10.0.0-rc.0"
   },
   "devDependencies": {
-    "rollup-plugin-buble": "^0.19.6"
+    "@babel/core": "^7.5.4",
+    "@babel/preset-env": "^7.5.4",
+    "@babel/preset-react": "^7.0.0",
+    "rollup-plugin-babel": "^4.3.3"
   }
 }
