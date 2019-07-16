@@ -1,4 +1,10 @@
-import { getAppHtml, toHtmlString, appSel, backspaceInput } from "../util";
+import {
+	getAppHtml,
+	toHtmlString,
+	appSel,
+	backspaceInput,
+	minifyHtml
+} from "../util";
 
 /**
  * @param {string} frameworkName
@@ -25,7 +31,7 @@ export default function run(frameworkName, appSetup) {
 		});
 
 		it("renders the correct HTML", async () => {
-			await expect(getAppHtml()).resolves.toEqual(
+			const expectedHtml = minifyHtml(
 				<>
 					<div class="form-group">
 						<label class="form-label" for="trip-type">
@@ -58,6 +64,7 @@ export default function run(frameworkName, appSetup) {
 					</div>
 				</>
 			);
+			await expect(getAppHtml()).resolves.toEqual(expectedHtml);
 		});
 
 		it("initializes with one-way flight selected", async () => {

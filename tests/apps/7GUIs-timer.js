@@ -46,22 +46,21 @@ export default function run(frameworkName, appSetup) {
 				return '"elapsed">0.0s<';
 			});
 
-			await expect(html).toEqual(
-				minifyHtml(
-					<>
-						<label>
-							Elapsed time: <progress />
-						</label>
-						<div class="elapsed">0.0s</div>
-						<label>
-							Duration: <input type="range" min="1" max="20000" />
-						</label>
-						<div>
-							<button class="btn btn-primary">Reset</button>
-						</div>
-					</>
-				)
+			const expectedHtml = minifyHtml(
+				<>
+					<label>
+						Elapsed time: <progress />
+					</label>
+					<div class="elapsed">0.0s</div>
+					<label>
+						Duration: <input type="range" min="1" max="20000" />
+					</label>
+					<div>
+						<button class="btn btn-primary">Reset</button>
+					</div>
+				</>
 			);
+			await expect(html).toEqual(expectedHtml);
 		});
 
 		it("initializes duration to 5s", async () => {

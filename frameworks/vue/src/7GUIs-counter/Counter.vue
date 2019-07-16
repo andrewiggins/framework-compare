@@ -1,5 +1,6 @@
+<!-- Since Vue replaces the element given in el, we redefine it here so tests work -->
 <template>
-  <div>
+  <div id="app">
     <button
       class="btn badge"
       style="margin-top: .5rem"

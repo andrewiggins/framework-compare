@@ -1,4 +1,4 @@
-import { getAppHtml, appSel, backspaceInput } from "../util";
+import { getAppHtml, appSel, backspaceInput, minifyHtml } from "../util";
 
 /**
  * @param {string} frameworkName
@@ -15,7 +15,7 @@ export default function run(frameworkName, appSetup) {
 
 		it("renders the correct HTML", async () => {
 			await expect(getAppHtml()).resolves.toEqual(
-				`<input type="number"> °c = <input type="number"> °f`
+				minifyHtml(`<input type="number"> °c = <input type="number"> °f`)
 			);
 		});
 

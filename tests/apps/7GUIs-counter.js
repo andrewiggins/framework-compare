@@ -1,4 +1,4 @@
-import { getAppHtml, toHtmlString } from "../util";
+import { getAppHtml, toHtmlString, minifyHtml } from "../util";
 
 /**
  * @param {string} frameworkName
@@ -6,11 +6,16 @@ import { getAppHtml, toHtmlString } from "../util";
  */
 export default function run(frameworkName, appSetup) {
 	describe("7GUIs Counter", () => {
-		const getMarkup = count => (
-			<button class="btn badge" data-badge={count} style="margin-top: 0.5rem;">
-				count: {count}
-			</button>
-		);
+		const getMarkup = count =>
+			minifyHtml(
+				<button
+					class="btn badge"
+					data-badge={count}
+					style="margin-top: 0.5rem;"
+				>
+					count: {count}
+				</button>
+			);
 
 		beforeEach(async () => {
 			await appSetup();

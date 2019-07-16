@@ -10,7 +10,8 @@ export function delay(ms) {
 
 export function minifyHtml(html) {
 	return minify(html, {
-		collapseWhitespace: true
+		collapseWhitespace: true,
+		sortAttributes: true
 	});
 }
 

@@ -1,3 +1,4 @@
+import fs from "fs";
 import { repoRoot } from "../util";
 import runHelloWorldTests from "../apps/hello-world";
 import runCounterTests from "../apps/7GUIs-counter";
@@ -6,35 +7,20 @@ import runFlightBookerTests from "../apps/7GUIs-flight-booker";
 import runTimerTests from "../apps/7GUIs-timer";
 
 export function runTests(frameworkName) {
+	function runTest(run, htmlFile) {
+		const htmlPath = repoRoot(`dist/frameworks/${frameworkName}/${htmlFile}`);
+		if (fs.existsSync(htmlPath)) {
+			run(frameworkName, () => {
+				return page.goto(htmlPath);
+			});
+		}
+	}
+
 	describe(frameworkName, () => {
-		runHelloWorldTests(frameworkName, () => {
-			return page.goto(
-				repoRoot(`dist/frameworks/${frameworkName}/hello-world.html`)
-			);
-		});
-
-		runCounterTests(frameworkName, () => {
-			return page.goto(
-				repoRoot(`dist/frameworks/${frameworkName}/7GUIs-counter.html`)
-			);
-		});
-
-		runTempConverterTests(frameworkName, () => {
-			return page.goto(
-				repoRoot(`dist/frameworks/${frameworkName}/7GUIs-temp-converter.html`)
-			);
-		});
-
-		runFlightBookerTests(frameworkName, () => {
-			return page.goto(
-				repoRoot(`dist/frameworks/${frameworkName}/7GUIs-flight-booker.html`)
-			);
-		});
-
-		runTimerTests(frameworkName, () => {
-			return page.goto(
-				repoRoot(`dist/frameworks/${frameworkName}/7GUIs-timer.html`)
-			);
-		});
+		runTest(runHelloWorldTests, "hello-world.html");
+		runTest(runCounterTests, "7GUIs-counter.html");
+		runTest(runTempConverterTests, "7GUIs-temp-converter.html");
+		runTest(runFlightBookerTests, "7GUIs-flight-booker.html");
+		runTest(runTimerTests, "7GUIs-timer.html");
 	});
 }

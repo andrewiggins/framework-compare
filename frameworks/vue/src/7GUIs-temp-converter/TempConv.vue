@@ -1,7 +1,8 @@
+<!-- Since Vue replaces the element given in el, we redefine it here so tests work -->
 <template>
-  <div>
-    <input v-model.number="c" type="number" /> °c =
-    <input v-model.number="f" type="number" /> °f
+  <div id="app">
+    <input v-model.number="cFormatted" type="number" /> °c =
+    <input v-model.number="fFormatted" type="number" /> °f
   </div>
 </template>
 
@@ -9,17 +10,29 @@
 export default {
   data() {
     return {
-      c: null,
-      f: null
+      c: "",
+      f: ""
     };
-	},
-	watch: {
-		c(c) {
-			this.f = +(32 + (9 / 5) * c).toFixed(1);
-		},
-		f(f) {
-			this.c = +((5 / 9) * (f - 32)).toFixed(1);
-		}
-	}
+  },
+  computed: {
+    cFormatted: {
+      get() {
+        return this.c !== "" ? +this.c.toFixed(1) : "";
+      },
+      set(c) {
+        this.c = c;
+        this.f = +(32 + (9 / 5) * c);
+      }
+    },
+    fFormatted: {
+      get() {
+        return this.f !== "" ? +this.f.toFixed(1) : "";
+      },
+      set(f) {
+        this.f = f;
+        this.c = +((5 / 9) * (f - 32));
+      }
+    }
+  }
 };
 </script>

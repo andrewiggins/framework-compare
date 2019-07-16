@@ -4,8 +4,7 @@
 * Write up conclusion
 * Add CONTRIBUTING guide
 
-* Add tests verifying each implementation of an app returns the expected markup
-	* For Vue, implement getFrameworkFragment(frameworkName) that returns either toHTMLString.Fragment or div depending on if frameworkName supports Fragments
+* Use babel for Preact and domFrag pragma
 
 * Consider showing source files inline under app
 	* Perhaps add toggle for source and js output? Particularly useful for compiler frameworks (Vue, Svelte)
