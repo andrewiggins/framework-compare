@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>7GUIs Timer - Svelte - Framework Compare</title>
-    <link rel="stylesheet" href="../../spectre-custom.min.css" />
+    <link rel="stylesheet" href="../../vendor.min.css" />
     <link rel="stylesheet" href="../../site.min.css" />
   </head>
   <body class="app-page">
@@ -194,11 +194,80 @@
         </div>
         <div class="page-contents">
           <div class="panel">
-            <div class="panel-header"></div>
+            <div class="panel-header">
+              <h2 class="panel-title h4">Result</h2>
+            </div>
             <div class="panel-body"><div id="app"></div></div>
-            <div class="panel-footer">
-              <div>Gzip: 1.81 kB</div>
-              <div>Brotli: 1.62 kB</div>
+            <div class="panel-footer"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-header">
+              <h2 class="panel-title h4">Source</h2>
+              <div>Bundle sizes:</div>
+              <div>1.81 kB Gzip</div>
+              <div>1.62 kB Brotli</div>
+            </div>
+            <div class="panel-nav">
+              <ul class="tab tab-block">
+                <li class="tab-item active">
+                  <a href="#7GUIs Timer-index.js">index.js</a>
+                </li>
+                <li class="tab-item">
+                  <a href="#7GUIs Timer-Timer.html">Timer.html</a>
+                </li>
+              </ul>
+            </div>
+            <div class="panel-body">
+              <div class="tab-body" id="7GUIs Timer-index.js">
+                <pre
+                  class="line-numbers"
+                ><code class="language-js">import Timer from &quot;./Timer.html&quot;;
+
+new Timer({
+	target: document.getElementById(&quot;app&quot;)
+});</code></pre>
+              </div>
+              <div class="tab-body" id="7GUIs Timer-Timer.html">
+                <pre
+                  class="line-numbers"
+                ><code class="language-html">&lt;!-- https://eugenkiss.github.io/7guis/tasks#timer --&gt;
+
+&lt;script&gt;
+	import { onDestroy } from &quot;svelte&quot;;
+
+	let elapsed = 0;
+	let duration = 5000;
+
+	let last_time = performance.now();
+	let frame;
+
+	$: if (elapsed &lt; duration) {
+		frame = requestAnimationFrame(time =&gt; {
+			elapsed += Math.min(time - last_time, duration - elapsed);
+			last_time = time;
+		});
+	}
+
+	function reset() {
+		elapsed = 0;
+		last_time = performance.now();
+	}
+
+	onDestroy(() =&gt; cancelAnimationFrame(frame));
+&lt;/script&gt;
+
+&lt;label&gt;
+	Elapsed time: &lt;progress value=&quot;{elapsed / duration}&quot;&gt;&lt;/progress&gt;
+&lt;/label&gt;
+&lt;div class=&quot;elapsed&quot;&gt;{(elapsed / 1000).toFixed(1)}s&lt;/div&gt;
+&lt;label&gt;
+	Duration:
+	&lt;input type=&quot;range&quot; bind:value=&quot;{duration}&quot; min=&quot;1&quot; max=&quot;20000&quot; /&gt;
+&lt;/label&gt;
+&lt;div&gt;
+	&lt;button class=&quot;btn btn-primary&quot; on:click=&quot;{reset}&quot;&gt;Reset&lt;/button&gt;
+&lt;/div&gt;</code></pre>
+              </div>
             </div>
           </div>
           <script src="7GUIs-timer.min.js" type="text/javascript"></script>
@@ -216,5 +285,8 @@
         </footer>
       </div>
     </div>
+    <script src="../../prism.js"></script
+    ><script src="../../prism-jsx.min.js"></script
+    ><script src="../../prism-line-numbers.min.js"></script>
   </body>
 </html>

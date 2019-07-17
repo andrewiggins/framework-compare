@@ -7,8 +7,10 @@
     "build": "node build.js"
   },
   "dependencies": {
+    "classcat": "^4.0.2",
     "preact": "^10.0.0-rc.0",
     "preact-router": "^2.6.1",
+    "prismjs": "^1.16.0",
     "spectre.css": "^0.5.8"
   },
   "devDependencies": {

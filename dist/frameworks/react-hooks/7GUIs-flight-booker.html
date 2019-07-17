@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>7GUIs Flight Booker - React Hooks - Framework Compare</title>
-    <link rel="stylesheet" href="../../spectre-custom.min.css" />
+    <link rel="stylesheet" href="../../vendor.min.css" />
     <link rel="stylesheet" href="../../site.min.css" />
   </head>
   <body class="app-page">
@@ -196,11 +196,144 @@
         </div>
         <div class="page-contents">
           <div class="panel">
-            <div class="panel-header"></div>
+            <div class="panel-header">
+              <h2 class="panel-title h4">Result</h2>
+            </div>
             <div class="panel-body"><div id="app"></div></div>
-            <div class="panel-footer">
-              <div>Gzip: 38.1 kB</div>
-              <div>Brotli: 33.5 kB</div>
+            <div class="panel-footer"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-header">
+              <h2 class="panel-title h4">Source</h2>
+              <div>Bundle sizes:</div>
+              <div>38.1 kB Gzip</div>
+              <div>33.5 kB Brotli</div>
+            </div>
+            <div class="panel-nav">
+              <ul class="tab tab-block">
+                <li class="tab-item active">
+                  <a href="#7GUIs Flight Booker-index.js">index.js</a>
+                </li>
+              </ul>
+            </div>
+            <div class="panel-body">
+              <div class="tab-body" id="7GUIs Flight Booker-index.js">
+                <pre
+                  class="line-numbers"
+                ><code class="language-js">import React, { useState, Fragment } from &quot;react&quot;;
+import ReactDOM from &quot;react-dom&quot;;
+import { today, validateDate } from &quot;../../../../lib/date&quot;;
+
+const initialDate = today();
+const oneWayFlight = &quot;one-way&quot;;
+const returnFlight = &quot;return&quot;;
+
+function useDate(initialDate) {
+	const [date, setDate] = useState(initialDate);
+	const [error, setError] = useState(null);
+
+	function updateDate(newDate) {
+		setDate(newDate);
+
+		try {
+			validateDate(newDate);
+			setError(null);
+		} catch (error) {
+			setError(error.message);
+		}
+	}
+
+	return [date, error, updateDate];
+}
+
+function App() {
+	const [tripType, setTripType] = useState(oneWayFlight);
+	const [departing, departingError, setDeparting] = useDate(initialDate);
+	let [returning, returningError, setReturning] = useDate(initialDate);
+
+	if (
+		departingError == null &amp;&amp;
+		returningError == null &amp;&amp;
+		tripType == returnFlight &amp;&amp;
+		returning &lt; departing
+	) {
+		returningError = &quot;Returning date must be on or after departing date.&quot;;
+	}
+
+	const isBookDisabled =
+		departingError ||
+		returningError ||
+		(tripType == returnFlight &amp;&amp; returning &lt; departing);
+
+	function bookFlight() {
+		const type = tripType === returnFlight ? &quot;return&quot; : &quot;one-way&quot;;
+
+		let message = `You have booked a ${type} flight, departing ${departing}`;
+		if (tripType == returnFlight) {
+			message += ` and returning ${returning}`;
+		}
+
+		alert(message);
+	}
+
+	return (
+		&lt;&gt;
+			&lt;div className=&quot;form-group&quot;&gt;
+				&lt;label className=&quot;form-label&quot; htmlFor=&quot;trip-type&quot;&gt;
+					Trip type
+				&lt;/label&gt;
+				&lt;select
+					id=&quot;trip-type&quot;
+					className=&quot;form-select&quot;
+					value={tripType}
+					onInput={e =&gt; setTripType(e.target.value)}
+				&gt;
+					&lt;option value={oneWayFlight}&gt;one-way flight&lt;/option&gt;
+					&lt;option value={returnFlight}&gt;return flight&lt;/option&gt;
+				&lt;/select&gt;
+			&lt;/div&gt;
+			&lt;div className={&quot;form-group&quot; + (departingError ? &quot; has-error&quot; : &quot;&quot;)}&gt;
+				&lt;label className=&quot;form-label&quot; htmlFor=&quot;departing-date&quot;&gt;
+					Departing
+				&lt;/label&gt;
+				&lt;input
+					id=&quot;departing-date&quot;
+					className=&quot;form-input&quot;
+					type=&quot;text&quot;
+					value={departing}
+					onInput={e =&gt; setDeparting(e.target.value)}
+				/&gt;
+				{departingError &amp;&amp; &lt;p class=&quot;form-input-hint&quot;&gt;{departingError}&lt;/p&gt;}
+			&lt;/div&gt;
+			&lt;div className={&quot;form-group&quot; + (returningError ? &quot; has-error&quot; : &quot;&quot;)}&gt;
+				&lt;label className=&quot;form-label&quot; htmlFor=&quot;returning-date&quot;&gt;
+					Returning
+				&lt;/label&gt;
+				&lt;input
+					id=&quot;returning-date&quot;
+					className=&quot;form-input&quot;
+					type=&quot;text&quot;
+					value={returning}
+					onInput={e =&gt; setReturning(e.target.value)}
+					disabled={tripType !== returnFlight}
+				/&gt;
+				{returningError &amp;&amp; &lt;p class=&quot;form-input-hint&quot;&gt;{returningError}&lt;/p&gt;}
+			&lt;/div&gt;
+			&lt;div className=&quot;form-group&quot;&gt;
+				&lt;button
+					disabled={isBookDisabled}
+					onClick={bookFlight}
+					className=&quot;btn btn-primary&quot;
+				&gt;
+					book
+				&lt;/button&gt;
+			&lt;/div&gt;
+		&lt;/&gt;
+	);
+}
+
+ReactDOM.render(&lt;App /&gt;, document.getElementById(&quot;app&quot;));</code></pre>
+              </div>
             </div>
           </div>
           <script
@@ -221,5 +354,8 @@
         </footer>
       </div>
     </div>
+    <script src="../../prism.js"></script
+    ><script src="../../prism-jsx.min.js"></script
+    ><script src="../../prism-line-numbers.min.js"></script>
   </body>
 </html>

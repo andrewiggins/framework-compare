@@ -123,11 +123,18 @@ async function buildVendorCss() {
 
 	const spectreSrcPath = file => p("node_modules/spectre.css/dist", file);
 	const from = spectreSrcPath(spectreFiles[0]);
-	const to = outputPath("spectre-custom.min.css");
+	const to = outputPath("vendor.min.css");
 
-	const vendorSrc = (await Promise.all(
-		spectreFiles.map(spectreSrcPath).map(filePath => readFile(filePath, "utf8"))
-	)).join("\n");
+	const vendorSrc = (await Promise.all([
+		...spectreFiles
+			.map(spectreSrcPath)
+			.map(filePath => readFile(filePath, "utf8")),
+		readFile(
+			p("node_modules/prismjs/plugins/line-numbers/prism-line-numbers.css"),
+			"utf8"
+		),
+		readFile(p("node_modules/prismjs/themes/prism.css"), "utf8")
+	])).join("\n");
 
 	// const result = await runPostCss(
 	// 	[uncss({ html: [p("index.html"), outputPath("**/*.html")] })],
@@ -137,6 +144,17 @@ async function buildVendorCss() {
 	// await writeFile(to, result.css, "utf8");
 
 	await writeFile(to, vendorSrc, "utf8");
+}
+
+async function copyStatics() {
+	await Promise.all([
+		copyFile(p("node_modules/prismjs/prism.js"), outputPath("prism.js")),
+		copyFile(p("node_modules/prismjs/components/prism-jsx.min.js"), outputPath("prism-jsx.min.js")),
+		copyFile(
+			p("node_modules/prismjs/plugins/line-numbers/prism-line-numbers.min.js"),
+			outputPath("prism-line-numbers.min.js")
+		)
+	]);
 }
 
 async function build() {
@@ -161,9 +179,9 @@ async function build() {
 	console.timeEnd(stage2);
 
 	// Uses built HTML to remove unused CSS
-	const stage3 = "Building CSS";
+	const stage3 = "Building CSS and copying libraries";
 	console.time(stage3);
-	await Promise.all([buildVendorCss(), buildSiteCss()]);
+	await Promise.all([buildVendorCss(), buildSiteCss(), copyStatics()]);
 	console.timeEnd(stage3);
 }
 

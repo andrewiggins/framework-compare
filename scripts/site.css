@@ -13,6 +13,10 @@ a:visited {
 	color: #5755d9;
 }
 
+code {
+	tab-size: 2;
+}
+
 /*******************************
 
 Sidebar nav styles

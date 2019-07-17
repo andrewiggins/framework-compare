@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>7GUIs Temp Converter - Svelte - Framework Compare</title>
-    <link rel="stylesheet" href="../../spectre-custom.min.css" />
+    <link rel="stylesheet" href="../../vendor.min.css" />
     <link rel="stylesheet" href="../../site.min.css" />
   </head>
   <body class="app-page">
@@ -196,11 +196,70 @@
         </div>
         <div class="page-contents">
           <div class="panel">
-            <div class="panel-header"></div>
+            <div class="panel-header">
+              <h2 class="panel-title h4">Result</h2>
+            </div>
             <div class="panel-body"><div id="app"></div></div>
-            <div class="panel-footer">
-              <div>Gzip: 1.39 kB</div>
-              <div>Brotli: 1.25 kB</div>
+            <div class="panel-footer"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-header">
+              <h2 class="panel-title h4">Source</h2>
+              <div>Bundle sizes:</div>
+              <div>1.39 kB Gzip</div>
+              <div>1.25 kB Brotli</div>
+            </div>
+            <div class="panel-nav">
+              <ul class="tab tab-block">
+                <li class="tab-item active">
+                  <a href="#7GUIs Temp Converter-index.js">index.js</a>
+                </li>
+                <li class="tab-item">
+                  <a href="#7GUIs Temp Converter-TempConv.html"
+                    >TempConv.html</a
+                  >
+                </li>
+              </ul>
+            </div>
+            <div class="panel-body">
+              <div class="tab-body" id="7GUIs Temp Converter-index.js">
+                <pre
+                  class="line-numbers"
+                ><code class="language-js">import App from &quot;./TempConv.html&quot;;
+
+new App({
+	target: document.getElementById(&quot;app&quot;)
+});</code></pre>
+              </div>
+              <div class="tab-body" id="7GUIs Temp Converter-TempConv.html">
+                <pre class="line-numbers"><code class="language-html">&lt;input
+	value=&quot;{c}&quot;
+	on:input=&quot;{e =&gt; setBothFromC(e.target.value)}&quot;
+	type=&quot;number&quot;
+/&gt;
+°c =
+&lt;input
+	value=&quot;{f}&quot;
+	on:input=&quot;{e =&gt; setBothFromF(e.target.value)}&quot;
+	type=&quot;number&quot;
+/&gt;
+°f
+
+&lt;script&gt;
+	let c = null;
+	let f = null;
+
+	function setBothFromC(value) {
+		c = +value;
+		f = +(32 + (9 / 5) * c).toFixed(1);
+	}
+
+	function setBothFromF(value) {
+		f = +value;
+		c = +((5 / 9) * (f - 32)).toFixed(1);
+	}
+&lt;/script&gt;</code></pre>
+              </div>
             </div>
           </div>
           <script
@@ -221,5 +280,8 @@
         </footer>
       </div>
     </div>
+    <script src="../../prism.js"></script
+    ><script src="../../prism-jsx.min.js"></script
+    ><script src="../../prism-line-numbers.min.js"></script>
   </body>
 </html>

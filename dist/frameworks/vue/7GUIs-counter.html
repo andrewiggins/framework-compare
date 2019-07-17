@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>7GUIs Counter - Vue - Framework Compare</title>
-    <link rel="stylesheet" href="../../spectre-custom.min.css" />
+    <link rel="stylesheet" href="../../vendor.min.css" />
     <link rel="stylesheet" href="../../site.min.css" />
   </head>
   <body class="app-page">
@@ -196,11 +196,69 @@
         </div>
         <div class="page-contents">
           <div class="panel">
-            <div class="panel-header"></div>
+            <div class="panel-header">
+              <h2 class="panel-title h4">Result</h2>
+            </div>
             <div class="panel-body"><div id="app"></div></div>
-            <div class="panel-footer">
-              <div>Gzip: 23.7 kB</div>
-              <div>Brotli: 21.5 kB</div>
+            <div class="panel-footer"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-header">
+              <h2 class="panel-title h4">Source</h2>
+              <div>Bundle sizes:</div>
+              <div>23.7 kB Gzip</div>
+              <div>21.5 kB Brotli</div>
+            </div>
+            <div class="panel-nav">
+              <ul class="tab tab-block">
+                <li class="tab-item active">
+                  <a href="#7GUIs Counter-Counter.vue">Counter.vue</a>
+                </li>
+                <li class="tab-item">
+                  <a href="#7GUIs Counter-index.js">index.js</a>
+                </li>
+              </ul>
+            </div>
+            <div class="panel-body">
+              <div class="tab-body" id="7GUIs Counter-Counter.vue">
+                <pre
+                  class="line-numbers"
+                ><code class="language-vue">&lt;!-- Since Vue replaces the element given in el, we redefine it here so tests work --&gt;
+&lt;template&gt;
+  &lt;div id=&quot;app&quot;&gt;
+    &lt;button
+      class=&quot;btn badge&quot;
+      style=&quot;margin-top: .5rem&quot;
+      v-on:click=&quot;count += 1&quot;
+      v-bind:data-badge=&quot;count&quot;
+    &gt;count: {{ count }}&lt;/button&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
+
+&lt;script&gt;
+export default {
+  data() {
+    return {
+      count: 0
+    };
+  }
+};
+&lt;/script&gt;</code></pre>
+              </div>
+              <div class="tab-body" id="7GUIs Counter-index.js">
+                <pre
+                  class="line-numbers"
+                ><code class="language-js">import Vue from &quot;vue&quot;;
+import Counter from &quot;./Counter.vue&quot;;
+
+new Vue({
+	el: &quot;#app&quot;,
+	components: { Counter },
+	render(createElement) {
+		return createElement(Counter);
+	}
+});</code></pre>
+              </div>
             </div>
           </div>
           <script src="7GUIs-counter.min.js" type="text/javascript"></script>
@@ -218,5 +276,8 @@
         </footer>
       </div>
     </div>
+    <script src="../../prism.js"></script
+    ><script src="../../prism-jsx.min.js"></script
+    ><script src="../../prism-line-numbers.min.js"></script>
   </body>
 </html>

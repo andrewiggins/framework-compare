@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>7GUIs Flight Booker - Svelte - Framework Compare</title>
-    <link rel="stylesheet" href="../../spectre-custom.min.css" />
+    <link rel="stylesheet" href="../../vendor.min.css" />
     <link rel="stylesheet" href="../../site.min.css" />
   </head>
   <body class="app-page">
@@ -196,11 +196,138 @@
         </div>
         <div class="page-contents">
           <div class="panel">
-            <div class="panel-header"></div>
+            <div class="panel-header">
+              <h2 class="panel-title h4">Result</h2>
+            </div>
             <div class="panel-body"><div id="app"></div></div>
-            <div class="panel-footer">
-              <div>Gzip: 2.77 kB</div>
-              <div>Brotli: 2.48 kB</div>
+            <div class="panel-footer"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-header">
+              <h2 class="panel-title h4">Source</h2>
+              <div>Bundle sizes:</div>
+              <div>2.77 kB Gzip</div>
+              <div>2.48 kB Brotli</div>
+            </div>
+            <div class="panel-nav">
+              <ul class="tab tab-block">
+                <li class="tab-item active">
+                  <a href="#7GUIs Flight Booker-FlightBooker.html"
+                    >FlightBooker.html</a
+                  >
+                </li>
+                <li class="tab-item">
+                  <a href="#7GUIs Flight Booker-index.js">index.js</a>
+                </li>
+              </ul>
+            </div>
+            <div class="panel-body">
+              <div class="tab-body" id="7GUIs Flight Booker-FlightBooker.html">
+                <pre
+                  class="line-numbers"
+                ><code class="language-html">&lt;script&gt;
+	import { today, validateDate } from &quot;../../../../lib/date&quot;;
+
+	const oneWayFlight = &quot;one-way&quot;;
+	const returnFlight = &quot;return&quot;;
+
+	let departing = today();
+	let returning = departing;
+
+	$: departingError = getErrorMessage(departing);
+	$: returningError = getErrorMessage(returning);
+	$: if (
+		departingError == null &amp;&amp;
+		returningError == null &amp;&amp;
+		tripType == returnFlight &amp;&amp;
+		returning &lt; departing
+	) {
+		returningError = &quot;Returning date must be on or after departing date.&quot;;
+	}
+
+	let tripType = oneWayFlight;
+
+	$: isBookDisabled =
+		departingError ||
+		returningError ||
+		(tripType == returnFlight &amp;&amp; returning &lt; departing);
+
+	function getErrorMessage(date) {
+		try {
+			validateDate(date);
+			return null;
+		} catch (error) {
+			return error.message;
+		}
+	}
+
+	function bookFlight() {
+		const type = tripType == returnFlight ? &quot;return&quot; : &quot;one-way&quot;;
+
+		let message = `You have booked a ${type} flight, leaving ${departing}`;
+		if (type === &quot;return&quot;) {
+			message += ` and returning ${returning}`;
+		}
+
+		alert(message);
+	}
+&lt;/script&gt;
+
+&lt;!-- https://github.com/eugenkiss/7guis/wiki#flight-booker --&gt;
+&lt;div class=&quot;form-group&quot;&gt;
+	&lt;label class=&quot;form-label&quot; for=&quot;trip-type&quot;&gt;Trip type&lt;/label
+	&gt;&lt;select id=&quot;trip-type&quot; class=&quot;form-select&quot; bind:value=&quot;{tripType}&quot;&gt;
+		&lt;option value=&quot;{oneWayFlight}&quot;&gt;one-way flight&lt;/option&gt;
+		&lt;option value=&quot;{returnFlight}&quot;&gt;return flight&lt;/option&gt;
+	&lt;/select&gt;
+&lt;/div&gt;
+
+&lt;div class=&quot;form-group {departingError ? 'has-error' : ''}&quot;&gt;
+	&lt;label class=&quot;form-label&quot; for=&quot;departing-date&quot;&gt;Departing&lt;/label
+	&gt;&lt;input
+		id=&quot;departing-date&quot;
+		class=&quot;form-input&quot;
+		type=&quot;text&quot;
+		bind:value=&quot;{departing}&quot;
+	/&gt;
+	{#if departingError}
+	&lt;p class=&quot;form-input-hint&quot;&gt;{departingError}&lt;/p&gt;
+	{/if}
+&lt;/div&gt;
+
+&lt;div class=&quot;form-group {returningError ? 'has-error' : ''}&quot;&gt;
+	&lt;label class=&quot;form-label&quot; for=&quot;returning-date&quot;&gt;Returning&lt;/label
+	&gt;&lt;input
+		id=&quot;returning-date&quot;
+		class=&quot;form-input&quot;
+		type=&quot;text&quot;
+		bind:value=&quot;{returning}&quot;
+		disabled=&quot;{tripType == oneWayFlight}&quot;
+	/&gt;
+	{#if returningError}
+	&lt;p class=&quot;form-input-hint&quot;&gt;{returningError}&lt;/p&gt;
+	{/if}
+&lt;/div&gt;
+
+&lt;div class=&quot;form-group&quot;&gt;
+	&lt;button
+		class=&quot;btn btn-primary&quot;
+		on:click=&quot;{bookFlight}&quot;
+		disabled=&quot;{isBookDisabled}&quot;
+	&gt;
+		book
+	&lt;/button&gt;
+&lt;/div&gt;</code></pre>
+              </div>
+              <div class="tab-body" id="7GUIs Flight Booker-index.js">
+                <pre
+                  class="line-numbers"
+                ><code class="language-js">import App from &quot;./FlightBooker.html&quot;;
+
+new App({
+	target: document.getElementById(&quot;app&quot;)
+});</code></pre>
+              </div>
             </div>
           </div>
           <script
@@ -221,5 +348,8 @@
         </footer>
       </div>
     </div>
+    <script src="../../prism.js"></script
+    ><script src="../../prism-jsx.min.js"></script
+    ><script src="../../prism-line-numbers.min.js"></script>
   </body>
 </html>

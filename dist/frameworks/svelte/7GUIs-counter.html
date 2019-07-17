@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>7GUIs Counter - Svelte - Framework Compare</title>
-    <link rel="stylesheet" href="../../spectre-custom.min.css" />
+    <link rel="stylesheet" href="../../vendor.min.css" />
     <link rel="stylesheet" href="../../site.min.css" />
   </head>
   <body class="app-page">
@@ -194,11 +194,55 @@
         </div>
         <div class="page-contents">
           <div class="panel">
-            <div class="panel-header"></div>
+            <div class="panel-header">
+              <h2 class="panel-title h4">Result</h2>
+            </div>
             <div class="panel-body"><div id="app"></div></div>
-            <div class="panel-footer">
-              <div>Gzip: 1.33 kB</div>
-              <div>Brotli: 1.2 kB</div>
+            <div class="panel-footer"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-header">
+              <h2 class="panel-title h4">Source</h2>
+              <div>Bundle sizes:</div>
+              <div>1.33 kB Gzip</div>
+              <div>1.2 kB Brotli</div>
+            </div>
+            <div class="panel-nav">
+              <ul class="tab tab-block">
+                <li class="tab-item active">
+                  <a href="#7GUIs Counter-Counter.html">Counter.html</a>
+                </li>
+                <li class="tab-item">
+                  <a href="#7GUIs Counter-index.js">index.js</a>
+                </li>
+              </ul>
+            </div>
+            <div class="panel-body">
+              <div class="tab-body" id="7GUIs Counter-Counter.html">
+                <pre
+                  class="line-numbers"
+                ><code class="language-html">&lt;script&gt;
+	let count = 0;
+&lt;/script&gt;
+
+&lt;button
+	class=&quot;btn badge&quot;
+	data-badge=&quot;{count}&quot;
+	style=&quot;margin-top: .5rem&quot;
+	on:click=&quot;{() =&gt; count += 1}&quot;
+&gt;
+	count: {count}
+&lt;/button&gt;</code></pre>
+              </div>
+              <div class="tab-body" id="7GUIs Counter-index.js">
+                <pre
+                  class="line-numbers"
+                ><code class="language-js">import App from &quot;./Counter.html&quot;;
+
+new App({
+	target: document.getElementById(&quot;app&quot;)
+});</code></pre>
+              </div>
             </div>
           </div>
           <script src="7GUIs-counter.min.js" type="text/javascript"></script>
@@ -216,5 +260,8 @@
         </footer>
       </div>
     </div>
+    <script src="../../prism.js"></script
+    ><script src="../../prism-jsx.min.js"></script
+    ><script src="../../prism-line-numbers.min.js"></script>
   </body>
 </html>

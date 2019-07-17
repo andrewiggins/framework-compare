@@ -25,7 +25,7 @@ export const Layout = props => (
 			</title>
 			<link
 				rel="stylesheet"
-				href={relativeUrl(props.url, "dist/spectre-custom.min.css")}
+				href={relativeUrl(props.url, "dist/vendor.min.css")}
 			/>
 			<link
 				rel="stylesheet"
@@ -56,6 +56,9 @@ export const Layout = props => (
 					<Footer />
 				</div>
 			</div>
+			<script src={relativeUrl(props.url, "dist/prism.js")}></script>
+			<script src={relativeUrl(props.url, "dist/prism-jsx.min.js")}></script>
+			<script src={relativeUrl(props.url, "dist/prism-line-numbers.min.js")}></script>
 		</body>
 	</html>
 );

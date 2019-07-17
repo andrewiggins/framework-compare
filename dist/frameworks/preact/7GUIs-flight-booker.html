@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>7GUIs Flight Booker - Preact - Framework Compare</title>
-    <link rel="stylesheet" href="../../spectre-custom.min.css" />
+    <link rel="stylesheet" href="../../vendor.min.css" />
     <link rel="stylesheet" href="../../site.min.css" />
   </head>
   <body class="app-page">
@@ -196,11 +196,150 @@
         </div>
         <div class="page-contents">
           <div class="panel">
-            <div class="panel-header"></div>
+            <div class="panel-header">
+              <h2 class="panel-title h4">Result</h2>
+            </div>
             <div class="panel-body"><div id="app"></div></div>
-            <div class="panel-footer">
-              <div>Gzip: 4.21 kB</div>
-              <div>Brotli: 3.82 kB</div>
+            <div class="panel-footer"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-header">
+              <h2 class="panel-title h4">Source</h2>
+              <div>Bundle sizes:</div>
+              <div>4.21 kB Gzip</div>
+              <div>3.82 kB Brotli</div>
+            </div>
+            <div class="panel-nav">
+              <ul class="tab tab-block">
+                <li class="tab-item active">
+                  <a href="#7GUIs Flight Booker-index.js">index.js</a>
+                </li>
+              </ul>
+            </div>
+            <div class="panel-body">
+              <div class="tab-body" id="7GUIs Flight Booker-index.js">
+                <pre
+                  class="line-numbers"
+                ><code class="language-js">import { createElement, render, Fragment, Component } from &quot;preact&quot;;
+import { today, validateDate } from &quot;../../../../lib/date&quot;;
+
+const initialDate = today();
+const oneWayFlight = &quot;one-way&quot;;
+const returnFlight = &quot;return&quot;;
+
+class App extends Component {
+	constructor() {
+		super();
+		this.state = {
+			tripType: oneWayFlight,
+			departing: initialDate,
+			departingError: null,
+			returning: initialDate,
+			returningError: null
+		};
+	}
+
+	updateDate(dateType, newDate) {
+		let errorMsg = null;
+		try {
+			validateDate(newDate);
+		} catch (error) {
+			errorMsg = error.message;
+		}
+
+		this.setState({
+			[dateType]: newDate,
+			[dateType + &quot;Error&quot;]: errorMsg
+		});
+	}
+
+	bookFlight() {
+		const type = this.state.tripType === returnFlight ? &quot;return&quot; : &quot;one-way&quot;;
+
+		let message = `You have booked a ${type} flight, departing ${
+			this.state.departing
+		}`;
+		if (this.state.tripType == returnFlight) {
+			message += ` and returning ${this.state.returning}`;
+		}
+
+		alert(message);
+	}
+
+	render(props, state) {
+		let returningError = state.returningError;
+		if (
+			state.departingError == null &amp;&amp;
+			returningError == null &amp;&amp;
+			state.tripType == returnFlight &amp;&amp;
+			state.returning &lt; state.departing
+		) {
+			returningError = &quot;Returning date must be on or after departing date.&quot;;
+		}
+
+		const isBookDisabled = state.departingError || returningError;
+
+		return (
+			&lt;&gt;
+				&lt;div class=&quot;form-group&quot;&gt;
+					&lt;label class=&quot;form-label&quot; for=&quot;trip-type&quot;&gt;
+						Trip type
+					&lt;/label&gt;
+					&lt;select
+						id=&quot;trip-type&quot;
+						class=&quot;form-select&quot;
+						value={state.tripType}
+						onInput={e =&gt; this.setState({ tripType: e.target.value })}
+					&gt;
+						&lt;option value={oneWayFlight}&gt;one-way flight&lt;/option&gt;
+						&lt;option value={returnFlight}&gt;return flight&lt;/option&gt;
+					&lt;/select&gt;
+				&lt;/div&gt;
+				&lt;div class={&quot;form-group&quot; + (state.departingError ? &quot; has-error&quot; : &quot;&quot;)}&gt;
+					&lt;label class=&quot;form-label&quot; for=&quot;departing-date&quot;&gt;
+						Departing
+					&lt;/label&gt;
+					&lt;input
+						id=&quot;departing-date&quot;
+						class=&quot;form-input&quot;
+						type=&quot;text&quot;
+						value={state.departing}
+						onInput={e =&gt; this.updateDate(&quot;departing&quot;, e.target.value)}
+					/&gt;
+					{state.departingError &amp;&amp; (
+						&lt;p class=&quot;form-input-hint&quot;&gt;{state.departingError}&lt;/p&gt;
+					)}
+				&lt;/div&gt;
+				&lt;div class={&quot;form-group&quot; + (returningError ? &quot; has-error&quot; : &quot;&quot;)}&gt;
+					&lt;label class=&quot;form-label&quot; for=&quot;returning-date&quot;&gt;
+						Returning
+					&lt;/label&gt;
+					&lt;input
+						id=&quot;returning-date&quot;
+						class=&quot;form-input&quot;
+						type=&quot;text&quot;
+						value={state.returning}
+						onInput={e =&gt; this.updateDate(&quot;returning&quot;, e.target.value)}
+						disabled={state.tripType !== returnFlight}
+					/&gt;
+					{returningError &amp;&amp; &lt;p class=&quot;form-input-hint&quot;&gt;{returningError}&lt;/p&gt;}
+				&lt;/div&gt;
+				&lt;div class=&quot;form-group&quot;&gt;
+					&lt;button
+						disabled={isBookDisabled}
+						onClick={() =&gt; this.bookFlight()}
+						class=&quot;btn btn-primary&quot;
+					&gt;
+						book
+					&lt;/button&gt;
+				&lt;/div&gt;
+			&lt;/&gt;
+		);
+	}
+}
+
+render(&lt;App /&gt;, document.getElementById(&quot;app&quot;));</code></pre>
+              </div>
             </div>
           </div>
           <script
@@ -221,5 +360,8 @@
         </footer>
       </div>
     </div>
+    <script src="../../prism.js"></script
+    ><script src="../../prism-jsx.min.js"></script
+    ><script src="../../prism-line-numbers.min.js"></script>
   </body>
 </html>

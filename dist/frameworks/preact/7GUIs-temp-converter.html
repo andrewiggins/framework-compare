@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>7GUIs Temp Converter - Preact - Framework Compare</title>
-    <link rel="stylesheet" href="../../spectre-custom.min.css" />
+    <link rel="stylesheet" href="../../vendor.min.css" />
     <link rel="stylesheet" href="../../site.min.css" />
   </head>
   <body class="app-page">
@@ -196,11 +196,74 @@
         </div>
         <div class="page-contents">
           <div class="panel">
-            <div class="panel-header"></div>
+            <div class="panel-header">
+              <h2 class="panel-title h4">Result</h2>
+            </div>
             <div class="panel-body"><div id="app"></div></div>
-            <div class="panel-footer">
-              <div>Gzip: 3.52 kB</div>
-              <div>Brotli: 3.19 kB</div>
+            <div class="panel-footer"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-header">
+              <h2 class="panel-title h4">Source</h2>
+              <div>Bundle sizes:</div>
+              <div>3.52 kB Gzip</div>
+              <div>3.19 kB Brotli</div>
+            </div>
+            <div class="panel-nav">
+              <ul class="tab tab-block">
+                <li class="tab-item active">
+                  <a href="#7GUIs Temp Converter-index.js">index.js</a>
+                </li>
+              </ul>
+            </div>
+            <div class="panel-body">
+              <div class="tab-body" id="7GUIs Temp Converter-index.js">
+                <pre
+                  class="line-numbers"
+                ><code class="language-js">import { createElement, render, Fragment, Component } from &quot;preact&quot;;
+
+class App extends Component {
+	constructor() {
+		super();
+		this.state = { c: null, f: null };
+	}
+
+	setBothFromC(value) {
+		this.setState({
+			c: value,
+			f: +(32 + (9 / 5) * value).toFixed(1)
+		});
+	}
+
+	setBothFromF(value) {
+		this.setState({
+			f: value,
+			c: +((5 / 9) * (value - 32)).toFixed(1)
+		});
+	}
+
+	render(props, state) {
+		return (
+			&lt;&gt;
+				&lt;input
+					value={state.c}
+					onInput={e =&gt; this.setBothFromC(e.target.value)}
+					type=&quot;number&quot;
+				/&gt;{&quot; &quot;}
+				°c ={&quot; &quot;}
+				&lt;input
+					value={state.f}
+					onInput={e =&gt; this.setBothFromF(e.target.value)}
+					type=&quot;number&quot;
+				/&gt;{&quot; &quot;}
+				°f
+			&lt;/&gt;
+		);
+	}
+}
+
+render(&lt;App /&gt;, document.getElementById(&quot;app&quot;));</code></pre>
+              </div>
             </div>
           </div>
           <script
@@ -221,5 +284,8 @@
         </footer>
       </div>
     </div>
+    <script src="../../prism.js"></script
+    ><script src="../../prism-jsx.min.js"></script
+    ><script src="../../prism-line-numbers.min.js"></script>
   </body>
 </html>
