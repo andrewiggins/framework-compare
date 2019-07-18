@@ -4,6 +4,8 @@
 #
 ##################################################
 
+index.html
+dist/
 scripts/components/index.js
 scripts/dist
 .vscode/
