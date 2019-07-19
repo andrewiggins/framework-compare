@@ -1,4 +1,7 @@
-<!-- Since Vue replaces the element given in el, we redefine it here so tests work -->
+<!--
+	Since Vue replaces the element given in el,
+	we redefine it here so tests work
+-->
 <template>
   <div id="app">
     <button
