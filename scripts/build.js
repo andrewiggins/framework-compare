@@ -56,7 +56,7 @@ async function compileComponents() {
 /**
  * @param {Components} components
  * @param {import('./data').FrameworkData} frameworkData
- * @typedef {{ url: string; title?: string; bodyClass?: string; }} LayoutProps
+ * @typedef {{ url: string; title?: string; bodyClass?: string; scripts?: string[] }} LayoutProps
  * @typedef {(page: import('preact').JSX.Element, props: LayoutProps) => string} Renderer
  * @returns {Renderer}
  */

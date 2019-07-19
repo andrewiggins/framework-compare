@@ -11,6 +11,7 @@ import { PageHeader } from "./PageHeader";
  * @property {string} url
  * @property {import('../data').FrameworkData} data
  * @property {string} bodyClass
+ * @property {string[]} [scripts]
  * @property {any} children
  * @param {Props} props
  */
@@ -60,9 +61,11 @@ export const Layout = props => (
 					<Footer />
 				</div>
 			</div>
-			<script
-				src={relativeUrl(props.url, "dist/prism-bundle.js")}
-			></script>
+			<script src={relativeUrl(props.url, "dist/prism-bundle.js")}></script>
+			{props.scripts &&
+				props.scripts.map(script => (
+					<script src={relativeUrl(props.url, script)}></script>
+				))}
 		</body>
 	</html>
 );

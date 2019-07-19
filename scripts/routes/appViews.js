@@ -18,12 +18,12 @@ async function buildAppViews(renderPage, AppPage, frameworkData) {
 	await Promise.all(
 		allApps.map(async app => {
 			const title = `${app.name} - ${app.framework}`;
-			const appSrc = toUrl(path.relative(path.dirname(app.htmlUrl), app.jsUrl));
-			const page = h(AppPage, { app, appSrc });
+			const page = h(AppPage, { app });
 			const appHtml = renderPage(page, {
 				url: app.htmlUrl,
 				title,
-				bodyClass: "app-page"
+				bodyClass: "app-page",
+				scripts: [app.jsUrl]
 			});
 
 			const htmlPath = app.htmlUrl;

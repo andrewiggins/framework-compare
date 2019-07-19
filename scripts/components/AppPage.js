@@ -3,7 +3,7 @@ import cc from "classcat";
 import prettyBytes from "pretty-bytes";
 
 const NEW_LINE_EXP = /\n(?!$)/g;
-const getSrcId = (app, srcFile) => `${app}-${srcFile}`;
+const getSrcId = (app, srcFile) => `${app.replace(/ /g, '-')}/${srcFile}`;
 
 function LineNumbers({ contents }) {
 	const lines = contents.split(NEW_LINE_EXP);
@@ -15,9 +15,9 @@ function LineNumbers({ contents }) {
 }
 
 /**
- * @param {{ app: import('../data').AppData; appSrc: string }} props
+ * @param {{ app: import('../data').AppData; }} props
  */
-export const AppPage = ({ app, appSrc }) => {
+export const AppPage = ({ app }) => {
 	const sourceFiles = Object.keys(app.sources);
 	return (
 		<Fragment>
@@ -65,7 +65,6 @@ export const AppPage = ({ app, appSrc }) => {
 					})}
 				</div>
 			</div>
-			<script src={appSrc} type="text/javascript" />
 		</Fragment>
 	);
 };
