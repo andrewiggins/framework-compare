@@ -2,6 +2,8 @@ const path = require("path");
 const { readFile } = require("fs").promises;
 const getGzipSize = require("gzip-size");
 const getBrotliSize = require("brotli-size");
+const Prism = require("prismjs");
+const loadLanguages = require("prismjs/components/");
 const {
 	getDisplayName,
 	toUrl,
@@ -10,6 +12,8 @@ const {
 	listFiles,
 	srcPath
 } = require("./util");
+
+loadLanguages(["jsx"]);
 
 const replaceExt = (fileName, newExt) => {
 	let newFilename = path.basename(fileName, path.extname(fileName)) + newExt;
@@ -41,8 +45,9 @@ async function buildFrameworkData() {
 
 /**
  * @typedef SourceFile
- * @property {string} contents
  * @property {string} lang
+ * @property {string} contents
+ * @property {string} htmlContents
  *
  * @typedef AppData
  * @property {string} framework
@@ -77,10 +82,13 @@ async function buildAppData(framework, appName, jsFile) {
 	/** @type {Record<string, SourceFile>} */
 	const sources = {};
 	for (let i = 0; i < srcFiles.length; i++) {
+		const contents = srcContents[i].trim();
 		const ext = srcFiles[i].split(".").pop();
+		const lang = ext === "vue" ? "html" : ext;
 		sources[srcFiles[i]] = {
-			lang: ext === "vue" ? "html" : ext,
-			contents: srcContents[i]
+			lang,
+			contents,
+			htmlContents: Prism.highlight(contents, Prism.languages[lang], lang)
 		};
 	}
 

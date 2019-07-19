@@ -7,7 +7,6 @@ const buble = require("rollup-plugin-buble");
 const { terser } = require("rollup-plugin-terser");
 const { h } = require("preact");
 const { render } = require("preact-render-to-string");
-const prettier = require("prettier");
 const postcss = require("postcss");
 const reporter = require("postcss-reporter/lib/formatter")();
 const cssnano = require("cssnano");
@@ -71,8 +70,7 @@ const createRenderer = (components, frameworkData) => (page, layoutProps) => {
 		page
 	);
 
-	const html = "<!DOCTYPE html>\n" + render(markup, {});
-	return prettier.format(html, { parser: "html" });
+	return "<!DOCTYPE html>\n" + render(markup, {});
 };
 
 /**
@@ -199,7 +197,7 @@ async function build() {
 			"themes/prism.css",
 			"plugins/line-numbers/prism-line-numbers.css"
 		]),
-		buildJSBundles()
+		// buildJSBundles()
 	]);
 	console.timeEnd(stage3);
 }
