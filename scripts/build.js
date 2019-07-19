@@ -197,7 +197,7 @@ async function build() {
 			"themes/prism.css",
 			"plugins/line-numbers/prism-line-numbers.css"
 		]),
-		// buildJSBundles()
+		buildJSBundles()
 	]);
 	console.timeEnd(stage3);
 }

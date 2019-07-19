@@ -33,7 +33,7 @@ export const AppPage = ({ app }) => {
 				<div class="panel-body">
 					<div id="app" />
 				</div>
-				<div class="panel-footer"></div>
+				<div class="panel-footer" />
 			</div>
 			<div class="panel">
 				<div class="panel-header">
@@ -45,23 +45,31 @@ export const AppPage = ({ app }) => {
 				<div class="panel-nav">
 					<ul class="tab tab-block">
 						{sourceFiles.map((srcFile, i) => (
-							<li class={cc({ "tab-item": true, active: i == 0 })}>
-								<a href={"#" + getSrcId(app, srcFile)}>{srcFile}</a>
+							<li class="tab-item">
+								<a
+									class={cc({ active: i == 0 })}
+									href={"#" + getSrcId(app, srcFile)}
+								>
+									{srcFile}
+								</a>
 							</li>
 						))}
 					</ul>
 				</div>
 				<div class="panel-body">
-					{sourceFiles.map(srcFile => {
+					{sourceFiles.map((srcFile, i) => {
 						let { contents, htmlContents, lang } = app.sources[srcFile];
 
 						return (
-							<div class="tab-body" id={getSrcId(app, srcFile)}>
+							<div
+								class={cc({ "tab-body": true, active: i == 0 })}
+								id={getSrcId(app, srcFile)}
+							>
 								<pre class={`line-numbers language-${lang}`}>
 									<code
 										class={`language-${lang}`}
 										dangerouslySetInnerHTML={{ __html: htmlContents }}
-									></code>
+									/>
 									<LineNumbers contents={contents} />
 								</pre>
 							</div>

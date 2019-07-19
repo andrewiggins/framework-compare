@@ -62,6 +62,7 @@ export const Layout = props => (
 				</div>
 			</div>
 			<script src={relativeUrl(props.url, "dist/prism-bundle.js")}></script>
+			<script src={relativeUrl(props.url, "dist/site.js")}></script>
 			{props.scripts &&
 				props.scripts.map(script => (
 					<script src={relativeUrl(props.url, script)}></script>
