@@ -4,21 +4,10 @@ Implement a set of webpages of increasing complexity in a couple different frame
 
 ## Frameworks to consider
 
-- Preact + Compat
-- Vue + Hooks
 - lit-html
-- lit-html + WC (lit-element?)
-
-Others:
-
-- inferno
-- ivi
-- aurelia
-- hyperhtml
-- angular
-- mithril
+- lit-element?
+- angular ivy
 - ember/glimmer
-- stencil?
 
 ## Webpages
 

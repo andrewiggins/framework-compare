@@ -7,7 +7,8 @@ const {
 	toUrl,
 	frameworkOutput,
 	listDirs,
-	listFiles
+	listFiles,
+	srcPath
 } = require("./util");
 
 const replaceExt = (fileName, newExt) => {
@@ -16,7 +17,6 @@ const replaceExt = (fileName, newExt) => {
 };
 
 /**
- * @typedef {{ framework: string; name: string; htmlUrl: string; jsUrl: string; gzipSize: number; brotliSize: number; }} AppData
  * @typedef {Array<{ name: string; apps: AppData[] }>} FrameworkData
  * @returns {Promise<FrameworkData>}
  */
@@ -29,31 +29,70 @@ async function buildFrameworkData() {
 			const appNames = jsFiles.map(jsFile => jsFile.replace(".min.js", ""));
 
 			const apps = await Promise.all(
-				appNames.map(async (appName, i) => {
-					const htmlFile = replaceExt(appName, ".html");
-					const htmlPath = frameworkOutput(framework, htmlFile);
-					const jsPath = frameworkOutput(framework, jsFiles[i]);
-					const jsContents = await readFile(jsPath);
-
-					const [gzipSize, brotliSize] = await Promise.all([
-						getGzipSize(jsContents),
-						getBrotliSize(jsContents)
-					]);
-
-					return {
-						framework: getDisplayName(framework),
-						name: getDisplayName(appName),
-						htmlUrl: toUrl(htmlPath),
-						jsUrl: toUrl(jsPath),
-						gzipSize,
-						brotliSize
-					};
-				})
+				appNames.map(async (appName, i) =>
+					buildAppData(framework, appName, jsFiles[i])
+				)
 			);
 
 			return { name: getDisplayName(framework), apps };
 		})
 	);
+}
+
+/**
+ * @typedef SourceFile
+ * @property {string} contents
+ * @property {string} lang
+ *
+ * @typedef AppData
+ * @property {string} framework
+ * @property {string} name
+ * @property {string} htmlUrl
+ * @property {string} jsUrl
+ * @property {number} gzipSize
+ * @property {number} brotliSize
+ * @property {Record<string, SourceFile>} sources
+ *
+ * @param {string} framework
+ * @param {string} appName
+ * @param {string} jsFile
+ * @returns {Promise<AppData>}
+ */
+async function buildAppData(framework, appName, jsFile) {
+	const htmlFile = replaceExt(appName, ".html");
+	const htmlPath = frameworkOutput(framework, htmlFile);
+	const jsPath = frameworkOutput(framework, jsFile);
+	const srcFiles = await listFiles(srcPath(framework, appName));
+
+	const [jsContents, ...srcContents] = await Promise.all([
+		readFile(jsPath, "utf8"),
+		...srcFiles.map(file => readFile(srcPath(framework, appName, file), "utf8"))
+	]);
+
+	const [gzipSize, brotliSize] = await Promise.all([
+		getGzipSize(jsContents),
+		getBrotliSize(jsContents)
+	]);
+
+	/** @type {Record<string, SourceFile>} */
+	const sources = {};
+	for (let i = 0; i < srcFiles.length; i++) {
+		const ext = srcFiles[i].split(".").pop();
+		sources[srcFiles[i]] = {
+			lang: ext === "vue" ? "html" : ext,
+			contents: srcContents[i]
+		};
+	}
+
+	return {
+		framework: getDisplayName(framework),
+		name: getDisplayName(appName),
+		htmlUrl: toUrl(htmlPath),
+		jsUrl: toUrl(jsPath),
+		gzipSize,
+		brotliSize,
+		sources
+	};
 }
 
 module.exports = {

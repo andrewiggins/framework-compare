@@ -13,6 +13,16 @@ a:visited {
 	color: #5755d9;
 }
 
+code[class*="language-"],
+pre[class*="language-"]	 {
+	tab-size: 2; /* Override Prism default tab-size */
+}
+
+code[class*="language-"] {
+	padding: 0; /* Override spectre styles to not conflict with Prism */
+	padding-top: .1rem;
+}
+
 /*******************************
 
 Sidebar nav styles
@@ -128,7 +138,7 @@ Page styles
 	.page-header {
 		position: static;
 		padding-left: 2.8rem;
-    padding-top: 0.3rem;
+		padding-top: 0.3rem;
 	}
 
 	.page-title {

@@ -28,6 +28,7 @@ const outputPath = (...args) => p("dist", ...args);
 const toUrl = s => path.relative(p(), s).replace(/\\/gi, "/");
 
 const frameworkOutput = (...args) => outputPath("frameworks", ...args);
+const srcPath = (framework, app, ...args) => p("frameworks", framework, "src", app, ...args);
 
 /** @type {(app: string) => string} */
 const getDisplayName = app => toTitleCase(app.replace(/-/g, " "));
@@ -59,6 +60,7 @@ module.exports = {
 	toUrl,
 	toTitleCase,
 	frameworkOutput,
+	srcPath,
 	getDisplayName,
 	ensureDir
 };

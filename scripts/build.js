@@ -4,6 +4,7 @@ const rollup = require("rollup");
 const nodeResolve = require("rollup-plugin-node-resolve");
 const commonjs = require("rollup-plugin-commonjs");
 const buble = require("rollup-plugin-buble");
+const { terser } = require("rollup-plugin-terser");
 const { h } = require("preact");
 const { render } = require("preact-render-to-string");
 const prettier = require("prettier");
@@ -13,7 +14,7 @@ const cssnano = require("cssnano");
 const uncss = require("postcss-uncss");
 
 const { buildFrameworkData } = require("./data");
-const { p, outputPath, ensureDir } = require("./util");
+const { p, outputPath, ensureDir, listFiles } = require("./util");
 
 const { buildIntroPage } = require("./routes/intro");
 const { buildSummaryView } = require("./routes/summary");
@@ -37,7 +38,7 @@ async function compileComponents() {
 					dangerousForOf: true
 				}
 			}),
-			//@ts-ignore
+			// @ts-ignore
 			commonjs(),
 			// @ts-ignore
 			nodeResolve({
@@ -114,29 +115,53 @@ async function buildSiteCss() {
 	await writeFile(to, result.css, "utf8");
 }
 
-async function buildVendorCss() {
-	const spectreFiles = [
-		"spectre.min.css",
-		"spectre-exp.min.css",
-		"spectre-icons.min.css"
-	];
-
-	const spectreSrcPath = file => p("node_modules/spectre.css/dist", file);
-	const from = spectreSrcPath(spectreFiles[0]);
-	const to = outputPath("spectre-custom.min.css");
+async function buildVendorCss(packageName, vendorFiles) {
+	const vendorSrcPath = file => p(`node_modules/${packageName}`, file);
+	const from = vendorSrcPath(vendorFiles[0]);
+	const to = outputPath(`${packageName}-bundle.min.css`);
 
 	const vendorSrc = (await Promise.all(
-		spectreFiles.map(spectreSrcPath).map(filePath => readFile(filePath, "utf8"))
+		vendorFiles.map(vendorSrcPath).map(filePath => readFile(filePath, "utf8"))
 	)).join("\n");
 
-	// const result = await runPostCss(
-	// 	[uncss({ html: [p("index.html"), outputPath("**/*.html")] })],
-	// 	vendorSrc,
-	// 	{ from }
-	// );
-	// await writeFile(to, result.css, "utf8");
+	const result = await runPostCss(
+		[
+			cssnano()
+			// uncss({ html: [p("index.html"), outputPath("**/*.html")] })
+		],
+		vendorSrc,
+		{ from }
+	);
+	await writeFile(to, result.css, "utf8");
+}
 
-	await writeFile(to, vendorSrc, "utf8");
+async function buildJSBundles() {
+	const fileNames = await listFiles(p("scripts/bundles"));
+	const filePaths = fileNames.map(name => p("scripts/bundles", name));
+
+	const config = {
+		input: filePaths,
+		output: {
+			dir: p("dist"),
+			format: /** @type {import('rollup').ModuleFormat} */ ("iife")
+		},
+		plugins: [
+			buble({
+				jsx: "h",
+				transforms: {
+					dangerousForOf: true
+				}
+			}),
+			// @ts-ignore
+			commonjs(),
+			// @ts-ignore
+			nodeResolve(),
+			terser()
+		]
+	};
+
+	const bundle = await rollup.rollup(config);
+	await bundle.write(config.output);
 }
 
 async function build() {
@@ -163,7 +188,19 @@ async function build() {
 	// Uses built HTML to remove unused CSS
 	const stage3 = "Building CSS";
 	console.time(stage3);
-	await Promise.all([buildVendorCss(), buildSiteCss()]);
+	await Promise.all([
+		buildSiteCss(),
+		buildVendorCss("spectre.css", [
+			"dist/spectre.min.css",
+			"dist/spectre-exp.min.css",
+			"dist/spectre-icons.min.css"
+		]),
+		buildVendorCss("prismjs", [
+			"themes/prism.css",
+			"plugins/line-numbers/prism-line-numbers.css"
+		]),
+		buildJSBundles()
+	]);
 	console.timeEnd(stage3);
 }
 
