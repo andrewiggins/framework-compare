@@ -4,12 +4,6 @@
 * Write up conclusion
 * Add CONTRIBUTING guide
 
-* Consider showing source files inline under app
-	* Consider using prism-file-highlight plugin
-	* Consider SSR'ing source using Prism.highlight
-	* Rename jsx source files to use jsx extension (so they get properly highlighted)
-
-
 * Perhaps add toggle for source and js output? Particularly useful for compiler frameworks (Vue, Svelte)
 * Add link to framework repl if exists
 * Consider having one page per app with a framework selector? with standalone page option?

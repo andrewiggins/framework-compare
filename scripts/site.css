@@ -114,8 +114,8 @@ Spectre off-canvas overrides
 }
 
 .off-canvas .off-canvas-content {
-	width: 100%;
 	padding: 0 1.5rem;
+	width: calc(100% - 13rem);
 }
 
 @media (max-width: 600px) {
@@ -125,6 +125,7 @@ Spectre off-canvas overrides
 
 	.off-canvas .off-canvas-content {
 		padding: 0 0.5rem;
+		width: calc(100% - 11rem);
 	}
 }
 
@@ -195,4 +196,25 @@ Page styles
 .page-footer a,
 .page-footer a:visited {
 	color: #66758c;
+}
+
+/*******************************
+
+App Page styles
+
+********************************/
+
+@media (min-width: 1080px) {
+	.app-page .page-contents {
+		display: flex;
+	}
+
+	.app-page .page-contents > .panel:first-child {
+		flex: 1 2 auto;
+		min-width: 320px;
+	}
+	.app-page .page-contents > .panel:last-child {
+		flex: 1 1 auto;
+		min-width: 0;
+	}
 }
