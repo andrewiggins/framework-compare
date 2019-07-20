@@ -131,7 +131,7 @@ Spectre off-canvas overrides
 
 /*******************************
 
-Spectre off-canvas overrides
+Spectre tabbing JS styles
 
 ********************************/
 
@@ -217,4 +217,12 @@ App Page styles
 		flex: 1 1 auto;
 		min-width: 0;
 	}
+}
+
+.source.panel .panel-body {
+	padding: 0;
+}
+
+.source.panel .panel-body pre {
+	margin-bottom: 0;
 }

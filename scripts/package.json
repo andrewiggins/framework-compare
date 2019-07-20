@@ -3,9 +3,6 @@
   "private": true,
   "version": "0.0.1",
   "license": "MIT",
-  "scripts": {
-    "build": "node build.js"
-  },
   "dependencies": {
     "classcat": "^4.0.2",
     "preact": "^10.0.0-rc.0",

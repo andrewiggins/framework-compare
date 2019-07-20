@@ -5,7 +5,8 @@
 * Add CONTRIBUTING guide
 
 * Perhaps add toggle for source and js output? Particularly useful for compiler frameworks (Vue, Svelte)
-* Add rollup-plugin-visualizer html to output
+* Add app and framework filtering to summary table
+* Add option to show nav by App instead of by Framework
 
 * Consider having different es5 and modern JS files
 * Consider eventually adding a app that delay loads component from separate chunk.
@@ -13,8 +14,4 @@
 * Determine what to do about styles
 	* Could require apps that have styles to render pre-defined markup using classes for styles provided externally
 	* Build basic style imports into every framework
-* Define library for common utilities across apps (e.g. spreadsheet grammar)
-	* common/ folder in src
-	* lib/ workspace
-* Add app and framework filtering to summary table
-* Add option to show nav by App instead of by Framework
+* Add rollup-plugin-visualizer html to output

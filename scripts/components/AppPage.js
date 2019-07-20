@@ -35,11 +35,11 @@ export const AppPage = ({ app }) => {
 				</div>
 				<div class="panel-footer" />
 			</div>
-			<div class="panel">
+			<div class="panel source">
 				<div class="panel-header">
 					<h2 class="panel-title h4">Source</h2>
 					<div>Bundle sizes:</div>
-					<div>{prettyBytes(app.sizes.minified)} minfied</div>
+					<div>{prettyBytes(app.sizes.minified)} minified</div>
 					<div>{prettyBytes(app.sizes.gzip)} Gzip</div>
 					<div>{prettyBytes(app.sizes.brotli)} Brotli</div>
 				</div>
