@@ -5,15 +5,11 @@
 * Add CONTRIBUTING guide
 
 * Perhaps add toggle for source and js output? Particularly useful for compiler frameworks (Vue, Svelte)
-* Add link to framework repl if exists
-* Consider having one page per app with a framework selector? with standalone page option?
-* Add Compare page
-	* plus button to add multiple frameworks of one app to view source and Compare
-* Add brotli/gzip radio option to summary page (power radios using /scripts/bundles/summary.js)
 * Add rollup-plugin-visualizer html to output
 
 * Consider having different es5 and modern JS files
-* Consider eventually adding a app that delay loads component from separate chunk. Bundling and infra needs to handle more than 1 js file per app
+* Consider eventually adding a app that delay loads component from separate chunk.
+	Bundling and infra needs to handle more than 1 js file per app
 * Determine what to do about styles
 	* Could require apps that have styles to render pre-defined markup using classes for styles provided externally
 	* Build basic style imports into every framework

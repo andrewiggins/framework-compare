@@ -29,12 +29,16 @@ async function buildFrameworkData() {
 	return await Promise.all(
 		frameworks.map(async framework => {
 			const distFiles = await listFiles(frameworkOutput(framework));
-			const jsFiles = distFiles.filter(file => file.endsWith(".min.js"));
-			const appNames = jsFiles.map(jsFile => jsFile.replace(".min.js", ""));
+			const minifiedJsFiles = distFiles.filter(file =>
+				file.endsWith(".min.js")
+			);
+			const appNames = minifiedJsFiles.map(jsFile =>
+				jsFile.replace(".min.js", "")
+			);
 
 			const apps = await Promise.all(
 				appNames.map(async (appName, i) =>
-					buildAppData(framework, appName, jsFiles[i])
+					buildAppData(framework, appName, minifiedJsFiles[i])
 				)
 			);
 
@@ -54,19 +58,18 @@ async function buildFrameworkData() {
  * @property {string} name
  * @property {string} htmlUrl
  * @property {string} jsUrl
- * @property {number} gzipSize
- * @property {number} brotliSize
+ * @property {{ minified: number; gzip: number; brotli: number; }} sizes
  * @property {Record<string, SourceFile>} sources
  *
  * @param {string} framework
  * @param {string} appName
- * @param {string} jsFile
+ * @param {string} minifiedJsFile
  * @returns {Promise<AppData>}
  */
-async function buildAppData(framework, appName, jsFile) {
+async function buildAppData(framework, appName, minifiedJsFile) {
 	const htmlFile = replaceExt(appName, ".html");
 	const htmlPath = frameworkOutput(framework, htmlFile);
-	const jsPath = frameworkOutput(framework, jsFile);
+	const jsPath = frameworkOutput(framework, minifiedJsFile);
 	const srcFiles = await listFiles(srcPath(framework, appName));
 
 	const [jsContents, ...srcContents] = await Promise.all([
@@ -97,8 +100,11 @@ async function buildAppData(framework, appName, jsFile) {
 		name: getDisplayName(appName),
 		htmlUrl: toUrl(htmlPath),
 		jsUrl: toUrl(jsPath),
-		gzipSize,
-		brotliSize,
+		sizes: {
+			minified: jsContents.length,
+			gzip: gzipSize,
+			brotli: brotliSize
+		},
 		sources
 	};
 }

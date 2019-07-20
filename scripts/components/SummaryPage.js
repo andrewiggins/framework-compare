@@ -29,29 +29,36 @@ export function SummaryPage(props) {
 	/** @type {Array<Array<string | number>>} */
 	const gzipData = [];
 	const brotliData = [];
+	const minifiedData = [];
 	for (let appName of Object.keys(apps).sort(appSorter)) {
 		/** @type {Array<string | number>} */
 		const gzipRow = [appName];
 		/** @type {Array<string | number>} */
 		const brotliRow = [appName];
+		/** @type {Array<string | number>} */
+		const minifiedRow = [appName];
 		for (let framework of frameworks) {
 			const appData = apps[appName][framework];
 			if (appData) {
-				gzipRow.push(prettyBytes(appData.gzipSize));
-				brotliRow.push(prettyBytes(appData.brotliSize));
+				gzipRow.push(prettyBytes(appData.sizes.gzip));
+				brotliRow.push(prettyBytes(appData.sizes.brotli));
+				minifiedRow.push(prettyBytes(appData.sizes.minified));
 			} else {
 				brotliRow.push("—");
 				gzipRow.push("—");
+				minifiedRow.push("—");
 			}
 		}
 
 		gzipData.push(gzipRow);
 		brotliData.push(brotliRow);
+		minifiedData.push(minifiedRow);
 	}
 
 	const allData = [
-		{ name: "brotli-data", data: brotliData },
-		{ name: "gzip-data", data: gzipData }
+		{ name: "Brotli-data", data: brotliData },
+		{ name: "Gzip-data", data: gzipData },
+		{ name: "Minified-data", data: minifiedData }
 	];
 
 	return (

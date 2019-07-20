@@ -39,8 +39,9 @@ export const AppPage = ({ app }) => {
 				<div class="panel-header">
 					<h2 class="panel-title h4">Source</h2>
 					<div>Bundle sizes:</div>
-					<div>{prettyBytes(app.gzipSize)} Gzip</div>
-					<div>{prettyBytes(app.brotliSize)} Brotli</div>
+					<div>{prettyBytes(app.sizes.minified)} minfied</div>
+					<div>{prettyBytes(app.sizes.gzip)} Gzip</div>
+					<div>{prettyBytes(app.sizes.brotli)} Brotli</div>
 				</div>
 				<div class="panel-nav">
 					<ul class="tab tab-block">
