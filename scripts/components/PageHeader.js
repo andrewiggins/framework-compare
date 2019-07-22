@@ -5,6 +5,9 @@ import { h } from "preact";
  */
 export const PageHeader = ({ title, children }) => (
 	<div class="page-header">
+		<a class="off-canvas-toggle btn btn-primary btn-action" href="#sidebar">
+			<i class="icon icon-menu" />
+		</a>
 		<h1 class="page-title">{title}</h1>
 		{children && <div class="metadata">{children}</div>}
 	</div>

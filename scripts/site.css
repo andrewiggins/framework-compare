@@ -129,6 +129,13 @@ Spectre off-canvas overrides
 	}
 }
 
+@media (min-width: 960px) {
+	/* To make it align with page title h1 */
+	.off-canvas .off-canvas-toggle {
+		margin: 7px 1rem 7px 0;
+	}
+}
+
 /*******************************
 
 Spectre tabbing JS styles

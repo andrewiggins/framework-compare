@@ -39,15 +39,6 @@ export const Layout = props => (
 		</head>
 		<body class={props.bodyClass}>
 			<div class="off-canvas off-canvas-sidebar-show">
-				<div class="navbar">
-					<a
-						class="off-canvas-toggle btn btn-primary btn-action"
-						href="#sidebar"
-					>
-						<i class="icon icon-menu" />
-					</a>
-				</div>
-
 				<div id="sidebar" class="sidebar off-canvas-sidebar">
 					<div class="brand">Framework Compare</div>
 					<Nav url={props.url} data={props.data} />
