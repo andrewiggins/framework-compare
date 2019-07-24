@@ -23,7 +23,7 @@ async function buildAppViews(renderPage, AppPage, frameworkData) {
 				url: app.htmlUrl,
 				title,
 				bodyClass: "app-page",
-				scripts: [app.jsUrl]
+				scripts: ["/" + app.jsUrl]
 			});
 
 			const htmlPath = app.htmlUrl;

@@ -1,5 +1,5 @@
 import { h } from "preact";
-import { appSorter, relativeUrl, getDisplayName, groupByApp } from "./util";
+import { appSorter, getDisplayName, groupByApp } from "./util";
 
 const active = "active";
 
@@ -46,7 +46,7 @@ export const Nav = ({ data: byFrameworkData, url }) => {
 						{aboutSection.pages.map(page => (
 							<li class="menu-item">
 								<a
-									href={relativeUrl(url, page.url)}
+									href={"/" + page.url}
 									class={url === page.url ? active : null}
 								>
 									{page.name}
@@ -82,7 +82,7 @@ export const Nav = ({ data: byFrameworkData, url }) => {
 								{framework.apps.sort(appSorter).map(app => (
 									<li class="menu-item">
 										<a
-											href={relativeUrl(url, app.htmlUrl)}
+											href={"/" + app.htmlUrl}
 											class={app.htmlUrl == url ? active : null}
 										>
 											{app.appName}
@@ -109,7 +109,7 @@ export const Nav = ({ data: byFrameworkData, url }) => {
 								{app.frameworks.sort(appSorter).map(app => (
 									<li class="menu-item">
 										<a
-											href={relativeUrl(url, app.htmlUrl)}
+											href={"/" + app.htmlUrl}
 											class={app.htmlUrl == url ? active : null}
 										>
 											{app.framework}

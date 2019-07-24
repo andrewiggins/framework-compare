@@ -13,7 +13,7 @@ function generateConfigs(frameworkName, plugins) {
 		const jsIndexPath = `./src/${appFolder}/index.js`;
 		const jsxIndexPath = `./src/${appFolder}/index.jsx`;
 		return generateConfig(
-			frameworkName,
+			frameworkOutput(frameworkName, appFolder),
 			fs.existsSync(jsxIndexPath) ? jsxIndexPath : jsIndexPath,
 			"production",
 			plugins
@@ -23,27 +23,29 @@ function generateConfigs(frameworkName, plugins) {
 
 /**
  * @typedef {"development" | "production"} Environment
- * @param {string} frameworkName
+ * @param {string} outputDir
  * @param {string} input
  * @param {Environment} environment
  * @param {(environment: Environment) => any[]} customPlugins
  */
-function generateConfig(frameworkName, input, environment, customPlugins) {
-	const extension = environment == "production" ? ".min.js" : ".js";
-	const outputFile = path.basename(path.dirname(input)) + extension;
+function generateConfig(outputDir, input, environment, customPlugins) {
+	const isProd = environment === "production";
+	const extension = isProd ? ".min.js" : ".js";
 
 	// @ts-ignore
 	let plugins = [...customPlugins(environment), nodeResolve()];
-	if (environment === "production") {
+	if (isProd) {
 		plugins.push(terser());
 	}
 
 	return {
 		input,
 		output: {
-			file: frameworkOutput(frameworkName, outputFile),
+			dir: outputDir,
 			format: "iife",
-			compact: environment === "production"
+			compact: isProd,
+			entryFileNames: `[name]${extension}`,
+			chunkFileNames: `[name]-[hash]${extension}`
 		},
 		plugins,
 		watch: {

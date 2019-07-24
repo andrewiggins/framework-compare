@@ -1,6 +1,5 @@
 import { h } from "preact";
 import { Nav } from "./Nav";
-import { relativeUrl } from "./util";
 import { Footer } from "./Footer";
 import { PageHeader } from "./PageHeader";
 
@@ -24,18 +23,9 @@ export const Layout = props => (
 			<title>
 				{(props.title ? props.title + " - " : "") + "Framework Compare"}
 			</title>
-			<link
-				rel="stylesheet"
-				href={relativeUrl(props.url, "dist/spectre.css-bundle.min.css")}
-			/>
-			<link
-				rel="stylesheet"
-				href={relativeUrl(props.url, "dist/prismjs-bundle.min.css")}
-			/>
-			<link
-				rel="stylesheet"
-				href={relativeUrl(props.url, "dist/site.min.css")}
-			/>
+			<link rel="stylesheet" href="/dist/spectre.css-bundle.min.css" />
+			<link rel="stylesheet" href="/dist/prismjs-bundle.min.css" />
+			<link rel="stylesheet" href="/dist/site.min.css" />
 		</head>
 		<body class={props.bodyClass}>
 			<div class="off-canvas off-canvas-sidebar-show">
@@ -52,11 +42,10 @@ export const Layout = props => (
 					<Footer />
 				</div>
 			</div>
-			<script src={relativeUrl(props.url, "dist/prism-bundle.js")}></script>
-			<script src={relativeUrl(props.url, "dist/site.js")}></script>
+			<script src="/dist/site.js" />
 			{props.scripts &&
 				props.scripts.map(script => (
-					<script src={relativeUrl(props.url, script)}></script>
+					<script src={script} />
 				))}
 		</body>
 	</html>

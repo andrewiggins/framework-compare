@@ -18,6 +18,8 @@ Implement a set of webpages of increasing complexity in a couple different frame
 - News site clone?
 - Github repo list?
 
+- Consider eventually adding a app that delay loads component from separate chunk.
+
 Also check out https://hackernoon.com/towards-a-better-gui-programming-benchmark-397aca3542b8
 
 And

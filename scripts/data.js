@@ -15,11 +15,6 @@ const {
 
 loadLanguages(["jsx"]);
 
-const replaceExt = (fileName, newExt) => {
-	let newFilename = path.basename(fileName, path.extname(fileName)) + newExt;
-	return path.join(path.dirname(fileName), newFilename);
-};
-
 /**
  * @typedef {Array<{ name: string; apps: AppData[] }>} FrameworkData
  * @returns {Promise<FrameworkData>}
@@ -28,18 +23,9 @@ async function buildFrameworkData() {
 	const frameworks = await listDirs(frameworkOutput());
 	return await Promise.all(
 		frameworks.map(async framework => {
-			const distFiles = await listFiles(frameworkOutput(framework));
-			const minifiedJsFiles = distFiles.filter(file =>
-				file.endsWith(".min.js")
-			);
-			const appNames = minifiedJsFiles.map(jsFile =>
-				jsFile.replace(".min.js", "")
-			);
-
+			const appFolders = await listDirs(frameworkOutput(framework));
 			const apps = await Promise.all(
-				appNames.map(async (appName, i) =>
-					buildAppData(framework, appName, minifiedJsFiles[i])
-				)
+				appFolders.map(async (appName, i) => buildAppData(framework, appName))
 			);
 
 			return { name: getDisplayName(framework), apps };
@@ -63,13 +49,13 @@ async function buildFrameworkData() {
  *
  * @param {string} framework
  * @param {string} appName
- * @param {string} minifiedJsFile
  * @returns {Promise<AppData>}
  */
-async function buildAppData(framework, appName, minifiedJsFile) {
-	const htmlFile = replaceExt(appName, ".html");
-	const htmlPath = frameworkOutput(framework, htmlFile);
-	const jsPath = frameworkOutput(framework, minifiedJsFile);
+async function buildAppData(framework, appName) {
+	const appOutput = (...args) => frameworkOutput(framework, appName, ...args);
+
+	const htmlPath = appOutput("index.html");
+	const jsPath = appOutput("index.min.js");
 	const srcFiles = await listFiles(srcPath(framework, appName));
 
 	const [jsContents, ...srcContents] = await Promise.all([
