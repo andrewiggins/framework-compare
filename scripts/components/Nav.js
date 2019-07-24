@@ -57,7 +57,7 @@ export const Nav = ({ data, url }) => (
 									href={relativeUrl(url, app.htmlUrl)}
 									class={app.htmlUrl == url ? active : null}
 								>
-									{app.name}
+									{app.appName}
 								</a>
 							</li>
 						))}

@@ -18,11 +18,11 @@ export function SummaryPage(props) {
 		headers.push(framework.name);
 
 		for (let app of framework.apps) {
-			if (!(app.name in apps)) {
-				apps[app.name] = {};
+			if (!(app.appName in apps)) {
+				apps[app.appName] = {};
 			}
 
-			apps[app.name][framework.name] = app;
+			apps[app.appName][framework.name] = app;
 		}
 	}
 

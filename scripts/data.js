@@ -55,7 +55,7 @@ async function buildFrameworkData() {
  *
  * @typedef AppData
  * @property {string} framework
- * @property {string} name
+ * @property {string} appName
  * @property {string} htmlUrl
  * @property {string} jsUrl
  * @property {{ minified: number; gzip: number; brotli: number; }} sizes
@@ -97,7 +97,7 @@ async function buildAppData(framework, appName, minifiedJsFile) {
 
 	return {
 		framework: getDisplayName(framework),
-		name: getDisplayName(appName),
+		appName: getDisplayName(appName),
 		htmlUrl: toUrl(htmlPath),
 		jsUrl: toUrl(jsPath),
 		sizes: {

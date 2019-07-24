@@ -6,7 +6,7 @@ const NEW_LINE_EXP = /\n(?!$)/g;
 
 /** @type {(app: import('../data').AppData, srcFile: string) => string} */
 const getSrcId = (app, srcFile) =>
-	`${app.framework}/${app.name.replace(/ /g, "-")}/${srcFile}`;
+	`${app.framework}/${app.appName.replace(/ /g, "-")}/${srcFile}`;
 
 function LineNumbers({ contents }) {
 	const lines = contents.split(NEW_LINE_EXP);
