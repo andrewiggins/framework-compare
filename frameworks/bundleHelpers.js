@@ -9,16 +9,18 @@ const { listDirsSync, frameworkOutput } = require("../scripts/util");
  * @param {(environment: Environment) => any[]} plugins
  */
 function generateConfigs(frameworkName, plugins) {
-	return listDirsSync("./src").map(appFolder => {
-		const jsIndexPath = `./src/${appFolder}/index.js`;
-		const jsxIndexPath = `./src/${appFolder}/index.jsx`;
-		return generateConfig(
-			frameworkOutput(frameworkName, appFolder),
-			fs.existsSync(jsxIndexPath) ? jsxIndexPath : jsIndexPath,
-			"production",
-			plugins
-		);
-	});
+	return listDirsSync("./src")
+		.map(appFolder => {
+			const jsIndexPath = `./src/${appFolder}/index.js`;
+			const jsxIndexPath = `./src/${appFolder}/index.jsx`;
+			const entry = fs.existsSync(jsxIndexPath) ? jsxIndexPath : jsIndexPath;
+			const outputDir = frameworkOutput(frameworkName, appFolder);
+			return [
+				generateConfig(outputDir, entry, "development", plugins),
+				generateConfig(outputDir, entry, "production", plugins)
+			];
+		})
+		.flat();
 }
 
 /**
