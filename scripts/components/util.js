@@ -26,6 +26,33 @@ export function appSorter(app1, app2) {
 	return sorted.indexOf(app1Name) - sorted.indexOf(app2Name);
 }
 
+/**
+ * @typedef {Array<{ name: string; frameworks: Array<import('../data').AppData>; }>} ByAppData
+ * @param {import('../data').FrameworkData} frameworkData
+ * @returns {ByAppData}
+ */
+export function groupByApp(frameworkData) {
+	/** @type {ByAppData} */
+	const apps = [];
+
+	/** @type {Record<string, number>} */
+	const appIndexes = {};
+
+	for (let framework of frameworkData) {
+		for (let app of framework.apps) {
+			if (!(app.appName in appIndexes)) {
+				appIndexes[app.appName] = apps.length;
+				apps.push({ name: app.appName, frameworks: [] })
+			}
+
+			const index = appIndexes[app.appName];
+			apps[index].frameworks.push(app);
+		}
+	}
+
+	return apps;
+}
+
 export function relativeUrl(currentUrl, url) {
 	return path.relative(path.dirname(currentUrl), url).replace(/\\/g, "/");
 }
@@ -37,14 +64,4 @@ const toTitleCase = str => {
 };
 
 /** @type {(app: string) => string} */
-const getDisplayName = app => toTitleCase(app.replace(/-/g, " "));
-
-const frameworkRegex = /\/frameworks\/([A-Za-z0-9_\-]+)\//i;
-
-/**
- * @param {string} url
- */
-export function getFramework(url) {
-	const match = url.match(frameworkRegex);
-	return match && getDisplayName(match[1]);
-}
+export const getDisplayName = app => toTitleCase(app.replace(/-/g, " "));

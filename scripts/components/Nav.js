@@ -1,5 +1,5 @@
 import { h } from "preact";
-import { appSorter, relativeUrl, getFramework } from "./util";
+import { appSorter, relativeUrl, getDisplayName, groupByApp } from "./util";
 
 const active = "active";
 
@@ -11,59 +11,116 @@ const aboutSection = {
 	]
 };
 
+const urlRegex = /\/frameworks\/([A-Za-z0-9_\-]+)\/([A-Za-z0-9_\-]+)\/?/i;
+
+/**
+ * @param {string} url
+ */
+function getFrameworkFromUrl(url) {
+	const match = url.match(urlRegex);
+	return match && getDisplayName(match[1]);
+}
+
+function getAppFromUrl(url) {
+	const match = url.match(urlRegex);
+	return match && getDisplayName(match[2]);
+}
+
 /**
  * @param {{ url: string; data: import('../data').FrameworkData; }} props
  */
-export const Nav = ({ data, url }) => (
-	<div class="nav">
-		<details
-			class="section accordion"
-			open={aboutSection.pages.map(page => page.url).includes(url)}
-		>
-			<summary class="section-header accordion-header c-hand">
-				<i class="icon icon-arrow-right mr-1" />
-				{aboutSection.name}
-			</summary>
-			<div class="section-body accordion-body">
-				<ul class="menu menu-nav">
-					{aboutSection.pages.map(page => (
-						<li class="menu-item">
-							<a
-								href={relativeUrl(url, page.url)}
-								class={url === page.url ? active : null}
-							>
-								{page.name}
-							</a>
-						</li>
-					))}
-				</ul>
-			</div>
-		</details>
-		<hr />
-		{data.map(framework => (
+export const Nav = ({ data: byFrameworkData, url }) => {
+	const byAppData = groupByApp(byFrameworkData);
+	return (
+		<div class="nav">
 			<details
 				class="section accordion"
-				open={getFramework(url) === framework.name}
+				open={aboutSection.pages.map(page => page.url).includes(url)}
 			>
 				<summary class="section-header accordion-header c-hand">
 					<i class="icon icon-arrow-right mr-1" />
-					{framework.name}
+					{aboutSection.name}
 				</summary>
 				<div class="section-body accordion-body">
 					<ul class="menu menu-nav">
-						{framework.apps.sort(appSorter).map(app => (
+						{aboutSection.pages.map(page => (
 							<li class="menu-item">
 								<a
-									href={relativeUrl(url, app.htmlUrl)}
-									class={app.htmlUrl == url ? active : null}
+									href={relativeUrl(url, page.url)}
+									class={url === page.url ? active : null}
 								>
-									{app.appName}
+									{page.name}
 								</a>
 							</li>
 						))}
 					</ul>
 				</div>
 			</details>
-		))}
-	</div>
-);
+			<hr />
+			<div class="form-group">
+				<label
+					id="nav-sort"
+					class="form-switch"
+					data-toggle="by-framework-nav by-app-nav"
+				>
+					<input type="checkbox" />
+					<i class="form-icon" /> Group by App
+				</label>
+			</div>
+			<div id="by-framework-nav">
+				{byFrameworkData.map(framework => (
+					<details
+						class="section accordion"
+						open={getFrameworkFromUrl(url) === framework.name}
+					>
+						<summary class="section-header accordion-header c-hand">
+							<i class="icon icon-arrow-right mr-1" />
+							{framework.name}
+						</summary>
+						<div class="section-body accordion-body">
+							<ul class="menu menu-nav">
+								{framework.apps.sort(appSorter).map(app => (
+									<li class="menu-item">
+										<a
+											href={relativeUrl(url, app.htmlUrl)}
+											class={app.htmlUrl == url ? active : null}
+										>
+											{app.appName}
+										</a>
+									</li>
+								))}
+							</ul>
+						</div>
+					</details>
+				))}
+			</div>
+			<div id="by-app-nav" style="display: none">
+				{byAppData.map(app => (
+					<details
+						class="section accordion"
+						open={getAppFromUrl(url) === app.name}
+					>
+						<summary class="section-header accordion-header c-hand">
+							<i class="icon icon-arrow-right mr-1" />
+							{app.name}
+						</summary>
+						<div class="section-body accordion-body">
+							<ul class="menu menu-nav">
+								{app.frameworks.sort(appSorter).map(app => (
+									<li class="menu-item">
+										<a
+											href={relativeUrl(url, app.htmlUrl)}
+											class={app.htmlUrl == url ? active : null}
+										>
+											{app.framework}
+										</a>
+									</li>
+								))}
+							</ul>
+						</div>
+					</details>
+				))}
+			</div>
+		</div>
+	);
+};
