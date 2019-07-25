@@ -16,8 +16,8 @@ function generateConfigs(frameworkName, plugins) {
 			const entry = fs.existsSync(jsxIndexPath) ? jsxIndexPath : jsIndexPath;
 			const outputDir = frameworkOutput(frameworkName, appFolder);
 			return [
-				generateConfig(outputDir, entry, "development", plugins),
-				generateConfig(outputDir, entry, "production", plugins)
+				generateConfig(outputDir, entry, false, plugins),
+				generateConfig(outputDir, entry, true, plugins)
 			];
 		})
 		.flat();
@@ -27,16 +27,22 @@ function generateConfigs(frameworkName, plugins) {
  * @typedef {"development" | "production"} Environment
  * @param {string} outputDir
  * @param {string} input
- * @param {Environment} environment
+ * @param {boolean} minify
  * @param {(environment: Environment) => any[]} customPlugins
+ * @param {Environment} [environment = "production"]
  */
-function generateConfig(outputDir, input, environment, customPlugins) {
-	const isProd = environment === "production";
-	const extension = isProd ? ".min.js" : ".js";
+function generateConfig(
+	outputDir,
+	input,
+	minify,
+	customPlugins,
+	environment = "production"
+) {
+	const extension = minify ? ".min.js" : ".js";
 
 	// @ts-ignore
 	let plugins = [...customPlugins(environment), nodeResolve()];
-	if (isProd) {
+	if (minify) {
 		plugins.push(terser());
 	}
 
@@ -45,7 +51,7 @@ function generateConfig(outputDir, input, environment, customPlugins) {
 		output: {
 			dir: outputDir,
 			format: "iife",
-			compact: isProd,
+			compact: minify,
 			entryFileNames: `[name]${extension}`,
 			chunkFileNames: `[name]-[hash]${extension}`
 		},

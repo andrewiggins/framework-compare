@@ -4,6 +4,7 @@
 * Write up conclusion
 * Add CONTRIBUTING guide
 
+* Add link/switch to view bundle output
 * Add rollup-plugin-visualizer html to output
 * Consider having different es5 and modern JS files
 
