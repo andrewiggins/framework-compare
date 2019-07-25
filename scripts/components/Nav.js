@@ -1,5 +1,5 @@
 import { h } from "preact";
-import { appSorter, getDisplayName, groupByApp } from "./util";
+import { appSorter, getDisplayName, groupByApp, relativeUrl } from "./util";
 
 const active = "active";
 
@@ -29,13 +29,14 @@ function getAppFromUrl(url) {
 /**
  * @param {{ url: string; data: import('../data').FrameworkData; }} props
  */
-export const Nav = ({ data: byFrameworkData, url }) => {
+export const Nav = ({ data: byFrameworkData, url: currentUrl }) => {
+	const u = url => relativeUrl(currentUrl, url);
 	const byAppData = groupByApp(byFrameworkData);
 	return (
 		<div class="nav">
 			<details
 				class="section accordion"
-				open={aboutSection.pages.map(page => page.url).includes(url)}
+				open={aboutSection.pages.map(page => page.url).includes(currentUrl)}
 			>
 				<summary class="section-header accordion-header c-hand">
 					<i class="icon icon-arrow-right mr-1" />
@@ -46,8 +47,8 @@ export const Nav = ({ data: byFrameworkData, url }) => {
 						{aboutSection.pages.map(page => (
 							<li class="menu-item">
 								<a
-									href={"/" + page.url}
-									class={url === page.url ? active : null}
+									href={u(page.url)}
+									class={currentUrl === page.url ? active : null}
 								>
 									{page.name}
 								</a>
@@ -71,7 +72,7 @@ export const Nav = ({ data: byFrameworkData, url }) => {
 				{byFrameworkData.map(framework => (
 					<details
 						class="section accordion"
-						open={getFrameworkFromUrl(url) === framework.name}
+						open={getFrameworkFromUrl(currentUrl) === framework.name}
 					>
 						<summary class="section-header accordion-header c-hand">
 							<i class="icon icon-arrow-right mr-1" />
@@ -82,8 +83,8 @@ export const Nav = ({ data: byFrameworkData, url }) => {
 								{framework.apps.sort(appSorter).map(app => (
 									<li class="menu-item">
 										<a
-											href={"/" + app.htmlUrl}
-											class={app.htmlUrl == url ? active : null}
+											href={u(app.htmlUrl)}
+											class={currentUrl == app.htmlUrl ? active : null}
 										>
 											{app.appName}
 										</a>
@@ -98,7 +99,7 @@ export const Nav = ({ data: byFrameworkData, url }) => {
 				{byAppData.map(app => (
 					<details
 						class="section accordion"
-						open={getAppFromUrl(url) === app.name}
+						open={getAppFromUrl(currentUrl) === app.name}
 					>
 						<summary class="section-header accordion-header c-hand">
 							<i class="icon icon-arrow-right mr-1" />
@@ -109,8 +110,8 @@ export const Nav = ({ data: byFrameworkData, url }) => {
 								{app.frameworks.sort(appSorter).map(app => (
 									<li class="menu-item">
 										<a
-											href={"/" + app.htmlUrl}
-											class={app.htmlUrl == url ? active : null}
+											href={u(app.htmlUrl)}
+											class={currentUrl == app.htmlUrl ? active : null}
 										>
 											{app.framework}
 										</a>

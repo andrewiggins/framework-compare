@@ -63,7 +63,11 @@ function watchFramework(framework) {
 }
 
 function startDevServer() {
-	runNode(p("node_modules/serve/bin/serve.js"), [p()]);
+	runNode(p("node_modules/serve/bin/serve.js"), [
+		p(),
+		"-c",
+		p("scripts/serve.json")
+	]);
 }
 
 async function main() {
@@ -76,8 +80,7 @@ async function main() {
 		for (let framework of availableFrameworks) {
 			tasks.push(() => watchFramework(framework));
 		}
-	}
-	else {
+	} else {
 		if (toWatch.includes("scripts")) {
 			tasks.push(watchScripts);
 			toWatch.splice(toWatch.indexOf("scripts"), 1);
