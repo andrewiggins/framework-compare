@@ -11,6 +11,9 @@
     "svelte": "^3.6.1"
   },
   "devDependencies": {
-    "rollup-plugin-svelte": "^5.1.0"
+    "@babel/core": "^7.5.4",
+    "@babel/preset-env": "^7.5.4",
+    "rollup-plugin-svelte": "^5.1.0",
+    "rollup-plugin-babel": "^4.3.3"
   }
 }
