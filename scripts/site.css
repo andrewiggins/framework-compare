@@ -216,11 +216,11 @@ App Page styles
 		display: flex;
 	}
 
-	.app-page .page-contents > .panel:first-child {
-		flex: 1 2 auto;
-		min-width: 320px;
+	.app-page .page-contents > .panel.result {
+		flex: 0 1 320px;
 	}
-	.app-page .page-contents > .panel:last-child {
+
+	.app-page .page-contents > .panel.source {
 		flex: 1 1 auto;
 		min-width: 0;
 	}

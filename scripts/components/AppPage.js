@@ -26,7 +26,7 @@ export const AppPage = ({ app }) => {
 	const sourceFiles = Object.keys(app.sources);
 	return (
 		<Fragment>
-			<div class="panel">
+			<div class="panel result">
 				<div class="panel-header">
 					<h2 class="panel-title h4">Result</h2>
 				</div>
