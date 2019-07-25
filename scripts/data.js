@@ -39,6 +39,11 @@ async function buildFrameworkData() {
  * @property {string} contents
  * @property {string} htmlContents
  *
+ * @typedef BundleFile
+ * @property {string} lang
+ * @property {number} contentLength
+ * @property {string} url
+ *
  * @typedef AppData
  * @property {string} framework
  * @property {string} appName
@@ -46,6 +51,7 @@ async function buildFrameworkData() {
  * @property {string} jsUrl
  * @property {{ minified: number; gzip: number; brotli: number; }} sizes
  * @property {Record<string, SourceFile>} sources
+ * @property {Record<string, BundleFile>} bundles
  *
  * @param {string} framework
  * @param {string} appName
@@ -56,11 +62,21 @@ async function buildAppData(framework, appName) {
 
 	const htmlPath = appOutput("index.html");
 	const jsPath = appOutput("index.min.js");
-	const srcFiles = await listFiles(srcPath(framework, appName));
+	const [appFiles, srcFiles] = await Promise.all([
+		listFiles(appOutput()),
+		listFiles(srcPath(framework, appName))
+	]);
 
-	const [jsContents, ...srcContents] = await Promise.all([
+	const bundleFiles = appFiles.filter(
+		file => file.endsWith(".js") && !file.endsWith(".min.js")
+	);
+
+	const [jsContents, ...otherContents] = await Promise.all([
 		readFile(jsPath, "utf8"),
-		...srcFiles.map(file => readFile(srcPath(framework, appName, file), "utf8"))
+		...srcFiles.map(file =>
+			readFile(srcPath(framework, appName, file), "utf8")
+		),
+		...bundleFiles.map(file => readFile(appOutput(file), "utf8"))
 	]);
 
 	const [gzipSize, brotliSize] = await Promise.all([
@@ -68,16 +84,49 @@ async function buildAppData(framework, appName) {
 		getBrotliSize(jsContents)
 	]);
 
+	const srcContents = otherContents.slice(0, srcFiles.length);
+	const bundleContents = otherContents.slice(srcFiles.length);
+
+	if (srcContents.length !== srcFiles.length) {
+		throw new Error(
+			`srcContents.length (${
+				srcContents.length
+			}) does not match srcFiles.length ${srcFiles.length} `
+		);
+	}
+
+	if (bundleContents.length !== bundleFiles.length) {
+		throw new Error(
+			`bundleContents.length (${
+				bundleContents.length
+			}) does not match bundleFiles.length ${bundleFiles.length} `
+		);
+	}
+
 	/** @type {Record<string, SourceFile>} */
 	const sources = {};
 	for (let i = 0; i < srcFiles.length; i++) {
 		const contents = srcContents[i].trim();
 		const ext = srcFiles[i].split(".").pop();
-		const lang = ext === "vue" ? "html" : ext;
+		const lang = getLang(ext);
 		sources[srcFiles[i]] = {
 			lang,
 			contents,
 			htmlContents: Prism.highlight(contents, Prism.languages[lang], lang)
+		};
+	}
+
+	/** @type {Record<string, BundleFile>} */
+	const bundles = {};
+	for (let i = 0; i < bundleFiles.length; i++) {
+		const contents = bundleContents[i].trim();
+		const ext = bundleFiles[i].split(".").pop();
+		const lang = getLang(ext);
+
+		bundles[bundleFiles[i]] = {
+			lang,
+			url: toUrl(appOutput(bundleFiles[i])),
+			contentLength: contents.length
 		};
 	}
 
@@ -91,9 +140,12 @@ async function buildAppData(framework, appName) {
 			gzip: gzipSize,
 			brotli: brotliSize
 		},
-		sources
+		sources,
+		bundles
 	};
 }
+
+const getLang = ext => (ext === "vue" ? "html" : ext);
 
 module.exports = {
 	buildFrameworkData

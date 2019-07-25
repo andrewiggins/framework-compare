@@ -5,7 +5,7 @@
   "description": "Compare implementations of some basic webpages in different frameworks",
   "main": "index.js",
   "scripts": {
-    "build": "yarn workspaces run build && node ./scripts/build.js",
+    "build": "rimraf dist && yarn workspaces run build && node ./scripts/build.js",
     "dev": "node ./scripts/dev.js",
     "deploy": "yarn build && node ./scripts/deploy.js",
     "serve": "serve",
@@ -32,6 +32,7 @@
     "jest": "^24.8.0",
     "jest-puppeteer": "^4.2.0",
     "puppeteer": "^1.18.1",
+    "rimraf": "^2.6.3",
     "rollup": "^1.16.7",
     "rollup-plugin-node-resolve": "^5.2.0",
     "rollup-plugin-terser": "^5.1.1",
