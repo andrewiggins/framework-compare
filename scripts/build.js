@@ -11,6 +11,7 @@ const { render } = require("preact-render-to-string");
 const postcss = require("postcss");
 const reporter = require("postcss-reporter/lib/formatter")();
 const cssnano = require("cssnano");
+const autoprefixer = require("autoprefixer");
 const scssParser = require("postcss-scss");
 const sass = require("postcss-node-sass");
 
@@ -121,11 +122,15 @@ async function buildSassBundles() {
 			const to = outputPath(`${packageName}-bundle.min.css`);
 
 			const source = await readFile(from, "utf8");
-			const result = await runPostCss([sass(), cssnano()], source, {
-				from,
-				to,
-				syntax: scssParser
-			});
+			const result = await runPostCss(
+				[sass(), autoprefixer(), cssnano()],
+				source,
+				{
+					from,
+					to,
+					syntax: scssParser
+				}
+			);
 			await writeFile(to, result.css, "utf8");
 		})
 	);
@@ -186,10 +191,7 @@ async function build() {
 	// Uses built HTML to remove unused CSS
 	const stage3 = "Building CSS";
 	console.time(stage3);
-	await Promise.all([
-		buildSassBundles(),
-		buildJSBundles()
-	]);
+	await Promise.all([buildSassBundles(), buildJSBundles()]);
 	console.timeEnd(stage3);
 }
 
