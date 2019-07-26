@@ -51,7 +51,7 @@ function watchScripts() {
 		"--watch",
 		p("dist/frameworks"),
 		"--ext",
-		"js,mjs,json,css",
+		"js,mjs,json,css,scss",
 		"--ignore",
 		p("scripts/components/index.js"),
 		p("scripts/build.js")

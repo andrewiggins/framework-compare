@@ -91,6 +91,17 @@ Sidebar nav styles
 	/* From accordion-header */
 	display: block;
 	padding: 0.2rem 0.4rem;
+
+
+	// Make <summary> elements focus state visible
+	&:focus, &:hover {
+		background: #f1f1fc;
+    color: #5755d9;
+	}
+
+	&:focus {
+		outline: rgba(87,85,217,.2) solid 0.1rem;
+	}
 }
 
 .sidebar .section .menu .menu-item {
