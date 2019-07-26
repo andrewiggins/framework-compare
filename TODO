@@ -4,7 +4,6 @@
 * Write up conclusion
 * Add CONTRIBUTING guide
 
-* Make URLs relative again cuz absolute doesn't work with github pages
 * Add link/switch to view bundle output
 * Add rollup-plugin-visualizer html to output
 * Consider having different es5 and modern JS files

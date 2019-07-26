@@ -26,9 +26,9 @@ export const Layout = props => {
 				<title>
 					{(props.title ? props.title + " - " : "") + "Framework Compare"}
 				</title>
-				<link rel="stylesheet" href={u("dist/spectre.css-bundle.min.css")} />
+				<link rel="stylesheet" href={u("dist/spectre-bundle.min.css")} />
 				<link rel="stylesheet" href={u("dist/prismjs-bundle.min.css")} />
-				<link rel="stylesheet" href={u("dist/site.min.css")} />
+				<link rel="stylesheet" href={u("dist/site-bundle.min.css")} />
 			</head>
 			<body class={props.bodyClass}>
 				<div class="off-canvas off-canvas-sidebar-show">

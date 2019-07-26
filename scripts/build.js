@@ -1,3 +1,4 @@
+const path = require("path");
 const { writeFile, readFile, copyFile } = require("fs").promises;
 
 const rollup = require("rollup");
@@ -10,7 +11,8 @@ const { render } = require("preact-render-to-string");
 const postcss = require("postcss");
 const reporter = require("postcss-reporter/lib/formatter")();
 const cssnano = require("cssnano");
-const uncss = require("postcss-uncss");
+const scssParser = require("postcss-scss");
+const sass = require("postcss-node-sass");
 
 const { buildFrameworkData } = require("./data");
 const { p, outputPath, ensureDir, listFiles } = require("./util");
@@ -104,38 +106,36 @@ async function runPostCss(plugins, css, options) {
 	return result;
 }
 
-async function buildSiteCss() {
-	const from = p("./scripts/site.css");
-	const to = outputPath("site.min.css");
-	const css = await readFile(from, "utf8");
+async function buildSassBundles() {
+	const fileNames = await listFiles(p("scripts/bundles"));
+	const filePaths = fileNames
+		.filter(file => file.endsWith(".scss"))
+		.map(name => p("scripts/bundles", name));
 
-	const result = await runPostCss([cssnano()], css, { from, to });
-	await writeFile(to, result.css, "utf8");
-}
+	await Promise.all(
+		filePaths.map(async from => {
+			const packageName = path
+				.basename(from)
+				.split(".")
+				.shift();
+			const to = outputPath(`${packageName}-bundle.min.css`);
 
-async function buildVendorCss(packageName, vendorFiles) {
-	const vendorSrcPath = file => p(`node_modules/${packageName}`, file);
-	const from = vendorSrcPath(vendorFiles[0]);
-	const to = outputPath(`${packageName}-bundle.min.css`);
-
-	const vendorSrc = (await Promise.all(
-		vendorFiles.map(vendorSrcPath).map(filePath => readFile(filePath, "utf8"))
-	)).join("\n");
-
-	const result = await runPostCss(
-		[
-			cssnano()
-			// uncss({ html: [p("index.html"), outputPath("**/*.html")] })
-		],
-		vendorSrc,
-		{ from }
+			const source = await readFile(from, "utf8");
+			const result = await runPostCss([sass(), cssnano()], source, {
+				from,
+				to,
+				syntax: scssParser
+			});
+			await writeFile(to, result.css, "utf8");
+		})
 	);
-	await writeFile(to, result.css, "utf8");
 }
 
 async function buildJSBundles() {
 	const fileNames = await listFiles(p("scripts/bundles"));
-	const filePaths = fileNames.map(name => p("scripts/bundles", name));
+	const filePaths = fileNames
+		.filter(file => file.endsWith(".js"))
+		.map(name => p("scripts/bundles", name));
 
 	const config = {
 		input: filePaths,
@@ -187,16 +187,7 @@ async function build() {
 	const stage3 = "Building CSS";
 	console.time(stage3);
 	await Promise.all([
-		buildSiteCss(),
-		buildVendorCss("spectre.css", [
-			"dist/spectre.min.css",
-			"dist/spectre-exp.min.css",
-			"dist/spectre-icons.min.css"
-		]),
-		buildVendorCss("prismjs", [
-			"themes/prism.css",
-			"plugins/line-numbers/prism-line-numbers.css"
-		]),
+		buildSassBundles(),
 		buildJSBundles()
 	]);
 	console.timeEnd(stage3);
