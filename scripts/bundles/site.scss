@@ -92,15 +92,15 @@ Sidebar nav styles
 	display: block;
 	padding: 0.2rem 0.4rem;
 
-
 	// Make <summary> elements focus state visible
-	&:focus, &:hover {
+	&:focus,
+	&:hover {
 		background: #f1f1fc;
-    color: #5755d9;
+		color: #5755d9;
 	}
 
 	&:focus {
-		outline: rgba(87,85,217,.2) solid 0.1rem;
+		outline: rgba(87, 85, 217, 0.2) solid 0.1rem;
 	}
 }
 
@@ -203,7 +203,7 @@ Page styles
 }
 
 .page-contents {
-	flex: 1;
+	flex: 1 1 auto; // IE needs flex-basis auto
 }
 
 .page-footer {
@@ -223,24 +223,98 @@ App Page styles
 ********************************/
 
 @media (min-width: 1080px) {
-	.app-page .page-contents {
-		display: flex;
+	.app-page-container {
+		display: grid;
+		grid-template-columns: auto 1fr;
+		grid-template-rows: min-content auto;
 	}
 
-	.app-page .page-contents > .panel.result {
-		flex: 0 1 320px;
+	.app-page-container > .result {
+		grid-column: 1 / 2;
+		grid-row: 1 / 3;
+		min-width: 240px;
+		max-width: 320px;
 	}
 
-	.app-page .page-contents > .panel.source {
-		flex: 1 1 auto;
+	.app-page-container > .metadata {
+		grid-column: 2 / 3;
+		grid-row: 1 / 2;
+		min-width: 0;
+	}
+
+	.app-page-container > .app-code-panels {
+		grid-column: 2 / 3;
+		grid-row: 2 / 3;
 		min-width: 0;
 	}
 }
 
-.source.panel .panel-body {
+.code.panel .panel-body {
 	padding: 0;
+
+	pre {
+		margin-bottom: 0;
+	}
 }
 
-.source.panel .panel-body pre {
-	margin-bottom: 0;
+.app-code-panels {
+	position: relative;
+}
+
+.code-settings {
+	position: absolute;
+	right: 0;
+	margin: 0.8rem;
+}
+
+.code-settings summary {
+	position: relative;
+	z-index: 400; // So it is above the dropdown menu
+
+	width: 32px;
+	height: 32px;
+	list-style: none;
+
+	svg {
+		transition: transform 0.5s ease-out;
+		fill: #ccc;
+	}
+
+	.form-switch .form-icon {
+		box-sizing: border-box; // Not sure why this isn't inherited
+	}
+
+	&:hover,
+	&:focus {
+		background-color: #f1f1fc;
+
+		svg {
+			fill: #5755d9;
+		}
+	}
+
+	&:focus {
+		outline: rgba(87, 85, 217, 0.2) solid 0.1rem;
+	}
+
+	&::-webkit-details-marker {
+		display: none;
+	}
+}
+
+.code-settings[open] {
+	summary svg {
+		transform: rotate(270deg);
+		fill: #5755d9;
+	}
+
+	> .menu {
+		display: block;
+	}
+}
+
+.code-settings.dirty {
+	summary svg {
+		fill: #5755d9;
+	}
 }

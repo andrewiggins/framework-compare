@@ -1,6 +1,7 @@
 import { h, Fragment } from "preact";
 import cc from "classcat";
 import prettyBytes from "pretty-bytes";
+import { SettingsCog } from "./SettingsCog";
 
 const NEW_LINE_EXP = /\n(?!$)/g;
 
@@ -24,43 +25,19 @@ function LineNumbers({ contents }) {
 }
 
 /**
- * @param {{ app: import('../data').AppData }} props
+ * @param {{ app: import('../data').AppData; hidden?: boolean; }} props
  */
-function SourcePanelHeader({ app }) {
-	return (
-		<div class="panel-header">
-			<h2 class="panel-title h4">Source</h2>
-			<div>Bundle sizes:</div>
-			<div>{prettyBytes(app.sizes.minified)} minified</div>
-			<div>{prettyBytes(app.sizes.gzip)} Gzip</div>
-			<div>{prettyBytes(app.sizes.brotli)} Brotli</div>
-		</div>
-	);
-}
-
-/**
- * @param {{ app: import('../data').AppData; id: string; hidden?: boolean; children: any }} props
- */
-function SourcePanel({ app, id, hidden, children }) {
-	return (
-		<div
-			id={id}
-			class="panel source"
-			style={{ display: hidden ? "none" : "block" }}
-		>
-			<SourcePanelHeader app={app} />
-			{children}
-		</div>
-	);
-}
-
-/**
- * @param {{ app: import('../data').AppData }} props
- */
-function SourceFilesPanelBody({ app }) {
+function SourcesPanel({ app, hidden }) {
 	const sourceFiles = Object.keys(app.sources);
 	return (
-		<Fragment>
+		<div
+			id="sources"
+			class="panel code"
+			style={{ display: hidden ? "none" : "block" }}
+		>
+			<div class="panel-header">
+				<h2 class="panel-title h4">Source</h2>
+			</div>
 			<div class="panel-nav">
 				<ul class="tab tab-block">
 					{sourceFiles.map((srcFile, i) => (
@@ -95,17 +72,24 @@ function SourceFilesPanelBody({ app }) {
 					);
 				})}
 			</div>
-		</Fragment>
+		</div>
 	);
 }
 
 /**
- * @param {{ app: import('../data').AppData }} props
+ * @param {{ app: import('../data').AppData; hidden?: boolean; }} props
  */
-function BundleFilesPanelBody({ app }) {
+function BundlesPanel({ app, hidden }) {
 	const bundleFiles = Object.keys(app.bundles);
 	return (
-		<Fragment>
+		<div
+			id="bundles"
+			class="panel code"
+			style={{ display: hidden ? "none" : "block" }}
+		>
+			<div class="panel-header">
+				<h2 class="panel-title h4">Bundles</h2>
+			</div>
 			<div class="panel-nav">
 				<ul class="tab tab-block">
 					{bundleFiles.map((bundleFile, i) => (
@@ -145,7 +129,7 @@ function BundleFilesPanelBody({ app }) {
 					);
 				})}
 			</div>
-		</Fragment>
+		</div>
 	);
 }
 
@@ -163,20 +147,60 @@ function ResultsPanel() {
 	);
 }
 
+function MetadataPanel({ app }) {
+	return (
+		<div class="panel metadata">
+			<div class="panel-header">
+				<h2 class="panel-title h4">Metadata</h2>
+			</div>
+			<div class="panel-body">
+				<div>Bundle sizes:</div>
+				<div>{prettyBytes(app.sizes.minified)} minified</div>
+				<div>{prettyBytes(app.sizes.gzip)} Gzip</div>
+				<div>{prettyBytes(app.sizes.brotli)} Brotli</div>
+			</div>
+			<div class="panel-footer" />
+		</div>
+	);
+}
+
+function CodeSettings() {
+	return (
+		<details class="code-settings dropdown dropdown-right">
+			<summary class="c-hand" aria-label="Change sources view">
+				<SettingsCog />
+			</summary>
+			<ul class="menu">
+				<li clsas="menu-item">
+					<label class="form-switch" data-toggle="sources bundles">
+						<input type="checkbox" />
+						<i class="form-icon" /> View bundled output
+					</label>
+				</li>
+				<li clsas="menu-item">
+					<label class="form-switch">
+						<input type="checkbox" />
+						<i class="form-icon" /> View ES6 module output
+					</label>
+				</li>
+			</ul>
+		</details>
+	);
+}
+
 /**
  * @param {{ app: import('../data').AppData; }} props
  */
 export function AppPage({ app }) {
 	return (
-		<Fragment>
+		<div class="app-page-container">
 			<ResultsPanel />
-			<SourcePanel id="sources" app={app}>
-				<SourceFilesPanelBody app={app} />
-			</SourcePanel>
-			{/* TODO: Consider showing bundle output... */}
-			{/* <SourcePanel id="bundle" app={app} hidden>
-				<BundleFilesPanelBody app={app} />
-			</SourcePanel> */}
-		</Fragment>
+			<MetadataPanel app={app} />
+			<div class="app-code-panels">
+				<CodeSettings />
+				<SourcesPanel app={app} />
+				<BundlesPanel app={app} hidden />
+			</div>
+		</div>
 	);
 }
