@@ -147,17 +147,50 @@ function ResultsPanel() {
 	);
 }
 
+/**
+ * @param {{ app: import('../data').AppData }} props
+ */
 function MetadataPanel({ app }) {
+	const bundleFiles = Object.keys(app.bundles);
 	return (
 		<div class="panel metadata">
 			<div class="panel-header">
 				<h2 class="panel-title h4">Metadata</h2>
 			</div>
 			<div class="panel-body">
-				<div>Bundle sizes:</div>
-				<div>{prettyBytes(app.sizes.minified)} minified</div>
-				<div>{prettyBytes(app.sizes.gzip)} Gzip</div>
-				<div>{prettyBytes(app.sizes.brotli)} Brotli</div>
+				<table class="table table-striped table-hover table-scroll">
+					<thead>
+						<tr>
+							<th>Bundle</th>
+							<th>Minified</th>
+							<th>Gzip</th>
+							<th>Brotli</th>
+						</tr>
+					</thead>
+					<tbody>
+						{bundleFiles.map(bundleName => {
+							const bundle = app.bundles[bundleName];
+							return (
+								<tr>
+									<td>{bundleName}</td>
+									<td>{prettyBytes(bundle.sizes.minified)}</td>
+									<td>{prettyBytes(bundle.sizes.gzip)}</td>
+									<td>{prettyBytes(bundle.sizes.brotli)}</td>
+								</tr>
+							);
+						})}
+					</tbody>
+					{bundleFiles.length > 1 &&
+						<tfoot>
+							<tr>
+								<td>Totals</td>
+								<td>{prettyBytes(app.totalSizes.minified)}</td>
+								<td>{prettyBytes(app.totalSizes.gzip)}</td>
+								<td>{prettyBytes(app.totalSizes.brotli)}</td>
+							</tr>
+						</tfoot>
+					}
+				</table>
 			</div>
 			<div class="panel-footer" />
 		</div>

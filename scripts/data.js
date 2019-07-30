@@ -1,4 +1,3 @@
-const path = require("path");
 const { readFile } = require("fs").promises;
 const getGzipSize = require("gzip-size");
 const getBrotliSize = require("brotli-size");
@@ -14,6 +13,104 @@ const {
 } = require("./util");
 
 loadLanguages(["jsx"]);
+
+const getLang = ext => (ext === "vue" ? "html" : ext);
+
+/**
+ * @typedef SourceFile
+ * @property {string} name
+ * @property {string} lang
+ * @property {string} contents
+ * @property {string} htmlContents
+ *
+ * @param {string} framework
+ * @param {string} appName
+ *
+ * @returns {Promise<Record<string, SourceFile>>}
+ */
+async function getSourceFiles(framework, appName) {
+	let srcFiles = await listFiles(srcPath(framework, appName));
+
+	const srcContents = await Promise.all(
+		srcFiles.map(file => readFile(srcPath(framework, appName, file), "utf8"))
+	);
+
+	/** @type {Record<string, SourceFile>} */
+	const sources = {};
+	for (let i = 0; i < srcFiles.length; i++) {
+		const srcFile = srcFiles[i];
+		const contents = srcContents[i];
+
+		const ext = srcFile.split(".").pop();
+		const lang = getLang(ext);
+
+		sources[srcFile] = {
+			name: srcFile,
+			lang,
+			contents,
+			htmlContents: Prism.highlight(contents, Prism.languages[lang], lang)
+		};
+	}
+
+	return sources;
+}
+
+/**
+ * @typedef Sizes
+ * @property {number} minified
+ * @property {number} gzip
+ * @property {number} brotli
+ *
+ * @typedef BundleFile
+ * @property {string} name
+ * @property {string} lang
+ * @property {number} contentLength
+ * @property {string} url
+ * @property {Sizes} [sizes]
+ *
+ * @param {string} framework
+ * @param {string} appName
+ *
+ * @returns {Promise<Record<string, BundleFile>>}
+ */
+async function getBundleFiles(framework, appName) {
+	const appOutput = (...args) => frameworkOutput(framework, appName, ...args);
+	const bundleFiles = (await listFiles(appOutput())).filter(file =>
+		file.endsWith(".js")
+	);
+
+	const bundleContents = await Promise.all(
+		bundleFiles.map(file => readFile(appOutput(file), "utf8"))
+	);
+
+	/** @type {Record<string, BundleFile>} */
+	const bundles = {};
+	for (let i = 0; i < bundleFiles.length; i++) {
+		const bundleFile = bundleFiles[i];
+		const contents = bundleContents[i].trim();
+
+		const name = bundleFile.replace(".min", "");
+		const ext = bundleFile.split(".").pop();
+		const lang = getLang(ext);
+
+		if (!(name in bundles)) {
+			bundles[name] = { name, lang, contentLength: 0, url: "" };
+		}
+
+		if (bundleFile.endsWith(".min.js")) {
+			bundles[name].sizes = {
+				minified: contents.length,
+				gzip: await getGzipSize(contents),
+				brotli: await getBrotliSize(contents)
+			};
+		} else {
+			bundles[name].contentLength = contents.length;
+			bundles[name].url = toUrl(appOutput(bundleFile));
+		}
+	}
+
+	return bundles;
+}
 
 /**
  * @typedef {Array<{ name: string; apps: AppData[] }>} FrameworkData
@@ -34,22 +131,12 @@ async function buildFrameworkData() {
 }
 
 /**
- * @typedef SourceFile
- * @property {string} lang
- * @property {string} contents
- * @property {string} htmlContents
- *
- * @typedef BundleFile
- * @property {string} lang
- * @property {number} contentLength
- * @property {string} url
- *
  * @typedef AppData
  * @property {string} framework
  * @property {string} appName
  * @property {string} htmlUrl
  * @property {string} jsUrl
- * @property {{ minified: number; gzip: number; brotli: number; }} sizes
+ * @property {Sizes} totalSizes
  * @property {Record<string, SourceFile>} sources
  * @property {Record<string, BundleFile>} bundles
  *
@@ -58,94 +145,32 @@ async function buildFrameworkData() {
  * @returns {Promise<AppData>}
  */
 async function buildAppData(framework, appName) {
-	const appOutput = (...args) => frameworkOutput(framework, appName, ...args);
-
-	const htmlPath = appOutput("index.html");
-	const jsPath = appOutput("index.min.js");
-	const [appFiles, srcFiles] = await Promise.all([
-		listFiles(appOutput()),
-		listFiles(srcPath(framework, appName))
+	const [sources, bundles] = await Promise.all([
+		getSourceFiles(framework, appName),
+		getBundleFiles(framework, appName)
 	]);
 
-	const bundleFiles = appFiles.filter(
-		file => file.endsWith(".js") && !file.endsWith(".min.js")
-	);
-
-	const [jsContents, ...otherContents] = await Promise.all([
-		readFile(jsPath, "utf8"),
-		...srcFiles.map(file =>
-			readFile(srcPath(framework, appName, file), "utf8")
-		),
-		...bundleFiles.map(file => readFile(appOutput(file), "utf8"))
-	]);
-
-	const [gzipSize, brotliSize] = await Promise.all([
-		getGzipSize(jsContents),
-		getBrotliSize(jsContents)
-	]);
-
-	const srcContents = otherContents.slice(0, srcFiles.length);
-	const bundleContents = otherContents.slice(srcFiles.length);
-
-	if (srcContents.length !== srcFiles.length) {
-		throw new Error(
-			`srcContents.length (${
-				srcContents.length
-			}) does not match srcFiles.length ${srcFiles.length} `
-		);
+	/** @type {Sizes} */
+	const totalSizes = { minified: 0, gzip: 0, brotli: 0 };
+	for (let bundle of Object.values(bundles)) {
+		totalSizes.minified += bundle.sizes.minified;
+		totalSizes.gzip += bundle.sizes.gzip;
+		totalSizes.brotli += bundle.sizes.brotli;
 	}
 
-	if (bundleContents.length !== bundleFiles.length) {
-		throw new Error(
-			`bundleContents.length (${
-				bundleContents.length
-			}) does not match bundleFiles.length ${bundleFiles.length} `
-		);
-	}
-
-	/** @type {Record<string, SourceFile>} */
-	const sources = {};
-	for (let i = 0; i < srcFiles.length; i++) {
-		const contents = srcContents[i].trim();
-		const ext = srcFiles[i].split(".").pop();
-		const lang = getLang(ext);
-		sources[srcFiles[i]] = {
-			lang,
-			contents,
-			htmlContents: Prism.highlight(contents, Prism.languages[lang], lang)
-		};
-	}
-
-	/** @type {Record<string, BundleFile>} */
-	const bundles = {};
-	for (let i = 0; i < bundleFiles.length; i++) {
-		const contents = bundleContents[i].trim();
-		const ext = bundleFiles[i].split(".").pop();
-		const lang = getLang(ext);
-
-		bundles[bundleFiles[i]] = {
-			lang,
-			url: toUrl(appOutput(bundleFiles[i])),
-			contentLength: contents.length
-		};
-	}
+	const htmlPath = frameworkOutput(framework, appName, "index.html");
+	const entryPath = frameworkOutput(framework, appName, "index.min.js");
 
 	return {
 		framework: getDisplayName(framework),
 		appName: getDisplayName(appName),
 		htmlUrl: toUrl(htmlPath),
-		jsUrl: toUrl(jsPath),
-		sizes: {
-			minified: jsContents.length,
-			gzip: gzipSize,
-			brotli: brotliSize
-		},
+		jsUrl: toUrl(entryPath),
+		totalSizes,
 		sources,
 		bundles
 	};
 }
-
-const getLang = ext => (ext === "vue" ? "html" : ext);
 
 module.exports = {
 	buildFrameworkData

@@ -5,9 +5,9 @@
 * Add CONTRIBUTING guide
 
 * Add link/switch to view bundle output
-	* Convert metadata panel to a table describing sizes for each bundle (row: bundle name; columns: minified, gzip, brotli)
 * Add rollup-plugin-visualizer html to output
 * Consider having different es5 and modern JS files
+* Consider renaming "bundles" to "chunks"?
 
 * Consider adding app descriptions to app page
 * Investigate why rollup doesn't remove SvelteElement (I think adding Babel messed it up)

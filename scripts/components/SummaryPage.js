@@ -40,9 +40,9 @@ export function SummaryPage(props) {
 		for (let framework of frameworks) {
 			const appData = apps[appName][framework];
 			if (appData) {
-				gzipRow.push(prettyBytes(appData.sizes.gzip));
-				brotliRow.push(prettyBytes(appData.sizes.brotli));
-				minifiedRow.push(prettyBytes(appData.sizes.minified));
+				gzipRow.push(prettyBytes(appData.totalSizes.gzip));
+				brotliRow.push(prettyBytes(appData.totalSizes.brotli));
+				minifiedRow.push(prettyBytes(appData.totalSizes.minified));
 			} else {
 				brotliRow.push("—");
 				gzipRow.push("—");
