@@ -31,25 +31,27 @@ const getLang = ext => (ext === "vue" ? "html" : ext);
 async function getSourceFiles(framework, appName) {
 	let srcFiles = await listFiles(srcPath(framework, appName));
 
-	const srcContents = await Promise.all(
-		srcFiles.map(file => readFile(srcPath(framework, appName, file), "utf8"))
+	const sourceFiles = await Promise.all(
+		srcFiles.map(async srcFile => {
+			const contents = await readFile(
+				srcPath(framework, appName, srcFile),
+				"utf8"
+			);
+
+			const lang = getLang(srcFile.split(".").pop());
+			return {
+				name: srcFile,
+				lang,
+				contents,
+				htmlContents: Prism.highlight(contents, Prism.languages[lang], lang)
+			};
+		})
 	);
 
 	/** @type {Record<string, SourceFile>} */
 	const sources = {};
-	for (let i = 0; i < srcFiles.length; i++) {
-		const srcFile = srcFiles[i];
-		const contents = srcContents[i];
-
-		const ext = srcFile.split(".").pop();
-		const lang = getLang(ext);
-
-		sources[srcFile] = {
-			name: srcFile,
-			lang,
-			contents,
-			htmlContents: Prism.highlight(contents, Prism.languages[lang], lang)
-		};
+	for (let sourceFile of sourceFiles) {
+		sources[sourceFile.name] = sourceFile;
 	}
 
 	return sources;
