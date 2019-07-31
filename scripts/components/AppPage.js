@@ -133,11 +133,11 @@ function BundlesPanel({ app, hidden }) {
 	);
 }
 
-function ResultsPanel() {
+function AppPanel() {
 	return (
 		<div class="panel result">
 			<div class="panel-header">
-				<h2 class="panel-title h4">Result</h2>
+				<h2 class="panel-title h4">App</h2>
 			</div>
 			<div class="panel-body">
 				<div id="app" />
@@ -227,7 +227,7 @@ function CodeSettings() {
 export function AppPage({ app }) {
 	return (
 		<div class="app-page-container">
-			<ResultsPanel />
+			<AppPanel />
 			<MetadataPanel app={app} />
 			<div class="app-code-panels">
 				<CodeSettings />
