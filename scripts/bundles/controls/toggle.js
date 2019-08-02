@@ -19,7 +19,6 @@ export function setupToggle() {
 		const container2 = document.getElementById(id2);
 
 		const defaultShown = getCookie(getToggleCookieName(parentId));
-		if (defaultShown)
 		if (defaultShown == id2) {
 			container1.style.display = "none";
 			container2.style.display = "block";
@@ -27,6 +26,7 @@ export function setupToggle() {
 		} else {
 			container1.style.display = "block";
 			container2.style.display = "none";
+			input.checked = false;
 		}
 
 		input.addEventListener("input", e => {
