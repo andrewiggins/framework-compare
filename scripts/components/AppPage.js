@@ -1,6 +1,7 @@
 import { h, Fragment } from "preact";
 import cc from "classcat";
 import prettyBytes from "pretty-bytes";
+import { relativeUrl } from "./util";
 import { SettingsCog } from "./SettingsCog";
 
 const NEW_LINE_EXP = /\n(?!$)/g;
@@ -77,9 +78,9 @@ function SourcesPanel({ app, hidden }) {
 }
 
 /**
- * @param {{ app: import('../data').AppData; hidden?: boolean; }} props
+ * @param {{ app: import('../data').AppData; currentUrl: string; hidden?: boolean; }} props
  */
-function BundlesPanel({ app, hidden }) {
+function BundlesPanel({ app, hidden, currentUrl }) {
 	const bundleFiles = Object.keys(app.bundles);
 	return (
 		<div
@@ -118,9 +119,9 @@ function BundlesPanel({ app, hidden }) {
 									<code class={`lang-${lang}`}>Loading...</code>
 								</pre>
 							) : (
-								<div>
-									File is too big display.{" "}
-									<a href={url} target="_blank">
+								<div class="oversize-file">
+									File is too big to display.{" "}
+									<a href={relativeUrl(currentUrl, url)} target="_blank">
 										Download it instead.
 									</a>
 								</div>
@@ -231,9 +232,9 @@ function CodeSettings() {
 }
 
 /**
- * @param {{ app: import('../data').AppData; }} props
+ * @param {{ app: import('../data').AppData; currentUrl: string; }} props
  */
-export function AppPage({ app }) {
+export function AppPage({ app, currentUrl }) {
 	return (
 		<div class="app-page-container">
 			<AppPanel />
@@ -241,7 +242,7 @@ export function AppPage({ app }) {
 			<div class="app-code-panels">
 				<CodeSettings />
 				<SourcesPanel app={app} />
-				<BundlesPanel app={app} hidden />
+				<BundlesPanel app={app} hidden currentUrl={currentUrl} />
 			</div>
 		</div>
 	);
