@@ -29,7 +29,7 @@ export function setupToggle() {
 			input.checked = false;
 		}
 
-		input.addEventListener("input", e => {
+		input.addEventListener("change", e => {
 			if (container1.style.display == "none") {
 				container1.style.display = "block";
 				container2.style.display = "none";

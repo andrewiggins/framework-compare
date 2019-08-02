@@ -1,5 +1,8 @@
 // Inspired by https://github.com/rstacruz/details-polyfill/
 
+/** @type {(arg: any) => any[]} */
+const toArray = arrayLike => Array.prototype.slice.call(arrayLike);
+
 function isSupported() {
 	var el = document.createElement("details");
 	if (!("open" in el)) return false;
@@ -27,27 +30,52 @@ function injectStyle(id, style) {
 }
 
 /**
- * @param {Event} e
+ * @param {Node} target
+ * @param {string} parentType
  */
-function clickHandler(e) {
-	/** @type {HTMLElement} */
-	let target = e.target;
-	while (target && target.nodeName.toLowerCase() !== "summary") {
+function getParentNode(target, parentType) {
+	while (target && target.nodeName.toLowerCase() !== parentType) {
 		target = target.parentNode;
 	}
 
-	if (target && target.nodeName.toLowerCase() === "summary") {
+	return target && target.nodeName.toLowerCase() === parentType ? target : null;
+}
+
+function toggleDetails(summary) {
+	if (summary) {
 		/** @type {HTMLDetailsElement} */
-		const details = target.parentNode;
+		const details = summary.parentNode;
 		if (!details) return;
 
-		if (details.getAttribute("open")) {
+		if (details.hasAttribute("open")) {
 			details.open = false;
 			details.removeAttribute("open");
+			summary.setAttribute("aria-expanded", "false");
 		} else {
 			details.open = true;
 			details.setAttribute("open", "open");
+			summary.setAttribute("aria-expanded", "true");
 		}
+	}
+}
+
+/**
+ * @param {Event} e
+ */
+function clickHandler(e) {
+	e.preventDefault();
+	const summary = getParentNode(e.target, "summary");
+	toggleDetails(summary);
+}
+
+/**
+ * @param {KeyboardEvent} e
+ */
+function keydownHandler(e) {
+	if (e.key === "Enter" || e.key === " ") {
+		e.preventDefault();
+		const summary = getParentNode(e.target, "summary");
+		toggleDetails(summary);
 	}
 }
 
@@ -58,7 +86,28 @@ export function installPolyfill() {
 
 	document.documentElement.className += " no-details";
 
-	window.addEventListener("click", clickHandler);
+	/** @type {HTMLDetailsElement[]} */
+	const details = toArray(document.querySelectorAll("details"));
+	for (let detail of details) {
+		let summary = null;
+		for (let child of detail.children) {
+			if (child.tagName.toLowerCase() === "summary") {
+				summary = child;
+				break;
+			}
+		}
+
+		summary.setAttribute("role", "button");
+		summary.setAttribute("tabindex", "0");
+		if (detail.hasAttribute("open")) {
+			summary.setAttribute("aria-expanded", "true");
+		} else {
+			summary.setAttribute("aria-expanded", "false");
+		}
+
+		summary.addEventListener("click", clickHandler);
+		summary.addEventListener("keydown", keydownHandler);
+	}
 
 	injectStyle(
 		"details-polyfill-style",
