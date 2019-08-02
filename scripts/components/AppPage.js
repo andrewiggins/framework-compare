@@ -33,7 +33,7 @@ function SourcesPanel({ app, hidden }) {
 	return (
 		<div
 			id="sources"
-			class="panel code"
+			class="sources code panel"
 			style={{ display: hidden ? "none" : "block" }}
 		>
 			<div class="panel-header">
@@ -78,67 +78,26 @@ function SourcesPanel({ app, hidden }) {
 }
 
 /**
- * @param {{ app: import('../data').AppData; currentUrl: string; hidden?: boolean; }} props
+ * @param {{ app: import('../data').AppData; currentUrl: string; }} props
  */
-function BundlesPanel({ app, hidden, currentUrl }) {
+function BundlesPanel({ app, currentUrl }) {
 	const bundleFiles = Object.keys(app.bundles);
 	return (
-		<div
-			id="bundles"
-			class="panel code"
-			style={{ display: hidden ? "none" : "block" }}
-		>
+		<div id="bundles" class="bundles panel">
 			<div class="panel-header">
 				<h2 class="panel-title h4">Bundles</h2>
 			</div>
-			<div class="panel-nav">
-				<ul class="tab tab-block">
-					{bundleFiles.map((bundleFile, i) => (
-						<li class="tab-item">
-							<a
-								class={cc({ active: i == 0 })}
-								href={"#" + getBundleId(app, bundleFile)}
-							>
-								{bundleFile}
-							</a>
-						</li>
-					))}
-				</ul>
-			</div>
 			<div class="panel-body">
-				{bundleFiles.map((bundleFile, i) => {
-					let { contentLength, url, lang } = app.bundles[bundleFile];
-					url = relativeUrl(currentUrl, url);
-
-					return (
-						<div
-							class={cc({ "tab-body": true, active: i == 0 })}
-							id={getBundleId(app, bundleFile)}
-						>
-							{contentLength < 50e3 ? (
-								<pre data-src={url} class={`language-${lang}`}>
-									<code class={`lang-${lang}`}>Loading…</code>
-								</pre>
-							) : (
-								<div class="oversize-file">
-									File is too big to display.{" "}
-									<a href={url} target="_blank">
-										Download it instead.
-									</a>
-								</div>
-							)}
-						</div>
-					);
-				})}
+				<SizeTable app={app} currentUrl={currentUrl} />
 			</div>
 		</div>
 	);
 }
 
 /**
- * @param {{ app: import('../data').AppData }} props
+ * @param {{ app: import('../data').AppData; currentUrl: string; }} props
  */
-function SizeTable({ app }) {
+function SizeTable({ app, currentUrl }) {
 	const bundleFiles = Object.keys(app.bundles);
 	return (
 		<table class="table table-striped table-hover table-scroll">
@@ -153,9 +112,14 @@ function SizeTable({ app }) {
 			<tbody>
 				{bundleFiles.map(bundleName => {
 					const bundle = app.bundles[bundleName];
+					const url = relativeUrl(currentUrl, bundle.url);
 					return (
 						<tr>
-							<td>{bundleName}</td>
+							<td>
+								<a href={url} target="_blank">
+									{bundleName}
+								</a>
+							</td>
 							<td>{prettyBytes(bundle.sizes.minified)}</td>
 							<td>{prettyBytes(bundle.sizes.gzip)}</td>
 							<td>{prettyBytes(bundle.sizes.brotli)}</td>
@@ -192,59 +156,14 @@ function AppPanel() {
 }
 
 /**
- * @param {{ app: import('../data').AppData }} props
- */
-function MetadataPanel({ app }) {
-	return (
-		<div class="panel metadata">
-			<div class="panel-header">
-				<h2 class="panel-title h4">Metadata</h2>
-			</div>
-			<div class="panel-body">
-				<SizeTable app={app} />
-			</div>
-			<div class="panel-footer" />
-		</div>
-	);
-}
-
-function CodeSettings() {
-	return (
-		<details class="code-settings dropdown dropdown-right">
-			<summary class="c-hand" aria-label="Change sources view">
-				<SettingsCog />
-			</summary>
-			<ul class="menu">
-				<li clsas="menu-item">
-					<label class="form-switch" data-toggle="sources bundles">
-						<input id="bundle-toggle" type="checkbox" />
-						<i class="form-icon" /> View bundled output
-					</label>
-				</li>
-				{/* <li clsas="menu-item">
-					<label class="form-switch">
-						<input type="checkbox" />
-						<i class="form-icon" /> View ES6 module output
-					</label>
-				</li> */}
-			</ul>
-		</details>
-	);
-}
-
-/**
  * @param {{ app: import('../data').AppData; currentUrl: string; }} props
  */
 export function AppPage({ app, currentUrl }) {
 	return (
 		<div class="app-page-container">
 			<AppPanel />
-			<MetadataPanel app={app} />
-			<div class="app-code-panels">
-				<CodeSettings />
-				<SourcesPanel app={app} />
-				<BundlesPanel app={app} hidden currentUrl={currentUrl} />
-			</div>
+			<BundlesPanel app={app} currentUrl={currentUrl} />
+			<SourcesPanel app={app} />
 		</div>
 	);
 }

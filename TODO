@@ -4,11 +4,9 @@
 * Write up conclusion
 * Add CONTRIBUTING guide
 
-* Add link/switch to view bundle output
 * Consider having different es5 and modern JS files
 	* Show two tables in metadata panel, one per output type (es5, esm)
 	* Add (?) button next to ES6 module switch which links to page explaining ES6 module output
-* Add rollup-plugin-visualizer html to output
 * Consider renaming "bundles" to "chunks"?
 
 * Consider adding app descriptions to app page

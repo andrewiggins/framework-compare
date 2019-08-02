@@ -59,6 +59,7 @@ async function getSourceFiles(framework, appName) {
 
 /**
  * @typedef Sizes
+ * @property {number} raw
  * @property {number} minified
  * @property {number} gzip
  * @property {number} brotli
@@ -66,9 +67,8 @@ async function getSourceFiles(framework, appName) {
  * @typedef BundleFile
  * @property {string} name
  * @property {string} lang
- * @property {number} contentLength
  * @property {string} url
- * @property {Sizes} [sizes]
+ * @property {Sizes} sizes
  *
  * @param {string} framework
  * @param {string} appName
@@ -96,17 +96,20 @@ async function getBundleFiles(framework, appName) {
 		const lang = getLang(ext);
 
 		if (!(name in bundles)) {
-			bundles[name] = { name, lang, contentLength: 0, url: "" };
+			bundles[name] = {
+				name,
+				lang,
+				url: "",
+				sizes: { raw: 0, minified: 0, gzip: 0, brotli: 0 }
+			};
 		}
 
 		if (bundleFile.endsWith(".min.js")) {
-			bundles[name].sizes = {
-				minified: contents.length,
-				gzip: await getGzipSize(contents),
-				brotli: await getBrotliSize(contents)
-			};
+			bundles[name].sizes.minified = contents.length;
+			bundles[name].sizes.gzip = await getGzipSize(contents);
+			bundles[name].sizes.brotli = await getBrotliSize(contents);
 		} else {
-			bundles[name].contentLength = contents.length;
+			bundles[name].sizes.raw = contents.length;
 			bundles[name].url = toUrl(appOutput(bundleFile));
 		}
 	}
@@ -153,8 +156,9 @@ async function buildAppData(framework, appName) {
 	]);
 
 	/** @type {Sizes} */
-	const totalSizes = { minified: 0, gzip: 0, brotli: 0 };
+	const totalSizes = { raw: 0, minified: 0, gzip: 0, brotli: 0 };
 	for (let bundle of Object.values(bundles)) {
+		totalSizes.raw += bundle.sizes.raw;
 		totalSizes.minified += bundle.sizes.minified;
 		totalSizes.gzip += bundle.sizes.gzip;
 		totalSizes.brotli += bundle.sizes.brotli;

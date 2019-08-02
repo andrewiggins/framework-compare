@@ -242,20 +242,20 @@ App Page styles
 
 	.app-page-container > .result {
 		grid-column: 1 / 2;
-		grid-row: 1 / 2;
-		min-width: 240px; // Note: max-width of metadata table appears to be 282px
+		grid-row: 1 / 3;
+		min-width: 280px; // Note: max-width of metadata table appears to be 282px
 		max-width: 320px;
 	}
 
-	.app-page-container > .metadata {
-		grid-column: 1 / 2;
-		grid-row: 2 / 3;
+	.app-page-container > .bundles {
+		grid-column: 2 / 3;
+		grid-row: 1 / 2;
 		min-width: 0;
 	}
 
-	.app-page-container > .app-code-panels {
+	.app-page-container > .sources {
 		grid-column: 2 / 3;
-		grid-row: 1 / 3;
+		grid-row: 2 / 3;
 		min-width: 0;
 	}
 }
@@ -266,67 +266,4 @@ App Page styles
 	pre {
 		margin-bottom: 0;
 	}
-}
-
-.app-code-panels {
-	position: relative;
-}
-
-.code-settings {
-	position: absolute;
-	right: 0;
-	margin: 0.8rem;
-}
-
-.code-settings summary {
-	position: relative;
-	z-index: 400; // So it is above the dropdown menu
-
-	width: 32px;
-	height: 32px;
-	list-style: none;
-
-	svg {
-		transition: transform 0.5s ease-out;
-		fill: #ccc;
-	}
-
-	&:hover,
-	&:focus {
-		background-color: #f1f1fc;
-
-		svg {
-			fill: #5755d9;
-		}
-	}
-
-	&:focus {
-		outline: rgba(87, 85, 217, 0.2) solid 0.1rem;
-	}
-
-	&::-webkit-details-marker {
-		display: none;
-	}
-}
-
-.code-settings[open] {
-	summary svg {
-		transform: rotate(270deg);
-		fill: #5755d9;
-	}
-
-	> .menu {
-		display: block;
-	}
-}
-
-.code-settings.dirty {
-	summary svg {
-		fill: #5755d9;
-	}
-}
-
-.oversize-file {
-	padding: 1rem;
-	text-align: center;
 }
