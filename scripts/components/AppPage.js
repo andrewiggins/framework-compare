@@ -108,6 +108,7 @@ function BundlesPanel({ app, hidden, currentUrl }) {
 			<div class="panel-body">
 				{bundleFiles.map((bundleFile, i) => {
 					let { contentLength, url, lang } = app.bundles[bundleFile];
+					url = relativeUrl(currentUrl, url);
 
 					return (
 						<div
@@ -116,12 +117,12 @@ function BundlesPanel({ app, hidden, currentUrl }) {
 						>
 							{contentLength < 50e3 ? (
 								<pre data-src={url} class={`language-${lang}`}>
-									<code class={`lang-${lang}`}>Loading...</code>
+									<code class={`lang-${lang}`}>Loading…</code>
 								</pre>
 							) : (
 								<div class="oversize-file">
 									File is too big to display.{" "}
-									<a href={relativeUrl(currentUrl, url)} target="_blank">
+									<a href={url} target="_blank">
 										Download it instead.
 									</a>
 								</div>
@@ -216,7 +217,7 @@ function CodeSettings() {
 			<ul class="menu">
 				<li clsas="menu-item">
 					<label class="form-switch" data-toggle="sources bundles">
-						<input type="checkbox" />
+						<input id="bundle-toggle" type="checkbox" />
 						<i class="form-icon" /> View bundled output
 					</label>
 				</li>
