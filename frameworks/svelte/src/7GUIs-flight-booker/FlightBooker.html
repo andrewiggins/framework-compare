@@ -20,10 +20,7 @@
 
 	let tripType = oneWayFlight;
 
-	$: isBookDisabled =
-		departingError ||
-		returningError ||
-		(tripType == returnFlight && returning < departing);
+	$: isBookDisabled = departingError || returningError;
 
 	function getErrorMessage(date) {
 		try {
@@ -46,7 +43,6 @@
 	}
 </script>
 
-<!-- https://github.com/eugenkiss/7guis/wiki#flight-booker -->
 <div class="form-group">
 	<label class="form-label" for="trip-type">Trip type</label
 	><select id="trip-type" class="form-select" bind:value="{tripType}">
