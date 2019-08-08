@@ -11,7 +11,9 @@ export function delay(ms) {
 export function minifyHtml(html) {
 	return minify(html, {
 		collapseWhitespace: true,
-		sortAttributes: true
+		sortAttributes: true,
+		removeComments: true,
+		collapseBooleanAttributes: true
 	});
 }
 
