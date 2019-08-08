@@ -7,7 +7,7 @@
   "scripts": {
     "build": "rimraf dist && yarn workspaces run build && node ./scripts/build.js",
     "dev": "node ./scripts/dev.js",
-    "deploy": "yarn build && node ./scripts/deploy.js",
+    "deploy": "yarn build && yarn test && node ./scripts/deploy.js",
     "serve": "serve -c scripts/serve.json",
     "test": "jest"
   },
