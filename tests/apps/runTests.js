@@ -7,8 +7,8 @@ import runFlightBookerTests from "../apps/7GUIs-flight-booker";
 import runTimerTests from "../apps/7GUIs-timer";
 
 export function runTests(frameworkName) {
-	function runTest(run, htmlFile) {
-		const htmlPath = repoRoot(`dist/frameworks/${frameworkName}/${htmlFile}`);
+	function runTest(run, appName) {
+		const htmlPath = repoRoot(`dist/frameworks/${frameworkName}/${appName}/index.html`);
 		if (fs.existsSync(htmlPath)) {
 			run(frameworkName, () => {
 				return page.goto(htmlPath);
@@ -17,10 +17,10 @@ export function runTests(frameworkName) {
 	}
 
 	describe(frameworkName, () => {
-		runTest(runHelloWorldTests, "hello-world.html");
-		runTest(runCounterTests, "7GUIs-counter.html");
-		runTest(runTempConverterTests, "7GUIs-temp-converter.html");
-		runTest(runFlightBookerTests, "7GUIs-flight-booker.html");
-		runTest(runTimerTests, "7GUIs-timer.html");
+		runTest(runHelloWorldTests, "hello-world");
+		runTest(runCounterTests, "7GUIs-counter");
+		runTest(runTempConverterTests, "7GUIs-temp-converter");
+		runTest(runFlightBookerTests, "7GUIs-flight-booker");
+		runTest(runTimerTests, "7GUIs-timer");
 	});
 }
