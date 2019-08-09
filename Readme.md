@@ -4,7 +4,6 @@ Implement a set of webpages of increasing complexity in a couple different frame
 
 ## Frameworks to consider
 
-- lit-html
 - lit-element?
 - angular ivy
 - ember/glimmer

@@ -18,6 +18,10 @@ const listFiles = async source =>
 		.map(child => child.name);
 
 const toTitleCase = str => {
+	if (str == "lit html") {
+		return "lit-html";
+	}
+
 	return str.replace(/\w\S*/g, txt => {
 		return txt.charAt(0).toUpperCase() + txt.substr(1);
 	});
@@ -28,7 +32,8 @@ const outputPath = (...args) => p("dist", ...args);
 const toUrl = s => path.relative(p(), s).replace(/\\/gi, "/");
 
 const frameworkOutput = (...args) => outputPath("frameworks", ...args);
-const srcPath = (framework, app, ...args) => p("frameworks", framework, "src", app, ...args);
+const srcPath = (framework, app, ...args) =>
+	p("frameworks", framework, "src", app, ...args);
 
 /** @type {(app: string) => string} */
 const getDisplayName = app => toTitleCase(app.replace(/-/g, " "));
