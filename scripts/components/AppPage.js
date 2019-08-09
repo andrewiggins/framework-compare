@@ -81,7 +81,6 @@ function SourcesPanel({ app, hidden }) {
  * @param {{ app: import('../data').AppData; currentUrl: string; }} props
  */
 function BundlesPanel({ app, currentUrl }) {
-	const bundleFiles = Object.keys(app.bundles);
 	return (
 		<div id="bundles" class="bundles panel">
 			<div class="panel-header">
@@ -99,8 +98,13 @@ function BundlesPanel({ app, currentUrl }) {
  */
 function SizeTable({ app, currentUrl }) {
 	const bundleFiles = Object.keys(app.bundles);
+	let tableClass = "table table-striped table-scroll";
+	if (bundleFiles.length > 1) {
+		tableClass += " table-hover";
+	}
+
 	return (
-		<table class="table table-striped table-hover table-scroll">
+		<table class={tableClass}>
 			<thead>
 				<tr>
 					<th>Bundle</th>
