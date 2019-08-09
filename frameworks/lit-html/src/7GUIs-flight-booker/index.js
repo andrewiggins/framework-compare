@@ -4,11 +4,27 @@ import { today, validateDate } from "../../../../lib/date";
 const oneWayFlight = "one-way";
 const returnFlight = "return";
 
+/** @type {(errorMessage: string) => import('lit-html').TemplateResult} */
 const Error = errorMessage => html`
 	<p class="form-input-hint">${errorMessage}</p>
 `;
 
-const FlightBooker = (
+/**
+ * @typedef {"one-way" | "return"} TripType
+ * @typedef {(e: Event) => void} EventHandler
+ *
+ * @param {TripType} tripType
+ * @param {EventHandler} setTripType
+ * @param {string} departing
+ * @param {string} departingError
+ * @param {EventHandler} setDeparting
+ * @param {string} returning
+ * @param {string} returningError
+ * @param {EventHandler} setReturning
+ * @param {boolean} isBookDisabled
+ * @param {EventHandler} bookFlight
+ */
+function FlightBooker(
 	tripType,
 	setTripType,
 
@@ -22,53 +38,59 @@ const FlightBooker = (
 
 	isBookDisabled,
 	bookFlight
-) => html`
-	<div class="form-group">
-		<label class="form-label" for="trip-type">Trip type</label
-		><select
-			id="trip-type"
-			class="form-select"
-			value=${tripType}
-			@input=${setTripType}
-		>
-			<option value=${oneWayFlight}>one-way flight</option>
-			<option value=${returnFlight}>return flight</option>
-		</select>
-	</div>
-	<div class=${"form-group" + (departingError ? " has-error" : "")}>
-		<label class="form-label" for="departing-date">Departing</label
-		><input
-			id="departing-date"
-			class="form-input"
-			type="text"
-			value=${departing}
-			@input=${setDeparting}
-		/>
-		${departingError && Error(departingError)}
-	</div>
-	<div class=${"form-group" + (returningError ? " has-error" : "")}>
-		<label class="form-label" for="returning-date">Returning</label
-		><input
-			id="returning-date"
-			class="form-input"
-			type="text"
-			value=${returning}
-			@input=${setReturning}
-			?disabled=${tripType !== returnFlight}
-		/>
-		${returningError && Error(returningError)}
-	</div>
-	<div class="form-group">
-		<button
-			?disabled=${isBookDisabled}
-			@click=${bookFlight}
-			class="btn btn-primary"
-		>
-			book
-		</button>
-	</div>
-`;
+) {
+	return html`
+		<div class="form-group">
+			<label class="form-label" for="trip-type">Trip type</label
+			><select
+				id="trip-type"
+				class="form-select"
+				value=${tripType}
+				@input=${setTripType}
+			>
+				<option value=${oneWayFlight}>one-way flight</option>
+				<option value=${returnFlight}>return flight</option>
+			</select>
+		</div>
+		<div class=${"form-group" + (departingError ? " has-error" : "")}>
+			<label class="form-label" for="departing-date">Departing</label
+			><input
+				id="departing-date"
+				class="form-input"
+				type="text"
+				value=${departing}
+				@input=${setDeparting}
+			/>
+			${departingError && Error(departingError)}
+		</div>
+		<div class=${"form-group" + (returningError ? " has-error" : "")}>
+			<label class="form-label" for="returning-date">Returning</label
+			><input
+				id="returning-date"
+				class="form-input"
+				type="text"
+				value=${returning}
+				@input=${setReturning}
+				?disabled=${tripType !== returnFlight}
+			/>
+			${returningError && Error(returningError)}
+		</div>
+		<div class="form-group">
+			<button
+				?disabled=${isBookDisabled}
+				@click=${bookFlight}
+				class="btn btn-primary"
+			>
+				book
+			</button>
+		</div>
+	`;
+}
 
+/**
+ * @param {string} date
+ * @returns {string | null}
+ */
 function getErrorMessage(date) {
 	try {
 		validateDate(date);
@@ -79,6 +101,12 @@ function getErrorMessage(date) {
 }
 
 const container = document.getElementById("app");
+
+/**
+ * @param {TripType} tripType
+ * @param {string} departing
+ * @param {string} returning
+ */
 function update(tripType, departing, returning) {
 	let departingError = getErrorMessage(departing);
 	let returningError = getErrorMessage(returning);

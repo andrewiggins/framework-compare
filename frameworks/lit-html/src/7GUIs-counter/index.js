@@ -1,6 +1,6 @@
 import { html, render } from "lit-html";
 
-const Counter = ({ count, increment }) => html`
+const Counter = (count, increment) => html`
 	<button
 		class="btn badge"
 		data-badge=${count}
@@ -15,7 +15,7 @@ const container = document.getElementById("app");
 
 function update(count) {
 	const increment = () => update(count + 1);
-	render(Counter({ count, increment }), container);
+	render(Counter(count, increment), container);
 }
 
 update(0);

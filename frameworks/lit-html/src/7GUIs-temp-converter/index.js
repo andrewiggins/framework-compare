@@ -1,6 +1,6 @@
 import { html, render } from "lit-html";
 
-const TempConverter = ({ c, f, setBothFromC, setBothFromF }) => html`
+const TempConverter = (c, f, setBothFromC, setBothFromF) => html`
 	<input .value=${c} @input=${setBothFromC} type="number" />
 	°c =
 	<input .value=${f} @input=${setBothFromF} type="number" />
@@ -24,7 +24,7 @@ function update(c, f) {
 		update(c, f);
 	}
 
-	render(TempConverter({ c, f, setBothFromC, setBothFromF }), container);
+	render(TempConverter(c, f, setBothFromC, setBothFromF), container);
 }
 
 update("", "");
