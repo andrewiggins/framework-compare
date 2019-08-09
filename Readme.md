@@ -18,6 +18,7 @@ Implement a set of webpages of increasing complexity in a couple different frame
 - Github repo list?
 
 - Consider eventually adding a app that delay loads component from separate chunk.
+- Consider adding an app that has nested components with local state (e.g. building a design system and using it in an app)
 
 Also check out https://hackernoon.com/towards-a-better-gui-programming-benchmark-397aca3542b8
 
