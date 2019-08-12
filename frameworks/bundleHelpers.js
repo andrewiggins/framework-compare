@@ -48,7 +48,7 @@ function generateConfig(
 		})
 	];
 	if (minify) {
-		// plugins.push(terser());
+		plugins.push(terser());
 	}
 
 	return {
