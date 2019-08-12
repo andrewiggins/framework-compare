@@ -201,8 +201,16 @@
     }
   }
 
+  function add_binding_callback(fn) {
+    binding_callbacks.push(fn);
+  }
+
   function add_render_callback(fn) {
     render_callbacks.push(fn);
+  }
+
+  function add_flush_callback(fn) {
+    flush_callbacks.push(fn);
   }
 
   function flush() {
@@ -253,12 +261,35 @@
   }
 
   var outroing = new Set();
+  var outros;
 
   function transition_in(block, local) {
     if (block && block.i) {
       outroing["delete"](block);
       block.i(local);
     }
+  }
+
+  function transition_out(block, local, callback) {
+    if (block && block.o) {
+      if (outroing.has(block)) return;
+      outroing.add(block);
+      outros.callbacks.push(function () {
+        outroing["delete"](block);
+
+        if (callback) {
+          block.d(1);
+          callback();
+        }
+      });
+      block.o(local);
+    }
+  }
+
+  function bind(component, name, callback) {
+    if (component.$$.props.indexOf(name) === -1) return;
+    component.$$.bound[name] = callback;
+    callback(component.$$.ctx[name]);
   }
 
   function mount_component(component, target, anchor) {
@@ -491,91 +522,23 @@
     }
   }
 
-  function create_if_block_1(ctx) {
-    var p, t;
-    return {
-      c: function c() {
-        p = element("p");
-        t = text(ctx.departingError);
-        attr(p, "class", "form-input-hint");
-      },
-      m: function m(target, anchor) {
-        insert(target, p, anchor);
-        append(p, t);
-      },
-      p: function p(changed, ctx) {
-        if (changed.departingError) {
-          set_data(t, ctx.departingError);
-        }
-      },
-      d: function d(detaching) {
-        if (detaching) {
-          detach(p);
-        }
-      }
-    };
-  } // (80:1) {#if returningError}
-
-
-  function create_if_block(ctx) {
-    var p, t;
-    return {
-      c: function c() {
-        p = element("p");
-        t = text(ctx.returningError);
-        attr(p, "class", "form-input-hint");
-      },
-      m: function m(target, anchor) {
-        insert(target, p, anchor);
-        append(p, t);
-      },
-      p: function p(changed, ctx) {
-        if (changed.returningError) {
-          set_data(t, ctx.returningError);
-        }
-      },
-      d: function d(detaching) {
-        if (detaching) {
-          detach(p);
-        }
-      }
-    };
-  }
+  var oneWayFlight = "one-way";
+  var returnFlight = "return";
 
   function create_fragment(ctx) {
-    var div0, label0, select, option0, t1, option1, t2, t3, div1, label1, input0, t5, div1_class_value, t6, div2, label2, input1, input1_disabled_value, t8, div2_class_value, t9, div3, button, t10, dispose;
-    var if_block0 = ctx.departingError && create_if_block_1(ctx);
-    var if_block1 = ctx.returningError && create_if_block(ctx);
+    var div, label, select, option0, t1, option1, t2, dispose;
     return {
       c: function c() {
-        div0 = element("div");
-        label0 = element("label");
-        label0.textContent = "Trip type";
+        div = element("div");
+        label = element("label");
+        label.textContent = "Trip type";
         select = element("select");
         option0 = element("option");
         t1 = text("one-way flight");
         option1 = element("option");
         t2 = text("return flight");
-        t3 = space();
-        div1 = element("div");
-        label1 = element("label");
-        label1.textContent = "Departing";
-        input0 = element("input");
-        t5 = space();
-        if (if_block0) if_block0.c();
-        t6 = space();
-        div2 = element("div");
-        label2 = element("label");
-        label2.textContent = "Returning";
-        input1 = element("input");
-        t8 = space();
-        if (if_block1) if_block1.c();
-        t9 = space();
-        div3 = element("div");
-        button = element("button");
-        t10 = text("book");
-        attr(label0, "class", "form-label");
-        attr(label0, "for", "trip-type");
+        attr(label, "class", "form-label");
+        attr(label, "for", "trip-type");
         option0.__value = oneWayFlight;
         option0.value = option0.__value;
         option1.__value = returnFlight;
@@ -585,133 +548,383 @@
         });
         attr(select, "id", "trip-type");
         attr(select, "class", "form-select");
-        attr(div0, "class", "form-group");
-        attr(label1, "class", "form-label");
-        attr(label1, "for", "departing-date");
-        attr(input0, "id", "departing-date");
-        attr(input0, "class", "form-input");
-        attr(input0, "type", "text");
-        attr(div1, "class", div1_class_value = "form-group " + (ctx.departingError ? 'has-error' : ''));
-        attr(label2, "class", "form-label");
-        attr(label2, "for", "returning-date");
-        attr(input1, "id", "returning-date");
-        attr(input1, "class", "form-input");
-        attr(input1, "type", "text");
-        input1.disabled = input1_disabled_value = ctx.tripType == oneWayFlight;
-        attr(div2, "class", div2_class_value = "form-group " + (ctx.returningError ? 'has-error' : ''));
-        attr(button, "class", "btn btn-primary");
-        button.disabled = ctx.isBookDisabled;
-        attr(div3, "class", "form-group");
-        dispose = [listen(select, "change", ctx.select_change_handler), listen(input0, "input", ctx.input0_input_handler), listen(input1, "input", ctx.input1_input_handler), listen(button, "click", ctx.bookFlight)];
+        attr(div, "class", "form-group");
+        dispose = listen(select, "change", ctx.select_change_handler);
       },
       m: function m(target, anchor) {
-        insert(target, div0, anchor);
-        append(div0, label0);
-        append(div0, select);
+        insert(target, div, anchor);
+        append(div, label);
+        append(div, select);
         append(select, option0);
         append(option0, t1);
         append(select, option1);
         append(option1, t2);
         select_option(select, ctx.tripType);
-        insert(target, t3, anchor);
-        insert(target, div1, anchor);
-        append(div1, label1);
-        append(div1, input0);
-        input0.value = ctx.departing;
-        append(div1, t5);
-        if (if_block0) if_block0.m(div1, null);
-        insert(target, t6, anchor);
-        insert(target, div2, anchor);
-        append(div2, label2);
-        append(div2, input1);
-        input1.value = ctx.returning;
-        append(div2, t8);
-        if (if_block1) if_block1.m(div2, null);
-        insert(target, t9, anchor);
-        insert(target, div3, anchor);
-        append(div3, button);
-        append(button, t10);
       },
       p: function p(changed, ctx) {
         option0.value = option0.__value;
         option1.value = option1.__value;
         if (changed.tripType) select_option(select, ctx.tripType);
-        if (changed.departing && input0.value !== ctx.departing) input0.value = ctx.departing;
+      },
+      i: noop,
+      o: noop,
+      d: function d(detaching) {
+        if (detaching) {
+          detach(div);
+        }
 
-        if (ctx.departingError) {
-          if (if_block0) {
-            if_block0.p(changed, ctx);
+        dispose();
+      }
+    };
+  }
+
+  function instance($$self, $$props, $$invalidate) {
+    var tripType = $$props.tripType;
+
+    function select_change_handler() {
+      tripType = select_value(this);
+      $$invalidate('tripType', tripType);
+      $$invalidate('returnFlight', returnFlight);
+      $$invalidate('oneWayFlight', oneWayFlight);
+    }
+
+    $$self.$set = function ($$props) {
+      if ('tripType' in $$props) $$invalidate('tripType', tripType = $$props.tripType);
+    };
+
+    return {
+      tripType: tripType,
+      select_change_handler: select_change_handler
+    };
+  }
+
+  var TripType =
+  /*#__PURE__*/
+  function (_SvelteComponent) {
+    _inheritsLoose(TripType, _SvelteComponent);
+
+    function TripType(options) {
+      var _this;
+
+      _this = _SvelteComponent.call(this) || this;
+      init(_assertThisInitialized(_this), options, instance, create_fragment, safe_not_equal, ["tripType"]);
+      return _this;
+    }
+
+    return TripType;
+  }(SvelteComponent);
+
+  function create_if_block(ctx) {
+    var p, t;
+    return {
+      c: function c() {
+        p = element("p");
+        t = text(ctx.errorMsg);
+        attr(p, "class", "form-input-hint");
+      },
+      m: function m(target, anchor) {
+        insert(target, p, anchor);
+        append(p, t);
+      },
+      p: function p(changed, ctx) {
+        if (changed.errorMsg) {
+          set_data(t, ctx.errorMsg);
+        }
+      },
+      d: function d(detaching) {
+        if (detaching) {
+          detach(p);
+        }
+      }
+    };
+  }
+
+  function create_fragment$1(ctx) {
+    var div, label_1, t0, input, t1, div_class_value, dispose;
+    var if_block = ctx.errorMsg && create_if_block(ctx);
+    return {
+      c: function c() {
+        div = element("div");
+        label_1 = element("label");
+        t0 = text(ctx.label);
+        input = element("input");
+        t1 = space();
+        if (if_block) if_block.c();
+        attr(label_1, "class", "form-label");
+        attr(label_1, "for", ctx.inputId);
+        attr(input, "id", ctx.inputId);
+        attr(input, "class", "form-input");
+        attr(input, "type", "text");
+        input.disabled = ctx.disabled;
+        attr(div, "class", div_class_value = "form-group " + (ctx.errorMsg ? 'has-error' : ''));
+        dispose = listen(input, "input", ctx.input_input_handler);
+      },
+      m: function m(target, anchor) {
+        insert(target, div, anchor);
+        append(div, label_1);
+        append(label_1, t0);
+        append(div, input);
+        input.value = ctx.date;
+        append(div, t1);
+        if (if_block) if_block.m(div, null);
+      },
+      p: function p(changed, ctx) {
+        if (changed.label) {
+          set_data(t0, ctx.label);
+        }
+
+        if (changed.date && input.value !== ctx.date) input.value = ctx.date;
+
+        if (changed.disabled) {
+          input.disabled = ctx.disabled;
+        }
+
+        if (ctx.errorMsg) {
+          if (if_block) {
+            if_block.p(changed, ctx);
           } else {
-            if_block0 = create_if_block_1(ctx);
-            if_block0.c();
-            if_block0.m(div1, null);
+            if_block = create_if_block(ctx);
+            if_block.c();
+            if_block.m(div, null);
           }
-        } else if (if_block0) {
-          if_block0.d(1);
-          if_block0 = null;
+        } else if (if_block) {
+          if_block.d(1);
+          if_block = null;
         }
 
-        if (changed.departingError && div1_class_value !== (div1_class_value = "form-group " + (ctx.departingError ? 'has-error' : ''))) {
-          attr(div1, "class", div1_class_value);
-        }
-
-        if (changed.returning && input1.value !== ctx.returning) input1.value = ctx.returning;
-
-        if (changed.tripType && input1_disabled_value !== (input1_disabled_value = ctx.tripType == oneWayFlight)) {
-          input1.disabled = input1_disabled_value;
-        }
-
-        if (ctx.returningError) {
-          if (if_block1) {
-            if_block1.p(changed, ctx);
-          } else {
-            if_block1 = create_if_block(ctx);
-            if_block1.c();
-            if_block1.m(div2, null);
-          }
-        } else if (if_block1) {
-          if_block1.d(1);
-          if_block1 = null;
-        }
-
-        if (changed.returningError && div2_class_value !== (div2_class_value = "form-group " + (ctx.returningError ? 'has-error' : ''))) {
-          attr(div2, "class", div2_class_value);
-        }
-
-        if (changed.isBookDisabled) {
-          button.disabled = ctx.isBookDisabled;
+        if (changed.errorMsg && div_class_value !== (div_class_value = "form-group " + (ctx.errorMsg ? 'has-error' : ''))) {
+          attr(div, "class", div_class_value);
         }
       },
       i: noop,
       o: noop,
       d: function d(detaching) {
         if (detaching) {
-          detach(div0);
-          detach(t3);
-          detach(div1);
+          detach(div);
         }
 
-        if (if_block0) if_block0.d();
-
-        if (detaching) {
-          detach(t6);
-          detach(div2);
-        }
-
-        if (if_block1) if_block1.d();
-
-        if (detaching) {
-          detach(t9);
-          detach(div3);
-        }
-
-        run_all(dispose);
+        if (if_block) if_block.d();
+        dispose();
       }
     };
   }
 
-  var oneWayFlight = "one-way";
-  var returnFlight = "return";
+  function instance$1($$self, $$props, $$invalidate) {
+    var label = $$props.label,
+        date = $$props.date,
+        errorMsg = $$props.errorMsg,
+        _$$props$disabled = $$props.disabled,
+        disabled = _$$props$disabled === void 0 ? false : _$$props$disabled;
+    var inputId = label + "-date";
+
+    function input_input_handler() {
+      date = this.value;
+      $$invalidate('date', date);
+    }
+
+    $$self.$set = function ($$props) {
+      if ('label' in $$props) $$invalidate('label', label = $$props.label);
+      if ('date' in $$props) $$invalidate('date', date = $$props.date);
+      if ('errorMsg' in $$props) $$invalidate('errorMsg', errorMsg = $$props.errorMsg);
+      if ('disabled' in $$props) $$invalidate('disabled', disabled = $$props.disabled);
+    };
+
+    return {
+      label: label,
+      date: date,
+      errorMsg: errorMsg,
+      disabled: disabled,
+      inputId: inputId,
+      input_input_handler: input_input_handler
+    };
+  }
+
+  var DateEntry =
+  /*#__PURE__*/
+  function (_SvelteComponent) {
+    _inheritsLoose(DateEntry, _SvelteComponent);
+
+    function DateEntry(options) {
+      var _this;
+
+      _this = _SvelteComponent.call(this) || this;
+      init(_assertThisInitialized(_this), options, instance$1, create_fragment$1, safe_not_equal, ["label", "date", "errorMsg", "disabled"]);
+      return _this;
+    }
+
+    return DateEntry;
+  }(SvelteComponent);
+
+  function create_fragment$2(ctx) {
+    var updating_tripType, t0, updating_date, t1, updating_date_1, t2, div, button, t3, current, dispose;
+
+    function triptype_tripType_binding(value) {
+      ctx.triptype_tripType_binding.call(null, value);
+      updating_tripType = true;
+      add_flush_callback(function () {
+        return updating_tripType = false;
+      });
+    }
+
+    var triptype_props = {};
+
+    if (ctx.tripType !== void 0) {
+      triptype_props.tripType = ctx.tripType;
+    }
+
+    var triptype = new TripType({
+      props: triptype_props
+    });
+    add_binding_callback(function () {
+      return bind(triptype, 'tripType', triptype_tripType_binding);
+    });
+
+    function dateentry0_date_binding(value_1) {
+      ctx.dateentry0_date_binding.call(null, value_1);
+      updating_date = true;
+      add_flush_callback(function () {
+        return updating_date = false;
+      });
+    }
+
+    var dateentry0_props = {
+      label: "Departing",
+      errorMsg: ctx.departingError
+    };
+
+    if (ctx.departing !== void 0) {
+      dateentry0_props.date = ctx.departing;
+    }
+
+    var dateentry0 = new DateEntry({
+      props: dateentry0_props
+    });
+    add_binding_callback(function () {
+      return bind(dateentry0, 'date', dateentry0_date_binding);
+    });
+
+    function dateentry1_date_binding(value_2) {
+      ctx.dateentry1_date_binding.call(null, value_2);
+      updating_date_1 = true;
+      add_flush_callback(function () {
+        return updating_date_1 = false;
+      });
+    }
+
+    var dateentry1_props = {
+      label: "Returning",
+      errorMsg: ctx.returningError,
+      disabled: ctx.tripType == oneWayFlight$1
+    };
+
+    if (ctx.returning !== void 0) {
+      dateentry1_props.date = ctx.returning;
+    }
+
+    var dateentry1 = new DateEntry({
+      props: dateentry1_props
+    });
+    add_binding_callback(function () {
+      return bind(dateentry1, 'date', dateentry1_date_binding);
+    });
+    return {
+      c: function c() {
+        triptype.$$.fragment.c();
+        t0 = space();
+        dateentry0.$$.fragment.c();
+        t1 = space();
+        dateentry1.$$.fragment.c();
+        t2 = space();
+        div = element("div");
+        button = element("button");
+        t3 = text("book");
+        attr(button, "class", "btn btn-primary");
+        button.disabled = ctx.isBookDisabled;
+        attr(div, "class", "form-group");
+        dispose = listen(button, "click", ctx.bookFlight);
+      },
+      m: function m(target, anchor) {
+        mount_component(triptype, target, anchor);
+        insert(target, t0, anchor);
+        mount_component(dateentry0, target, anchor);
+        insert(target, t1, anchor);
+        mount_component(dateentry1, target, anchor);
+        insert(target, t2, anchor);
+        insert(target, div, anchor);
+        append(div, button);
+        append(button, t3);
+        current = true;
+      },
+      p: function p(changed, ctx) {
+        var triptype_changes = {};
+
+        if (!updating_tripType && changed.tripType) {
+          triptype_changes.tripType = ctx.tripType;
+        }
+
+        triptype.$set(triptype_changes);
+        var dateentry0_changes = {};
+        if (changed.departingError) dateentry0_changes.errorMsg = ctx.departingError;
+
+        if (!updating_date && changed.departing) {
+          dateentry0_changes.date = ctx.departing;
+        }
+
+        dateentry0.$set(dateentry0_changes);
+        var dateentry1_changes = {};
+        if (changed.returningError) dateentry1_changes.errorMsg = ctx.returningError;
+        if (changed.tripType || changed.oneWayFlight) dateentry1_changes.disabled = ctx.tripType == oneWayFlight$1;
+
+        if (!updating_date_1 && changed.returning) {
+          dateentry1_changes.date = ctx.returning;
+        }
+
+        dateentry1.$set(dateentry1_changes);
+
+        if (!current || changed.isBookDisabled) {
+          button.disabled = ctx.isBookDisabled;
+        }
+      },
+      i: function i(local) {
+        if (current) return;
+        transition_in(triptype.$$.fragment, local);
+        transition_in(dateentry0.$$.fragment, local);
+        transition_in(dateentry1.$$.fragment, local);
+        current = true;
+      },
+      o: function o(local) {
+        transition_out(triptype.$$.fragment, local);
+        transition_out(dateentry0.$$.fragment, local);
+        transition_out(dateentry1.$$.fragment, local);
+        current = false;
+      },
+      d: function d(detaching) {
+        destroy_component(triptype, detaching);
+
+        if (detaching) {
+          detach(t0);
+        }
+
+        destroy_component(dateentry0, detaching);
+
+        if (detaching) {
+          detach(t1);
+        }
+
+        destroy_component(dateentry1, detaching);
+
+        if (detaching) {
+          detach(t2);
+          detach(div);
+        }
+
+        dispose();
+      }
+    };
+  }
+
+  var oneWayFlight$1 = "one-way";
+  var returnFlight$1 = "return";
 
   function getErrorMessage(date) {
     try {
@@ -722,13 +935,13 @@
     }
   }
 
-  function instance($$self, $$props, $$invalidate) {
+  function instance$2($$self, $$props, $$invalidate) {
     var departing = today();
     var returning = departing;
-    var tripType = oneWayFlight;
+    var tripType = oneWayFlight$1;
 
     function bookFlight() {
-      var type = tripType == returnFlight ? "return" : "one-way";
+      var type = tripType == returnFlight$1 ? "return" : "one-way";
       var message = "You have booked a " + type + " flight, leaving " + departing;
 
       if (type === "return") {
@@ -738,20 +951,18 @@
       alert(message);
     }
 
-    function select_change_handler() {
-      tripType = select_value(this);
+    function triptype_tripType_binding(value) {
+      tripType = value;
       $$invalidate('tripType', tripType);
-      $$invalidate('returnFlight', returnFlight);
-      $$invalidate('oneWayFlight', oneWayFlight);
     }
 
-    function input0_input_handler() {
-      departing = this.value;
+    function dateentry0_date_binding(value_1) {
+      departing = value_1;
       $$invalidate('departing', departing);
     }
 
-    function input1_input_handler() {
-      returning = this.value;
+    function dateentry1_date_binding(value_2) {
+      returning = value_2;
       $$invalidate('returning', returning);
     }
 
@@ -777,13 +988,13 @@
       }
 
       if ($$dirty.departingError || $$dirty.returningError || $$dirty.tripType || $$dirty.returning || $$dirty.departing) {
-        if (departingError == null && returningError == null && tripType == returnFlight && returning < departing) {
+        if (departingError == null && returningError == null && tripType == returnFlight$1 && returning < departing) {
           $$invalidate('returningError', returningError = "Returning date must be on or after departing date.");
         }
       }
 
-      if ($$dirty.departingError || $$dirty.returningError || $$dirty.tripType || $$dirty.returning || $$dirty.departing) {
-        $$invalidate('isBookDisabled', isBookDisabled = departingError || returningError || tripType == returnFlight && returning < departing);
+      if ($$dirty.departingError || $$dirty.returningError) {
+        $$invalidate('isBookDisabled', isBookDisabled = departingError || returningError);
       }
     };
 
@@ -795,9 +1006,9 @@
       departingError: departingError,
       returningError: returningError,
       isBookDisabled: isBookDisabled,
-      select_change_handler: select_change_handler,
-      input0_input_handler: input0_input_handler,
-      input1_input_handler: input1_input_handler
+      triptype_tripType_binding: triptype_tripType_binding,
+      dateentry0_date_binding: dateentry0_date_binding,
+      dateentry1_date_binding: dateentry1_date_binding
     };
   }
 
@@ -810,7 +1021,7 @@
       var _this;
 
       _this = _SvelteComponent.call(this) || this;
-      init(_assertThisInitialized(_this), options, instance, create_fragment, safe_not_equal, []);
+      init(_assertThisInitialized(_this), options, instance$2, create_fragment$2, safe_not_equal, []);
       return _this;
     }
 

@@ -58,9 +58,58 @@
     }
   }
 
-  var initialDate = today();
   var oneWayFlight = "one-way";
   var returnFlight = "return";
+  function TripType(_ref) {
+    var tripType = _ref.tripType,
+        setTripType = _ref.setTripType;
+    return c("div", {
+      "class": "form-group"
+    }, c("label", {
+      "class": "form-label",
+      "for": "trip-type"
+    }, "Trip type"), c("select", {
+      id: "trip-type",
+      "class": "form-select",
+      value: tripType,
+      onInput: function onInput(e) {
+        return setTripType(e.target.value);
+      }
+    }, c("option", {
+      value: oneWayFlight
+    }, "one-way flight"), c("option", {
+      value: returnFlight
+    }, "return flight")));
+  }
+
+  function DateEntry(_ref) {
+    var label = _ref.label,
+        date = _ref.date,
+        errorMsg = _ref.errorMsg,
+        setDate = _ref.setDate,
+        _ref$disabled = _ref.disabled,
+        disabled = _ref$disabled === void 0 ? false : _ref$disabled;
+    var inputId = label + "-date";
+    return c("div", {
+      "class": "form-group" + (errorMsg ? " has-error" : "")
+    }, c("label", {
+      "class": "form-label",
+      "for": inputId
+    }, label), c("input", {
+      id: inputId,
+      "class": "form-input",
+      type: "text",
+      value: date,
+      onInput: function onInput(e) {
+        return setDate(e.target.value);
+      },
+      disabled: disabled
+    }), errorMsg && c("p", {
+      "class": "form-input-hint"
+    }, errorMsg));
+  }
+
+  var initialDate = today();
 
   var App =
   /*#__PURE__*/
@@ -118,56 +167,29 @@
       }
 
       var isBookDisabled = state.departingError || returningError;
-      return c(h, null, c("div", {
-        "class": "form-group"
-      }, c("label", {
-        "class": "form-label",
-        "for": "trip-type"
-      }, "Trip type"), c("select", {
-        id: "trip-type",
-        "class": "form-select",
-        value: state.tripType,
-        onInput: function onInput(e) {
+      return c(h, null, c(TripType, {
+        tripType: state.tripType,
+        setTripType: function setTripType(tripType) {
           return _this2.setState({
-            tripType: e.target.value
+            tripType: tripType
           });
         }
-      }, c("option", {
-        value: oneWayFlight
-      }, "one-way flight"), c("option", {
-        value: returnFlight
-      }, "return flight"))), c("div", {
-        "class": "form-group" + (state.departingError ? " has-error" : "")
-      }, c("label", {
-        "class": "form-label",
-        "for": "departing-date"
-      }, "Departing"), c("input", {
-        id: "departing-date",
-        "class": "form-input",
-        type: "text",
-        value: state.departing,
-        onInput: function onInput(e) {
-          return _this2.updateDate("departing", e.target.value);
-        }
-      }), state.departingError && c("p", {
-        "class": "form-input-hint"
-      }, state.departingError)), c("div", {
-        "class": "form-group" + (returningError ? " has-error" : "")
-      }, c("label", {
-        "class": "form-label",
-        "for": "returning-date"
-      }, "Returning"), c("input", {
-        id: "returning-date",
-        "class": "form-input",
-        type: "text",
-        value: state.returning,
-        onInput: function onInput(e) {
-          return _this2.updateDate("returning", e.target.value);
+      }), c(DateEntry, {
+        label: "Departing",
+        date: state.departing,
+        setDate: function setDate(newDate) {
+          return _this2.updateDate("departing", newDate);
         },
+        errorMsg: state.departingError
+      }), c(DateEntry, {
+        label: "Returning",
+        date: state.returning,
+        setDate: function setDate(newDate) {
+          return _this2.updateDate("returning", newDate);
+        },
+        errorMsg: returningError,
         disabled: state.tripType !== returnFlight
-      }), returningError && c("p", {
-        "class": "form-input-hint"
-      }, returningError)), c("div", {
+      }), c("div", {
         "class": "form-group"
       }, c("button", {
         disabled: isBookDisabled,

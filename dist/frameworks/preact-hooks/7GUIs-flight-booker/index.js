@@ -54,9 +54,58 @@
 	  }
 	}
 
-	var initialDate = today();
 	var oneWayFlight = "one-way";
 	var returnFlight = "return";
+	function TripType(_ref) {
+	  var tripType = _ref.tripType,
+	      setTripType = _ref.setTripType;
+	  return c("div", {
+	    "class": "form-group"
+	  }, c("label", {
+	    "class": "form-label",
+	    "for": "trip-type"
+	  }, "Trip type"), c("select", {
+	    id: "trip-type",
+	    "class": "form-select",
+	    value: tripType,
+	    onInput: function onInput(e) {
+	      return setTripType(e.target.value);
+	    }
+	  }, c("option", {
+	    value: oneWayFlight
+	  }, "one-way flight"), c("option", {
+	    value: returnFlight
+	  }, "return flight")));
+	}
+
+	function DateEntry(_ref) {
+	  var label = _ref.label,
+	      date = _ref.date,
+	      setDate = _ref.setDate,
+	      errorMsg = _ref.errorMsg,
+	      _ref$disabled = _ref.disabled,
+	      disabled = _ref$disabled === void 0 ? false : _ref$disabled;
+	  var inputId = label + "-date";
+	  return c("div", {
+	    "class": "form-group" + (errorMsg ? " has-error" : "")
+	  }, c("label", {
+	    "class": "form-label",
+	    "for": inputId
+	  }, label), c("input", {
+	    id: inputId,
+	    "class": "form-input",
+	    type: "text",
+	    value: date,
+	    onInput: function onInput(e) {
+	      return setDate(e.target.value);
+	    },
+	    disabled: disabled
+	  }), errorMsg && c("p", {
+	    "class": "form-input-hint"
+	  }, errorMsg));
+	}
+
+	var initialDate = today();
 
 	function useDate(initialDate) {
 	  var _useState = e$1(initialDate),
@@ -84,7 +133,7 @@
 	function App() {
 	  var _useState3 = e$1(oneWayFlight),
 	      tripType = _useState3[0],
-	      setTripType = _useState3[1];
+	      _setTripType = _useState3[1];
 
 	  var _useDate = useDate(initialDate),
 	      departing = _useDate[0],
@@ -113,54 +162,27 @@
 	    alert(message);
 	  }
 
-	  return c(h, null, c("div", {
-	    "class": "form-group"
-	  }, c("label", {
-	    "class": "form-label",
-	    "for": "trip-type"
-	  }, "Trip type"), c("select", {
-	    id: "trip-type",
-	    "class": "form-select",
-	    value: tripType,
-	    onInput: function onInput(e) {
-	      return setTripType(e.target.value);
+	  return c(h, null, c(TripType, {
+	    tripType: tripType,
+	    setTripType: function setTripType(value) {
+	      return _setTripType(value);
 	    }
-	  }, c("option", {
-	    value: oneWayFlight
-	  }, "one-way flight"), c("option", {
-	    value: returnFlight
-	  }, "return flight"))), c("div", {
-	    "class": "form-group" + (departingError ? " has-error" : "")
-	  }, c("label", {
-	    "class": "form-label",
-	    "for": "departing-date"
-	  }, "Departing"), c("input", {
-	    id: "departing-date",
-	    "class": "form-input",
-	    type: "text",
-	    value: departing,
-	    onInput: function onInput(e) {
-	      return setDeparting(e.target.value);
-	    }
-	  }), departingError && c("p", {
-	    "class": "form-input-hint"
-	  }, departingError)), c("div", {
-	    "class": "form-group" + (returningError ? " has-error" : "")
-	  }, c("label", {
-	    "class": "form-label",
-	    "for": "returning-date"
-	  }, "Returning"), c("input", {
-	    id: "returning-date",
-	    "class": "form-input",
-	    type: "text",
-	    value: returning,
-	    onInput: function onInput(e) {
-	      return setReturning(e.target.value);
+	  }), c(DateEntry, {
+	    label: "Departing",
+	    date: departing,
+	    setDate: function setDate(newDate) {
+	      return setDeparting(newDate);
 	    },
+	    errorMsg: departingError
+	  }), c(DateEntry, {
+	    label: "Returning",
+	    date: returning,
+	    setDate: function setDate(newDate) {
+	      return setReturning(newDate);
+	    },
+	    errorMsg: returningError,
 	    disabled: tripType !== returnFlight
-	  }), returningError && c("p", {
-	    "class": "form-input-hint"
-	  }, returningError)), c("div", {
+	  }), c("div", {
 	    "class": "form-group"
 	  }, c("button", {
 	    disabled: isBookDisabled,

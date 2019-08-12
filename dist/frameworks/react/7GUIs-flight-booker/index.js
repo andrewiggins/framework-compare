@@ -505,9 +505,58 @@
     }
   }
 
-  var initial = today();
   var oneWayFlight = "one-way";
   var returnFlight = "return";
+  function TripType(_ref) {
+    var tripType = _ref.tripType,
+        setTripType = _ref.setTripType;
+    return react.createElement("div", {
+      className: "form-group"
+    }, react.createElement("label", {
+      className: "form-label",
+      htmlFor: "trip-type"
+    }, "Trip type"), react.createElement("select", {
+      id: "trip-type",
+      className: "form-select",
+      value: tripType,
+      onChange: function onChange(e) {
+        return setTripType(e.target.value);
+      }
+    }, react.createElement("option", {
+      value: oneWayFlight
+    }, "one-way flight"), react.createElement("option", {
+      value: returnFlight
+    }, "return flight")));
+  }
+
+  function DateEntry(_ref) {
+    var label = _ref.label,
+        date = _ref.date,
+        errorMsg = _ref.errorMsg,
+        setDate = _ref.setDate,
+        _ref$disabled = _ref.disabled,
+        disabled = _ref$disabled === void 0 ? false : _ref$disabled;
+    var inputId = label + "-date";
+    return react.createElement("div", {
+      className: "form-group" + (errorMsg ? " has-error" : "")
+    }, react.createElement("label", {
+      className: "form-label",
+      htmlFor: inputId
+    }, label), react.createElement("input", {
+      id: inputId,
+      className: "form-input",
+      type: "text",
+      value: date,
+      onChange: function onChange(e) {
+        return setDate(e.target.value);
+      },
+      disabled: disabled
+    }), errorMsg && react.createElement("p", {
+      className: "form-input-hint"
+    }, errorMsg));
+  }
+
+  var initial = today();
 
   var App =
   /*#__PURE__*/
@@ -570,56 +619,29 @@
       }
 
       var isBookDisabled = departingError || returningError;
-      return react.createElement(react.Fragment, null, react.createElement("div", {
-        className: "form-group"
-      }, react.createElement("label", {
-        className: "form-label",
-        htmlFor: "trip-type"
-      }, "Trip type"), react.createElement("select", {
-        id: "trip-type",
-        className: "form-select",
-        value: tripType,
-        onInput: function onInput(e) {
+      return react.createElement(react.Fragment, null, react.createElement(TripType, {
+        tripType: tripType,
+        setTripType: function setTripType(tripType) {
           return _this2.setState({
-            tripType: e.target.value
+            tripType: tripType
           });
         }
-      }, react.createElement("option", {
-        value: oneWayFlight
-      }, "one-way flight"), react.createElement("option", {
-        value: returnFlight
-      }, "return flight"))), react.createElement("div", {
-        className: "form-group" + (departingError ? " has-error" : "")
-      }, react.createElement("label", {
-        className: "form-label",
-        htmlFor: "departing-date"
-      }, "Departing"), react.createElement("input", {
-        id: "departing-date",
-        className: "form-input",
-        type: "text",
-        value: departing,
-        onInput: function onInput(e) {
-          return _this2.updateDate("departing", e.target.value);
-        }
-      }), departingError && react.createElement("p", {
-        "class": "form-input-hint"
-      }, departingError)), react.createElement("div", {
-        className: "form-group" + (returningError ? " has-error" : "")
-      }, react.createElement("label", {
-        className: "form-label",
-        htmlFor: "returning-date"
-      }, "Returning"), react.createElement("input", {
-        id: "returning-date",
-        className: "form-input",
-        type: "text",
-        value: returning,
-        onInput: function onInput(e) {
-          return _this2.updateDate("returning", e.target.value);
+      }), react.createElement(DateEntry, {
+        label: "Departing",
+        date: departing,
+        setDate: function setDate(newDate) {
+          return _this2.updateDate("departing", newDate);
         },
+        errorMsg: departingError
+      }), react.createElement(DateEntry, {
+        label: "Returning",
+        date: returning,
+        setDate: function setDate(newDate) {
+          return _this2.updateDate("returning", newDate);
+        },
+        errorMsg: returningError,
         disabled: tripType !== returnFlight
-      }), returningError && react.createElement("p", {
-        "class": "form-input-hint"
-      }, returningError)), react.createElement("div", {
+      }), react.createElement("div", {
         className: "form-group"
       }, react.createElement("button", {
         disabled: isBookDisabled,
