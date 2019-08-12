@@ -41,9 +41,14 @@ function generateConfig(
 	const extension = minify ? ".min.js" : ".js";
 
 	// @ts-ignore
-	let plugins = [...customPlugins(environment), nodeResolve()];
+	let plugins = [
+		...customPlugins(environment),
+		nodeResolve({
+			extensions: [".mjs", ".js", ".jsx", ".json", ".node"]
+		})
+	];
 	if (minify) {
-		plugins.push(terser());
+		// plugins.push(terser());
 	}
 
 	return {

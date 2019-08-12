@@ -1,10 +1,10 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import { today, validateDate } from "../../../../lib/date";
+import { TripType, oneWayFlight, returnFlight } from "./TripType";
+import { DateEntry } from "./DateEntry";
 
 const initial = today();
-const oneWayFlight = "one-way";
-const returnFlight = "return";
 
 class App extends React.Component {
 	constructor(props) {
@@ -67,47 +67,23 @@ class App extends React.Component {
 
 		return (
 			<>
-				<div className="form-group">
-					<label className="form-label" htmlFor="trip-type">
-						Trip type
-					</label>
-					<select
-						id="trip-type"
-						className="form-select"
-						value={tripType}
-						onInput={e => this.setState({ tripType: e.target.value })}
-					>
-						<option value={oneWayFlight}>one-way flight</option>
-						<option value={returnFlight}>return flight</option>
-					</select>
-				</div>
-				<div className={"form-group" + (departingError ? " has-error" : "")}>
-					<label className="form-label" htmlFor="departing-date">
-						Departing
-					</label>
-					<input
-						id="departing-date"
-						className="form-input"
-						type="text"
-						value={departing}
-						onInput={e => this.updateDate("departing", e.target.value)}
-					/>
-					{departingError && <p class="form-input-hint">{departingError}</p>}
-				</div>
-				<div className={"form-group" + (returningError ? " has-error" : "")}>
-					<label className="form-label" htmlFor="returning-date">
-						Returning
-					</label>
-					<input
-						id="returning-date"
-						className="form-input"
-						type="text"
-						value={returning}
-						onInput={e => this.updateDate("returning", e.target.value)}
-						disabled={tripType !== returnFlight}
-					/>
-					{returningError && <p class="form-input-hint">{returningError}</p>}
-				</div>
+				<TripType
+					tripType={tripType}
+					setTripType={tripType => this.setState({ tripType })}
+				/>
+				<DateEntry
+					label="Departing"
+					date={departing}
+					setDate={newDate => this.updateDate("departing", newDate)}
+					errorMsg={departingError}
+				/>
+				<DateEntry
+					label="Returning"
+					date={returning}
+					setDate={newDate => this.updateDate("returning", newDate)}
+					errorMsg={returningError}
+					disabled={tripType !== returnFlight}
+				/>
 				<div className="form-group">
 					<button
 						disabled={isBookDisabled}

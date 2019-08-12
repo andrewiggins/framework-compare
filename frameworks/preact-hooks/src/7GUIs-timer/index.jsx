@@ -1,5 +1,5 @@
 import { createElement, render, Fragment } from "preact";
-import { useState, useRef, useEffect } from "preact/hooks";
+import { useState, useEffect } from "preact/hooks";
 
 function App() {
 	const [lastRenderTime, setLastRenderTime] = useState(performance.now());

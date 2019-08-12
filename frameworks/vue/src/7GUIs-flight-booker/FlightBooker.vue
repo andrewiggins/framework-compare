@@ -4,36 +4,25 @@
 -->
 <template>
   <div id="app">
-    <div class="form-group">
-      <label class="form-label" for="trip-type">Trip type</label
-      ><select id="trip-type" class="form-select" v-model="tripType">
-        <option :value="oneWayFlight">one-way flight</option>
-        <option :value="returnFlight">return flight</option>
-      </select>
-    </div>
+    <TripType
+      tripType="{tripType}"
+      v-on:setTripType="newTripType => (tripType = newTripType)"
+    />
 
-    <div class="form-group" v-bind:class="{ 'has-error': departingError }">
-      <label class="form-label" for="departing-date">Departing</label
-      ><input
-        id="departing-date"
-        class="form-input"
-        type="text"
-        v-model="departing"
-      />
-      <p v-if="departingError" class="form-input-hint">{{ departingError }}</p>
-    </div>
+    <DateEntry
+      label="Departing"
+      v-bind:date="departing"
+      v-bind:errorMsg="departingError"
+      v-on:setDate="newDate => (departing = newDate)"
+    />
 
-    <div class="form-group" v-bind:class="{ 'has-error': returningError }">
-      <label class="form-label" for="returning-date">Returning</label
-      ><input
-        id="returning-date"
-        class="form-input"
-        type="text"
-        v-model="returning"
-        v-bind:disabled="tripType == oneWayFlight"
-      />
-      <p v-if="returningError" class="form-input-hint">{{ returningError }}</p>
-    </div>
+    <DateEntry
+      label="Returning"
+      v-bind:date="returning"
+      v-bind:errorMsg="returningError"
+      v-on:setDate="newDate => (returning = newDate)"
+      v-bind:disabled="tripType == oneWayFlight"
+    />
 
     <div class="form-group">
       <button
@@ -49,6 +38,8 @@
 
 <script>
 import { today, validateDate } from "../../../../lib/date";
+import TripType from "./TripType.vue";
+import DateEntry from "./DateEntry.vue";
 
 const oneWayFlight = "one-way";
 const returnFlight = "return";
@@ -63,6 +54,7 @@ function getErrorMessage(date) {
 }
 
 export default {
+  components: { TripType, DateEntry },
   data() {
     let currentDate = today();
 

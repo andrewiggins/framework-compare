@@ -1,10 +1,10 @@
 import React, { useState, Fragment } from "react";
 import ReactDOM from "react-dom";
 import { today, validateDate } from "../../../../lib/date";
+import { TripType, oneWayFlight, returnFlight } from "./TripType";
+import { DateEntry } from "./DateEntry";
 
 const initialDate = today();
-const oneWayFlight = "one-way";
-const returnFlight = "return";
 
 function useDate(initialDate) {
 	const [date, setDate] = useState(initialDate);
@@ -56,47 +56,20 @@ function App() {
 
 	return (
 		<>
-			<div className="form-group">
-				<label className="form-label" htmlFor="trip-type">
-					Trip type
-				</label>
-				<select
-					id="trip-type"
-					className="form-select"
-					value={tripType}
-					onInput={e => setTripType(e.target.value)}
-				>
-					<option value={oneWayFlight}>one-way flight</option>
-					<option value={returnFlight}>return flight</option>
-				</select>
-			</div>
-			<div className={"form-group" + (departingError ? " has-error" : "")}>
-				<label className="form-label" htmlFor="departing-date">
-					Departing
-				</label>
-				<input
-					id="departing-date"
-					className="form-input"
-					type="text"
-					value={departing}
-					onInput={e => setDeparting(e.target.value)}
-				/>
-				{departingError && <p class="form-input-hint">{departingError}</p>}
-			</div>
-			<div className={"form-group" + (returningError ? " has-error" : "")}>
-				<label className="form-label" htmlFor="returning-date">
-					Returning
-				</label>
-				<input
-					id="returning-date"
-					className="form-input"
-					type="text"
-					value={returning}
-					onInput={e => setReturning(e.target.value)}
-					disabled={tripType !== returnFlight}
-				/>
-				{returningError && <p class="form-input-hint">{returningError}</p>}
-			</div>
+			<TripType tripType={tripType} setTripType={value => setTripType(value)} />
+			<DateEntry
+				label="Departing"
+				date={departing}
+				setDate={newDate => setDeparting(newDate)}
+				errorMsg={departingError}
+			/>
+			<DateEntry
+				label="Returning"
+				date={returning}
+				setDate={newDate => setReturning(newDate)}
+				errorMsg={returningError}
+				disabled={tripType !== returnFlight}
+			/>
 			<div className="form-group">
 				<button
 					disabled={isBookDisabled}

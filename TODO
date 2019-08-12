@@ -4,7 +4,6 @@
 * Write up conclusion
 * Add CONTRIBUTING guide
 
-* Consider breaking up Flight Booker into multiple components to demonstrate how that works
 * Consider adding description of app as a pill above Bundles and Source panels
 * Consider having different es5 and modern JS files
 	* Show two tables in metadata panel, one per output type (es5, esm)

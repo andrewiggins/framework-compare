@@ -1,5 +1,7 @@
 <script>
 	import { today, validateDate } from "../../../../lib/date";
+	import TripType from "./TripType.html";
+	import DateEntry from "./DateEntry.html";
 
 	const oneWayFlight = "one-way";
 	const returnFlight = "return";
@@ -43,40 +45,18 @@
 	}
 </script>
 
-<div class="form-group">
-	<label class="form-label" for="trip-type">Trip type</label
-	><select id="trip-type" class="form-select" bind:value="{tripType}">
-		<option value="{oneWayFlight}">one-way flight</option>
-		<option value="{returnFlight}">return flight</option>
-	</select>
-</div>
-
-<div class="form-group {departingError ? 'has-error' : ''}">
-	<label class="form-label" for="departing-date">Departing</label
-	><input
-		id="departing-date"
-		class="form-input"
-		type="text"
-		bind:value="{departing}"
-	/>
-	{#if departingError}
-	<p class="form-input-hint">{departingError}</p>
-	{/if}
-</div>
-
-<div class="form-group {returningError ? 'has-error' : ''}">
-	<label class="form-label" for="returning-date">Returning</label
-	><input
-		id="returning-date"
-		class="form-input"
-		type="text"
-		bind:value="{returning}"
-		disabled="{tripType == oneWayFlight}"
-	/>
-	{#if returningError}
-	<p class="form-input-hint">{returningError}</p>
-	{/if}
-</div>
+<TripType bind:tripType="{tripType}"></TripType>
+<DateEntry
+	label="Departing"
+	bind:date="{departing}"
+	errorMsg="{departingError}"
+></DateEntry>
+<DateEntry
+	label="Returning"
+	bind:date="{returning}"
+	errorMsg="{returningError}"
+	disabled="{tripType == oneWayFlight}"
+></DateEntry>
 
 <div class="form-group">
 	<button

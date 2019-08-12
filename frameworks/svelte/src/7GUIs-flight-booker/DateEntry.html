@@ -1,0 +1,22 @@
+<script>
+	export let label;
+	export let date;
+	export let errorMsg;
+	export let disabled = false;
+
+	const inputId = `${label}-date`;
+</script>
+
+<div class="form-group {errorMsg ? 'has-error' : ''}">
+	<label class="form-label" for="{inputId}">{label}</label
+	><input
+		id="{inputId}"
+		class="form-input"
+		type="text"
+		bind:value="{date}"
+		disabled="{disabled}"
+	/>
+	{#if errorMsg}
+	<p class="form-input-hint">{errorMsg}</p>
+	{/if}
+</div>

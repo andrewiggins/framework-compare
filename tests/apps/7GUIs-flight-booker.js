@@ -13,14 +13,14 @@ import {
 export default function run(frameworkName, appSetup) {
 	describe("7GUIs Flight Booker", () => {
 		const tripTypeSel = appSel("#trip-type");
-		const departingSel = appSel("#departing-date");
-		const returningSel = appSel("#returning-date");
+		const departingSel = appSel("#Departing-date");
+		const returningSel = appSel("#Returning-date");
 		const bookSel = appSel("button");
 		const departingErrorSel = appSel(
-			".form-group.has-error #departing-date+.form-input-hint"
+			".form-group.has-error #Departing-date+.form-input-hint"
 		);
 		const returningErrorSel = appSel(
-			".form-group.has-error #returning-date+.form-input-hint"
+			".form-group.has-error #Returning-date+.form-input-hint"
 		);
 
 		const oneWayType = "one-way";
@@ -43,17 +43,17 @@ export default function run(frameworkName, appSetup) {
 						</select>
 					</div>
 					<div class="form-group">
-						<label class="form-label" for="departing-date">
+						<label class="form-label" for="Departing-date">
 							Departing
 						</label>
-						<input id="departing-date" class="form-input" type="text" />
+						<input id="Departing-date" class="form-input" type="text" />
 					</div>
 					<div class="form-group">
-						<label class="form-label" for="returning-date">
+						<label class="form-label" for="Returning-date">
 							Returning
 						</label>
 						<input
-							id="returning-date"
+							id="Returning-date"
 							class="form-input"
 							type="text"
 							disabled=""
