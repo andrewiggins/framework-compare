@@ -18,12 +18,12 @@ const urlRegex = /\/frameworks\/([A-Za-z0-9_\-]+)\/([A-Za-z0-9_\-]+)\/?/i;
  */
 function getFrameworkFromUrl(url) {
 	const match = url.match(urlRegex);
-	return match && getDisplayName(match[1]);
+	return match && match[1];
 }
 
 function getAppFromUrl(url) {
 	const match = url.match(urlRegex);
-	return match && getDisplayName(match[2]);
+	return match && match[2];
 }
 
 /**
@@ -72,11 +72,11 @@ export const Nav = ({ data: byFrameworkData, url: currentUrl }) => {
 				{byFrameworkData.map(framework => (
 					<details
 						class="section accordion"
-						open={getFrameworkFromUrl(currentUrl) === framework.name}
+						open={getFrameworkFromUrl(currentUrl) === framework.id}
 					>
 						<summary class="section-header accordion-header c-hand">
 							<i class="icon icon-arrow-right mr-1" />
-							{framework.name}
+							{getDisplayName(framework.id)}
 						</summary>
 						<div class="section-body accordion-body">
 							<ul class="menu menu-nav">
@@ -86,7 +86,7 @@ export const Nav = ({ data: byFrameworkData, url: currentUrl }) => {
 											href={u(app.htmlUrl)}
 											class={currentUrl == app.htmlUrl ? active : null}
 										>
-											{app.appName}
+											{getDisplayName(app.appId)}
 										</a>
 									</li>
 								))}
@@ -99,11 +99,11 @@ export const Nav = ({ data: byFrameworkData, url: currentUrl }) => {
 				{byAppData.map(app => (
 					<details
 						class="section accordion"
-						open={getAppFromUrl(currentUrl) === app.name}
+						open={getAppFromUrl(currentUrl) === app.id}
 					>
 						<summary class="section-header accordion-header c-hand">
 							<i class="icon icon-arrow-right mr-1" />
-							{app.name}
+							{getDisplayName(app.id)}
 						</summary>
 						<div class="section-body accordion-body">
 							<ul class="menu menu-nav">
@@ -113,7 +113,7 @@ export const Nav = ({ data: byFrameworkData, url: currentUrl }) => {
 											href={u(app.htmlUrl)}
 											class={currentUrl == app.htmlUrl ? active : null}
 										>
-											{app.framework}
+											{getDisplayName(app.frameworkId)}
 										</a>
 									</li>
 								))}

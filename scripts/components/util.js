@@ -12,8 +12,8 @@ const sorted = [
  * @param {import('../data').AppData | string} app2
  */
 export function appSorter(app1, app2) {
-	const app1Name = typeof app1 == "string" ? app1 : app1.appName;
-	const app2Name = typeof app2 == "string" ? app2 : app2.appName;
+	const app1Name = typeof app1 == "string" ? app1 : getDisplayName(app1.appId);
+	const app2Name = typeof app2 == "string" ? app2 : getDisplayName(app2.appId);
 
 	if (!sorted.includes(app1Name)) {
 		return 1;
@@ -27,7 +27,7 @@ export function appSorter(app1, app2) {
 }
 
 /**
- * @typedef {Array<{ name: string; frameworks: Array<import('../data').AppData>; }>} ByAppData
+ * @typedef {Array<{ id: string; frameworks: Array<import('../data').AppData>; }>} ByAppData
  * @param {import('../data').FrameworkData} frameworkData
  * @returns {ByAppData}
  */
@@ -40,12 +40,12 @@ export function groupByApp(frameworkData) {
 
 	for (let framework of frameworkData) {
 		for (let app of framework.apps) {
-			if (!(app.appName in appIndexes)) {
-				appIndexes[app.appName] = apps.length;
-				apps.push({ name: app.appName, frameworks: [] })
+			if (!(app.appId in appIndexes)) {
+				appIndexes[app.appId] = apps.length;
+				apps.push({ id: app.appId, frameworks: [] })
 			}
 
-			const index = appIndexes[app.appName];
+			const index = appIndexes[app.appId];
 			apps[index].frameworks.push(app);
 		}
 	}
@@ -63,5 +63,11 @@ const toTitleCase = str => {
 	});
 };
 
-/** @type {(app: string) => string} */
-export const getDisplayName = app => toTitleCase(app.replace(/-/g, " "));
+/** @type {(id: string) => string} */
+export const getDisplayName = id => {
+	if (id == "lit-html") {
+		return "lit-html";
+	}
+
+	return toTitleCase(id.replace(/-/g, " "));
+}

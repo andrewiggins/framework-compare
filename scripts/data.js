@@ -4,7 +4,6 @@ const getBrotliSize = require("brotli-size");
 const Prism = require("prismjs");
 const loadLanguages = require("prismjs/components/");
 const {
-	getDisplayName,
 	toUrl,
 	frameworkOutput,
 	listDirs,
@@ -23,18 +22,18 @@ const getLang = ext => (ext === "vue" ? "html" : ext);
  * @property {string} contents
  * @property {string} htmlContents
  *
- * @param {string} framework
- * @param {string} appName
+ * @param {string} frameworkId
+ * @param {string} appId
  *
  * @returns {Promise<Record<string, SourceFile>>}
  */
-async function getSourceFiles(framework, appName) {
-	let srcFiles = await listFiles(srcPath(framework, appName));
+async function getSourceFiles(frameworkId, appId) {
+	let srcFiles = await listFiles(srcPath(frameworkId, appId));
 
 	const sourceFiles = await Promise.all(
 		srcFiles.map(async srcFile => {
 			const contents = await readFile(
-				srcPath(framework, appName, srcFile),
+				srcPath(frameworkId, appId, srcFile),
 				"utf8"
 			);
 
@@ -70,13 +69,13 @@ async function getSourceFiles(framework, appName) {
  * @property {string} url
  * @property {Sizes} sizes
  *
- * @param {string} framework
- * @param {string} appName
+ * @param {string} frameworkId
+ * @param {string} appId
  *
  * @returns {Promise<Record<string, BundleFile>>}
  */
-async function getBundleFiles(framework, appName) {
-	const appOutput = (...args) => frameworkOutput(framework, appName, ...args);
+async function getBundleFiles(frameworkId, appId) {
+	const appOutput = (...args) => frameworkOutput(frameworkId, appId, ...args);
 	const bundleFiles = (await listFiles(appOutput())).filter(file =>
 		file.endsWith(".js")
 	);
@@ -118,7 +117,7 @@ async function getBundleFiles(framework, appName) {
 }
 
 /**
- * @typedef {Array<{ name: string; apps: AppData[] }>} FrameworkData
+ * @typedef {Array<{ id: string; apps: AppData[] }>} FrameworkData
  * @returns {Promise<FrameworkData>}
  */
 async function buildFrameworkData() {
@@ -130,29 +129,29 @@ async function buildFrameworkData() {
 				appFolders.map(async (appName, i) => buildAppData(framework, appName))
 			);
 
-			return { name: getDisplayName(framework), apps };
+			return { id: framework, apps };
 		})
 	);
 }
 
 /**
  * @typedef AppData
- * @property {string} framework
- * @property {string} appName
+ * @property {string} frameworkId
+ * @property {string} appId
  * @property {string} htmlUrl
  * @property {string} jsUrl
  * @property {Sizes} totalSizes
  * @property {Record<string, SourceFile>} sources
  * @property {Record<string, BundleFile>} bundles
  *
- * @param {string} framework
- * @param {string} appName
+ * @param {string} frameworkId
+ * @param {string} appId
  * @returns {Promise<AppData>}
  */
-async function buildAppData(framework, appName) {
+async function buildAppData(frameworkId, appId) {
 	const [sources, bundles] = await Promise.all([
-		getSourceFiles(framework, appName),
-		getBundleFiles(framework, appName)
+		getSourceFiles(frameworkId, appId),
+		getBundleFiles(frameworkId, appId)
 	]);
 
 	/** @type {Sizes} */
@@ -164,12 +163,12 @@ async function buildAppData(framework, appName) {
 		totalSizes.brotli += bundle.sizes.brotli;
 	}
 
-	const htmlPath = frameworkOutput(framework, appName, "index.html");
-	const entryPath = frameworkOutput(framework, appName, "index.min.js");
+	const htmlPath = frameworkOutput(frameworkId, appId, "index.html");
+	const entryPath = frameworkOutput(frameworkId, appId, "index.min.js");
 
 	return {
-		framework: getDisplayName(framework),
-		appName: getDisplayName(appName),
+		frameworkId,
+		appId: appId,
 		htmlUrl: toUrl(htmlPath),
 		jsUrl: toUrl(entryPath),
 		totalSizes,

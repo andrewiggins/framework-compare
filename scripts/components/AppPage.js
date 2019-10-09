@@ -8,11 +8,11 @@ const NEW_LINE_EXP = /\n(?!$)/g;
 
 /** @type {(app: import('../data').AppData, srcFile: string) => string} */
 const getSrcId = (app, srcFile) =>
-	`${app.framework}/${app.appName.replace(/ /g, "-")}/src/${srcFile}`;
+	`${app.frameworkId}/${app.appId.replace(/ /g, "-")}/src/${srcFile}`;
 
 /** @type {(app: import('../data').AppData, srcFile: string) => string} */
 const getBundleId = (app, bundleFile) =>
-	`${app.framework}/${app.appName.replace(/ /g, "-")}/bundle/${bundleFile}`;
+	`${app.frameworkId}/${app.appId.replace(/ /g, "-")}/bundle/${bundleFile}`;
 
 function LineNumbers({ contents }) {
 	const lines = contents.split(NEW_LINE_EXP);

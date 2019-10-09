@@ -1,7 +1,7 @@
 const { writeFile } = require("fs").promises;
 const path = require("path");
 const { h } = require("preact");
-const { toUrl, outputPath, ensureDir } = require("../util");
+const { ensureDir, getDisplayName } = require("../util");
 
 /**
  * @param {import('../build').Renderer} renderPage
@@ -17,7 +17,7 @@ async function buildAppViews(renderPage, AppPage, frameworkData) {
 
 	await Promise.all(
 		allApps.map(async app => {
-			const title = `${app.appName} - ${app.framework}`;
+			const title = `${getDisplayName(app.appId)} - ${getDisplayName(app.frameworkId)}`;
 			const page = h(AppPage, { app, currentUrl: app.htmlUrl });
 			const appHtml = renderPage(page, {
 				url: app.htmlUrl,
