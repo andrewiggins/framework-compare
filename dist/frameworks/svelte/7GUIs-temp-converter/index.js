@@ -159,11 +159,11 @@
   }
 
   var dirty_components = [];
-  var resolved_promise = Promise.resolve();
-  var update_scheduled = false;
   var binding_callbacks = [];
   var render_callbacks = [];
   var flush_callbacks = [];
+  var resolved_promise = Promise.resolve();
+  var update_scheduled = false;
 
   function schedule_update() {
     if (!update_scheduled) {
@@ -189,14 +189,14 @@
       }
 
       while (binding_callbacks.length) {
-        binding_callbacks.shift()();
+        binding_callbacks.pop()();
       } // then, once components are updated, call
       // afterUpdate functions. This may cause
       // subsequent updates...
 
 
-      while (render_callbacks.length) {
-        var callback = render_callbacks.pop();
+      for (var i = 0; i < render_callbacks.length; i += 1) {
+        var callback = render_callbacks[i];
 
         if (!seen_callbacks.has(callback)) {
           callback(); // ...so guard against infinite loops
@@ -204,6 +204,8 @@
           seen_callbacks.add(callback);
         }
       }
+
+      render_callbacks.length = 0;
     } while (dirty_components.length);
 
     while (flush_callbacks.length) {
@@ -216,10 +218,10 @@
   function update($$) {
     if ($$.fragment) {
       $$.update($$.dirty);
-      run_all($$.before_render);
+      run_all($$.before_update);
       $$.fragment.p($$.dirty, $$.ctx);
       $$.dirty = null;
-      $$.after_render.forEach(add_render_callback);
+      $$.after_update.forEach(add_render_callback);
     }
   }
 
@@ -237,10 +239,8 @@
         fragment = _component$$$.fragment,
         on_mount = _component$$$.on_mount,
         on_destroy = _component$$$.on_destroy,
-        after_render = _component$$$.after_render;
-    fragment.m(target, anchor); // onMount happens after the initial afterUpdate. Because
-    // afterUpdate callbacks happen in reverse order (inner first)
-    // we schedule onMount callbacks before afterUpdate callbacks
+        after_update = _component$$$.after_update;
+    fragment.m(target, anchor); // onMount happens before the initial afterUpdate
 
     add_render_callback(function () {
       var new_on_destroy = on_mount.map(run).filter(is_function);
@@ -255,7 +255,7 @@
 
       component.$$.on_mount = [];
     });
-    after_render.forEach(add_render_callback);
+    after_update.forEach(add_render_callback);
   }
 
   function destroy_component(component, detaching) {
@@ -279,7 +279,7 @@
     component.$$.dirty[key] = true;
   }
 
-  function init(component, options, instance, create_fragment, not_equal$$1, prop_names) {
+  function init(component, options, instance, create_fragment, not_equal, prop_names) {
     var parent_component = current_component;
     set_current_component(component);
     var props = options.props || {};
@@ -289,28 +289,34 @@
       // state
       props: prop_names,
       update: noop,
-      not_equal: not_equal$$1,
+      not_equal: not_equal,
       bound: blank_object(),
       // lifecycle
       on_mount: [],
       on_destroy: [],
-      before_render: [],
-      after_render: [],
+      before_update: [],
+      after_update: [],
       context: new Map(parent_component ? parent_component.$$.context : []),
       // everything else
       callbacks: blank_object(),
       dirty: null
     };
     var ready = false;
-    $$.ctx = instance ? instance(component, props, function (key, value) {
-      if ($$.ctx && not_equal$$1($$.ctx[key], $$.ctx[key] = value)) {
+    $$.ctx = instance ? instance(component, props, function (key, ret, value) {
+      if (value === void 0) {
+        value = ret;
+      }
+
+      if ($$.ctx && not_equal($$.ctx[key], $$.ctx[key] = value)) {
         if ($$.bound[key]) $$.bound[key](value);
         if (ready) make_dirty(component, key);
       }
+
+      return ret;
     }) : props;
     $$.update();
     ready = true;
-    run_all($$.before_render);
+    run_all($$.before_update);
     $$.fragment = create_fragment($$.ctx);
 
     if (options.target) {
@@ -350,9 +356,9 @@
         return _this;
       }
 
-      var _proto = SvelteElement.prototype;
+      var _proto2 = SvelteElement.prototype;
 
-      _proto.connectedCallback = function connectedCallback() {
+      _proto2.connectedCallback = function connectedCallback() {
         // @ts-ignore todo: improve typings
         for (var key in this.$$.slotted) {
           // @ts-ignore todo: improve typings
@@ -360,16 +366,16 @@
         }
       };
 
-      _proto.attributeChangedCallback = function attributeChangedCallback(attr$$1, _oldValue, newValue) {
-        this[attr$$1] = newValue;
+      _proto2.attributeChangedCallback = function attributeChangedCallback(attr, _oldValue, newValue) {
+        this[attr] = newValue;
       };
 
-      _proto.$destroy = function $destroy() {
+      _proto2.$destroy = function $destroy() {
         destroy_component(this, 1);
         this.$destroy = noop;
       };
 
-      _proto.$on = function $on(type, callback) {
+      _proto2.$on = function $on(type, callback) {
         // TODO should this delegate to addEventListener?
         var callbacks = this.$$.callbacks[type] || (this.$$.callbacks[type] = []);
         callbacks.push(callback);
@@ -379,7 +385,7 @@
         };
       };
 
-      _proto.$set = function $set() {// overridden by instance, if it has props
+      _proto2.$set = function $set() {// overridden by instance, if it has props
       };
 
       return SvelteElement;
@@ -391,14 +397,14 @@
   function () {
     function SvelteComponent() {}
 
-    var _proto2 = SvelteComponent.prototype;
+    var _proto3 = SvelteComponent.prototype;
 
-    _proto2.$destroy = function $destroy() {
+    _proto3.$destroy = function $destroy() {
       destroy_component(this, 1);
       this.$destroy = noop;
     };
 
-    _proto2.$on = function $on(type, callback) {
+    _proto3.$on = function $on(type, callback) {
       var callbacks = this.$$.callbacks[type] || (this.$$.callbacks[type] = []);
       callbacks.push(callback);
       return function () {
@@ -407,7 +413,7 @@
       };
     };
 
-    _proto2.$set = function $set() {// overridden by instance, if it has props
+    _proto3.$set = function $set() {// overridden by instance, if it has props
     };
 
     return SvelteComponent;
@@ -471,13 +477,13 @@
       $$invalidate('c', c = +(5 / 9 * (f - 32)).toFixed(1));
     }
 
-    function input_handler(e) {
+    var input_handler = function input_handler(e) {
       return setBothFromC(e.target.value);
-    }
+    };
 
-    function input_handler_1(e) {
+    var input_handler_1 = function input_handler_1(e) {
       return setBothFromF(e.target.value);
-    }
+    };
 
     return {
       c: c,
