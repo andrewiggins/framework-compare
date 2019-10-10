@@ -5855,12 +5855,7 @@ preact-router@^2.6.1:
   resolved "https://registry.yarnpkg.com/preact-router/-/preact-router-2.6.1.tgz#eec60a9f2c07a1ae4fbc6604d8a0415742fbbd89"
   integrity sha512-Ql3fptQ8hiioIw5zUcWUq5NShl7yFR4e6KBUzLbGI7+HKMIgBnH+aOITN5IrY1rbr2vhKXBdHdd9nLbbjcJTOQ==
 
-preact@10.0.0-rc.0:
-  version "10.0.0-rc.0"
-  resolved "https://registry.yarnpkg.com/preact/-/preact-10.0.0-rc.0.tgz#084316631ae6f0a965e889e7715cccb74c4a5d6e"
-  integrity sha512-mOOF2FoSt52uYPa+n2cvgI0NI+yo6Rxyamvu5z/8GHod3UhtExWhBcOeTawriR4HiGuR5VHENJEJ/dtBWMZZaQ==
-
-preact@^10.0.0-rc.0:
+preact@^10.0.0:
   version "10.0.0"
   resolved "https://registry.yarnpkg.com/preact/-/preact-10.0.0.tgz#c528f04ac6c792a04d8c98a5144d8b13e0cf2aed"
   integrity sha512-v5geBMq8xlX7Ai8ed0QFXIs7/SQ+4lzdu3fpApRspZ6IiFDRHeEXQ3fqns0jDsXseHjYqgWlK1QxqdWF4QrdFw==
