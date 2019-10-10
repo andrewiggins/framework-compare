@@ -1,17 +1,26 @@
-import React, { useEffect, useState, Fragment } from "react";
+import React, { useEffect, useLayoutEffect, useState, useRef, Fragment } from "react";
 import ReactDOM from "react-dom";
 
 function App() {
 	const [lastRenderTime, setLastRenderTime] = useState(performance.now());
 	const [elapsed, setElapsed] = useState(0);
 	const [duration, setDuration] = useState(5000);
+	const frame = useRef(null);
 
-	useEffect(() => {
-		if (elapsed < duration) {
-			const now = performance.now();
-			const timeToAdd = Math.min(now - lastRenderTime, duration - elapsed);
-			setElapsed(prevElapsed => prevElapsed + timeToAdd);
-			setLastRenderTime(now);
+	useLayoutEffect(() => {
+		if (frame.current == null && elapsed < duration) {
+			frame.current = requestAnimationFrame(now => {
+				frame.current = null;
+				const timeToAdd = Math.min(now - lastRenderTime, duration - elapsed);
+				setElapsed(prevElapsed => prevElapsed + timeToAdd);
+				setLastRenderTime(now);
+			});
+
+			return () => {
+				if (frame.current) {
+					frame.current = cancelAnimationFrame(frame.current);
+				}
+			};
 		}
 	}, [elapsed, duration, lastRenderTime]);
 
@@ -28,7 +37,7 @@ function App() {
 					min="1"
 					max="20000"
 					value={duration}
-					onInput={e => setDuration(e.target.value)}
+					onChange={e => setDuration(e.target.value)}
 				/>
 			</label>
 			<div>

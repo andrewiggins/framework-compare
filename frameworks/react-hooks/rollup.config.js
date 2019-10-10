@@ -13,7 +13,17 @@ const plugins = environment => [
 	}),
 	// @ts-ignore
 	commonjs({
-		namedExports: { react: ["useState", "useEffect", "Fragment"] }
+		namedExports: {
+			react: [
+				"useReducer",
+				"useState",
+				"useEffect",
+				"useLayoutEffect",
+				"useRef",
+				"useMemo",
+				"Fragment"
+			]
+		}
 	})
 ];
 

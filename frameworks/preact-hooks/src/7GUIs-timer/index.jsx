@@ -1,17 +1,26 @@
 import { createElement, render, Fragment } from "preact";
-import { useState, useEffect } from "preact/hooks";
+import { useState, useRef, useLayoutEffect } from "preact/hooks";
 
 function App() {
 	const [lastRenderTime, setLastRenderTime] = useState(performance.now());
 	const [elapsed, setElapsed] = useState(0);
 	const [duration, setDuration] = useState(5000);
+	const frame = useRef(null);
 
-	useEffect(() => {
-		if (elapsed < duration) {
-			const now = performance.now();
-			const timeToAdd = Math.min(now - lastRenderTime, duration - elapsed);
-			setElapsed(prevElapsed => prevElapsed + timeToAdd);
-			setLastRenderTime(now);
+	useLayoutEffect(() => {
+		if (frame.current == null && elapsed < duration) {
+			frame.current = requestAnimationFrame(now => {
+				frame.current = null;
+				const timeToAdd = Math.min(now - lastRenderTime, duration - elapsed);
+				setElapsed(prevElapsed => prevElapsed + timeToAdd);
+				setLastRenderTime(now);
+			});
+
+			return () => {
+				if (frame.current) {
+					frame.current = cancelAnimationFrame(frame.current);
+				}
+			};
 		}
 	}, [elapsed, duration, lastRenderTime]);
 
