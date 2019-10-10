@@ -41,8 +41,8 @@ export default function run(frameworkName, appSetup) {
 
 		it("renders the correct HTML", async () => {
 			let html = await getAppHtml();
-			html = html.replace(/"elapsed">([0-9.]+)s</, (match, elapsedValue) => {
-				expect(parseFloat(elapsedValue)).toBeLessThanOrEqual(0.1);
+			html = html.replace(/"elapsed">(-?[0-9.]+)s</, (match, elapsedValue) => {
+				expect(Math.abs(parseFloat(elapsedValue))).toBeLessThanOrEqual(0.1);
 				return '"elapsed">0.0s<';
 			});
 
