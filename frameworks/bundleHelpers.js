@@ -1,6 +1,6 @@
 const path = require("path");
 const fs = require("fs");
-const nodeResolve = require("rollup-plugin-node-resolve");
+const nodeResolve = require("@rollup/plugin-node-resolve");
 const { terser } = require("rollup-plugin-terser");
 const { listDirsSync, frameworkOutput } = require("../scripts/util");
 

@@ -26,17 +26,17 @@
     "./scripts/"
   ],
   "devDependencies": {
-    "@types/jest": "^24.0.15",
-    "gh-pages": "^2.0.1",
+    "@types/jest": "^25.1.1",
+    "@rollup/plugin-node-resolve": "7.0.0",
+    "gh-pages": "^2.2.0",
     "html-minifier": "^4.0.0",
-    "jest": "^24.8.0",
-    "jest-puppeteer": "^4.2.0",
-    "puppeteer": "^1.18.1",
-    "rimraf": "^2.6.3",
-    "rollup": "^1.16.7",
-    "rollup-plugin-node-resolve": "^5.2.0",
-    "rollup-plugin-terser": "^5.1.1",
-    "rollup-plugin-visualizer": "^2.4.4"
+    "jest": "^25.1.0",
+    "jest-puppeteer": "^4.4.0",
+    "puppeteer": "^2.1.0",
+    "rimraf": "^3.0.1",
+    "rollup": "^1.30.1",
+    "rollup-plugin-terser": "^5.2.0",
+    "rollup-plugin-visualizer": "^3.3.1"
   },
   "jest": {
     "preset": "jest-puppeteer",

@@ -1,6 +1,6 @@
 const babel = require("rollup-plugin-babel");
-const commonjs = require("rollup-plugin-commonjs");
-const replace = require("rollup-plugin-replace");
+const replace = require("@rollup/plugin-replace");
+const commonjs = require("@rollup/plugin-commonjs");
 const { generateConfigs } = require("../bundleHelpers");
 
 const plugins = environment => [

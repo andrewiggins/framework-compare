@@ -2,9 +2,9 @@ const path = require("path");
 const { writeFile, readFile } = require("fs").promises;
 
 const rollup = require("rollup");
-const nodeResolve = require("rollup-plugin-node-resolve");
-const commonjs = require("rollup-plugin-commonjs");
-const buble = require("rollup-plugin-buble");
+const nodeResolve = require("@rollup/plugin-node-resolve");
+const commonjs = require("@rollup/plugin-commonjs");
+const buble = require("@rollup/plugin-buble");
 const { terser } = require("rollup-plugin-terser");
 const { h } = require("preact");
 const { render } = require("preact-render-to-string");

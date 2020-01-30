@@ -1,6 +1,6 @@
 const { readFile } = require("fs").promises;
 const getGzipSize = require("gzip-size");
-const getBrotliSize = require("brotli-size");
+const { default: getBrotliSize } = require("brotli-size");
 const Prism = require("prismjs");
 const loadLanguages = require("prismjs/components/");
 const {
