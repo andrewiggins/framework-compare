@@ -4,7 +4,9 @@ const sorted = [
 	"Hello World",
 	"7GUIs Counter",
 	"7GUIs Temp Converter",
-	"7GUIs Flight Booker"
+	"7GUIs Flight Booker",
+	"7GUIs Timer",
+	"7GUIs CRUD"
 ];
 
 /**
