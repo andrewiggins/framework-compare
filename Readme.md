@@ -4,14 +4,21 @@ Implement a set of webpages of increasing complexity in a couple different frame
 
 ## Frameworks to consider
 
-- lit-element?
 - angular ivy
 - ember/glimmer
+- inferno
+- lit-element?
 
 ## Webpages
 
 - Static Hello World
 - 7 GUIs (Based on https://eugenkiss.github.io/7guis/)
+	- CRUD (let's make it async)
+	- Circle Drawer
+		- undo/redo
+		- SVG custom drawing
+		- dialog control (the challenge of retaining context between successive GUI operations)
+	- Cells (e.g. virtual lists? many components? fine-grain updates?)
 - Simple TODO
 - Tic-Tac-Toe (https://github.com/jesseskinner/svelte-tic-tac-toe)
 - News site clone?
