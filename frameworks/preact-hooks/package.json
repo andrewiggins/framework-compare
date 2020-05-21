@@ -8,7 +8,7 @@
     "watch": "rollup -c rollup.config.js --watch"
   },
   "dependencies": {
-    "preact": "^10.0.0"
+    "preact": "^10.4.4"
   },
   "devDependencies": {
     "@babel/core": "^7.5.4",
