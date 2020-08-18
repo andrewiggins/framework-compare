@@ -1,38 +1,32 @@
-<!--
-	Since Vue replaces the element given in el,
-	we redefine it here so tests work
--->
 <template>
-	<div id="app">
-		<TripType
-			tripType="{tripType}"
-			v-on:setTripType="newTripType => (tripType = newTripType)"
-		/>
+	<TripType
+		tripType="{tripType}"
+		v-on:setTripType="newTripType => (tripType = newTripType)"
+	/>
 
-		<DateEntry
-			label="Departing"
-			v-bind:date="departing"
-			v-bind:errorMsg="departingError"
-			v-on:setDate="newDate => (departing = newDate)"
-		/>
+	<DateEntry
+		label="Departing"
+		v-bind:date="departing"
+		v-bind:errorMsg="departingError"
+		v-on:setDate="newDate => (departing = newDate)"
+	/>
 
-		<DateEntry
-			label="Returning"
-			v-bind:date="returning"
-			v-bind:errorMsg="returningError"
-			v-on:setDate="newDate => (returning = newDate)"
-			v-bind:disabled="tripType == oneWayFlight"
-		/>
+	<DateEntry
+		label="Returning"
+		v-bind:date="returning"
+		v-bind:errorMsg="returningError"
+		v-on:setDate="newDate => (returning = newDate)"
+		v-bind:disabled="tripType == oneWayFlight"
+	/>
 
-		<div class="form-group">
-			<button
-				class="btn btn-primary"
-				v-on:click="bookFlight"
-				v-bind:disabled="isBookDisabled"
-			>
-				book
-			</button>
-		</div>
+	<div class="form-group">
+		<button
+			class="btn btn-primary"
+			v-on:click="bookFlight"
+			v-bind:disabled="isBookDisabled"
+		>
+			book
+		</button>
 	</div>
 </template>
 

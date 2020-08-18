@@ -1,10 +1,4 @@
-import Vue from "vue";
+import { createApp } from "vue";
 import FlightBooker from "./FlightBooker.vue";
 
-new Vue({
-	el: "#app",
-	components: { FlightBooker },
-	render(createElement) {
-		return createElement(FlightBooker);
-	}
-});
+createApp(FlightBooker).mount("#app");

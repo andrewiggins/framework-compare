@@ -1,16 +1,14 @@
 <template>
-	<div id="app">
-		<label>
-			Elapsed time: <progress v-bind:value="elapsed / duration"></progress>
-		</label>
-		<div class="elapsed">{{ elapsedFormatted }}</div>
-		<label>
-			Duration:
-			<input type="range" v-model="duration" min="1" max="20000" />
-		</label>
-		<div>
-			<button class="btn btn-primary" v-on:click="reset">Reset</button>
-		</div>
+	<label>
+		Elapsed time: <progress v-bind:value="elapsed / duration"></progress>
+	</label>
+	<div class="elapsed">{{ elapsedFormatted }}</div>
+	<label>
+		Duration:
+		<input type="range" v-model="duration" min="1" max="20000" />
+	</label>
+	<div>
+		<button class="btn btn-primary" v-on:click="reset">Reset</button>
 	</div>
 </template>
 

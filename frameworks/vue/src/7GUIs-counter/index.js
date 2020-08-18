@@ -1,10 +1,4 @@
-import Vue from "vue";
+import { createApp } from "vue";
 import Counter from "./Counter.vue";
 
-new Vue({
-	el: "#app",
-	components: { Counter },
-	render(createElement) {
-		return createElement(Counter);
-	}
-});
+createApp(Counter).mount("#app");

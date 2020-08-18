@@ -1,4 +1,4 @@
-<template functional>
+<template>
 	<div class="form-group">
 		<label class="form-label" for="trip-type">Trip type</label
 		><select
@@ -11,3 +11,7 @@
 		</select>
 	</div>
 </template>
+
+<script>
+export default {};
+</script>

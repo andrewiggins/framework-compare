@@ -1,10 +1,4 @@
-import Vue from "vue";
+import { createApp } from "vue";
 import App from "./TempConv.vue";
 
-new Vue({
-	el: "#app",
-	components: { App },
-	render(createElement) {
-		return createElement(App);
-	}
-});
+createApp(App).mount("#app");
