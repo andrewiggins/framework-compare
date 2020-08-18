@@ -13,6 +13,7 @@ export function runTests(frameworkName) {
 		);
 		if (fs.existsSync(htmlPath)) {
 			run(frameworkName, () => {
+				console.log("htmlPath:", fs.existsSync(htmlPath), htmlPath);
 				return page.goto(htmlPath);
 			});
 		}
