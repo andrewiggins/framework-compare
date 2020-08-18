@@ -8,7 +8,9 @@ import runTimerTests from "../apps/7GUIs-timer";
 
 export function runTests(frameworkName) {
 	function runTest(run, appName) {
-		const htmlPath = repoRoot(`dist/frameworks/${frameworkName}/${appName}/index.html`);
+		const htmlPath = repoRoot(
+			`dist/frameworks/${frameworkName}/${appName}/index.html`
+		);
 		if (fs.existsSync(htmlPath)) {
 			run(frameworkName, () => {
 				return page.goto(htmlPath);

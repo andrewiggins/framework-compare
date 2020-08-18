@@ -53,10 +53,7 @@ function App() {
 
 	return (
 		<>
-			<TripType
-				tripType={tripType}
-				setTripType={value => setTripType(value)}
-			/>
+			<TripType tripType={tripType} setTripType={value => setTripType(value)} />
 			<DateEntry
 				label="Departing"
 				date={departing}

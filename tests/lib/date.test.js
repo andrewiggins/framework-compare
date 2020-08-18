@@ -51,5 +51,5 @@ describe("date lib", () => {
 			expect(() => validateDate("2019-02-29")).toThrowError(/Date/);
 			expect(() => validateDate("2019-13-01")).toThrowError(/Month/);
 		});
-	})
+	});
 });

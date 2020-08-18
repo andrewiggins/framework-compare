@@ -5,9 +5,7 @@ export function DateEntry(label, date, errorMsg, setDate, disabled = false) {
 
 	let errorMarkup;
 	if (errorMsg) {
-		errorMarkup = html`
-			<p class="form-input-hint">${errorMsg}</p>
-		`;
+		errorMarkup = html` <p class="form-input-hint">${errorMsg}</p> `;
 	}
 
 	return html`

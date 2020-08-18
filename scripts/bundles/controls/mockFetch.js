@@ -29,12 +29,12 @@ function mockFetch(url, options = { method: "GET" }) {
 	let resolve, reject;
 	const promise = new Promise((r1, r2) => {
 		resolve = () => {
-			config.log(`Resolving request ${options.method} ${url}`)
+			config.log(`Resolving request ${options.method} ${url}`);
 			r1();
 		};
 
 		reject = () => {
-			config.log(`Rejecting request ${options.method} ${url}`)
+			config.log(`Rejecting request ${options.method} ${url}`);
 			r2();
 		};
 	});
@@ -43,7 +43,7 @@ function mockFetch(url, options = { method: "GET" }) {
 	let timeoutId = null;
 	const duration = config.durationMs;
 	if (!config.areNewRequestsPaused) {
-		config.log(`Starting request ${options.method} ${url}`)
+		config.log(`Starting request ${options.method} ${url}`);
 		timeoutId = setTimeout(resolve, duration);
 	}
 

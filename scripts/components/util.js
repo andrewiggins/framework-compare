@@ -44,7 +44,7 @@ export function groupByApp(frameworkData) {
 		for (let app of framework.apps) {
 			if (!(app.appId in appIndexes)) {
 				appIndexes[app.appId] = apps.length;
-				apps.push({ id: app.appId, frameworks: [] })
+				apps.push({ id: app.appId, frameworks: [] });
 			}
 
 			const index = appIndexes[app.appId];
@@ -72,4 +72,4 @@ export const getDisplayName = id => {
 	}
 
 	return toTitleCase(id.replace(/-/g, " "));
-}
+};

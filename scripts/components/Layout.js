@@ -23,7 +23,10 @@ export const Layout = props => {
 				<meta charset="UTF-8" />
 				<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 				<meta http-equiv="X-UA-Compatible" content="ie=edge" />
-				<meta name="description" content="Compare how apps are built across multiple popular web frameworks" />
+				<meta
+					name="description"
+					content="Compare how apps are built across multiple popular web frameworks"
+				/>
 				<title>
 					{(props.title ? props.title + " - " : "") + "Framework Compare"}
 				</title>
@@ -38,7 +41,11 @@ export const Layout = props => {
 						<Nav url={props.url} data={props.data} />
 					</div>
 
-					<a class="off-canvas-overlay" href="#close" aria-label="Collapse navigation menu" />
+					<a
+						class="off-canvas-overlay"
+						href="#close"
+						aria-label="Collapse navigation menu"
+					/>
 
 					<div class="page-wrapper off-canvas-content">
 						<PageHeader title={props.title} />

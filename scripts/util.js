@@ -38,7 +38,7 @@ const getDisplayName = id => {
 	}
 
 	return toTitleCase(id.replace(/-/g, " "));
-}
+};
 
 async function ensureDir(path) {
 	let stats;

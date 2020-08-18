@@ -115,10 +115,7 @@ async function buildSassBundles() {
 
 	await Promise.all(
 		filePaths.map(async from => {
-			const packageName = path
-				.basename(from)
-				.split(".")
-				.shift();
+			const packageName = path.basename(from).split(".").shift();
 			const to = outputPath(`${packageName}-bundle.min.css`);
 
 			const source = await readFile(from, "utf8");
