@@ -1,10 +1,11 @@
-const babel = require("rollup-plugin-babel");
+const babel = require("@rollup/plugin-babel").default;
 const replace = require("@rollup/plugin-replace");
 const commonjs = require("@rollup/plugin-commonjs");
 const { generateConfigs } = require("../bundleHelpers");
 
 const plugins = environment => [
 	babel({
+		babelHelpers: "bundled",
 		exclude: /node_modules/
 	}),
 	// @ts-ignore
@@ -12,19 +13,7 @@ const plugins = environment => [
 		"process.env.NODE_ENV": JSON.stringify(environment)
 	}),
 	// @ts-ignore
-	commonjs({
-		namedExports: {
-			react: [
-				"useReducer",
-				"useState",
-				"useEffect",
-				"useLayoutEffect",
-				"useRef",
-				"useMemo",
-				"Fragment"
-			]
-		}
-	})
+	commonjs()
 ];
 
 module.exports = generateConfigs("react-hooks", plugins);

@@ -1,8 +1,9 @@
-const babel = require("rollup-plugin-babel");
+const babel = require("@rollup/plugin-babel").default;
 const { generateConfigs } = require("../bundleHelpers");
 
 const plugins = () => [
 	babel({
+		babelHelpers: "bundled",
 		exclude: /node_modules/
 	})
 ];

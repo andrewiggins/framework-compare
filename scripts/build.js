@@ -2,9 +2,9 @@ const path = require("path");
 const { writeFile, readFile } = require("fs").promises;
 
 const rollup = require("rollup");
-const nodeResolve = require("@rollup/plugin-node-resolve");
+const nodeResolve = require("@rollup/plugin-node-resolve").default;
 const commonjs = require("@rollup/plugin-commonjs");
-const buble = require("@rollup/plugin-buble");
+const sucrase = require("@rollup/plugin-sucrase");
 const { terser } = require("rollup-plugin-terser");
 const { h } = require("preact");
 const { render } = require("preact-render-to-string");
@@ -34,11 +34,10 @@ async function compileComponents() {
 			format: /** @type {import('rollup').ModuleFormat} */ ("commonjs")
 		},
 		plugins: [
-			buble({
-				jsx: "h",
-				transforms: {
-					dangerousForOf: true
-				}
+			sucrase({
+				transforms: ["jsx"],
+				jsxPragma: "h",
+				production: true
 			}),
 			// @ts-ignore
 			commonjs(),
@@ -146,11 +145,10 @@ async function buildJSBundles() {
 			format: /** @type {import('rollup').ModuleFormat} */ ("iife")
 		},
 		plugins: [
-			buble({
-				jsx: "h",
-				transforms: {
-					dangerousForOf: true
-				}
+			sucrase({
+				transforms: ["jsx"],
+				jsxPragma: "h",
+				production: true
 			}),
 			// @ts-ignore
 			commonjs(),
