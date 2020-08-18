@@ -1,4 +1,5 @@
 import fs from "fs";
+import { pathToFileURL } from "url";
 import { repoRoot } from "../util";
 import runHelloWorldTests from "../apps/hello-world";
 import runCounterTests from "../apps/7GUIs-counter";
@@ -13,7 +14,8 @@ export function runTests(frameworkName) {
 		);
 		if (fs.existsSync(htmlPath)) {
 			run(frameworkName, () => {
-				return page.goto(htmlPath);
+				const htmlUrl = pathToFileURL(htmlPath).toString();
+				return page.goto(htmlUrl);
 			});
 		}
 	}
