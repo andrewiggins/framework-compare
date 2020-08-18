@@ -22,13 +22,13 @@ jobs:
         run: yarn build
       - name: test
         run: yarn test
-  # size:
-  #   name: Compressed Size Action
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v2
-  #     - uses: preactjs/compressed-size-action@v1
-  #       with:
-  #         repo-token: '${{ secrets.GITHUB_TOKEN }}'
-  #         pattern: "**/dist/**/*.min.js"
-  #         build-script: yarn build
+
+  size:
+    name: Compressed Size Action
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: preactjs/compressed-size-action@v1
+        with:
+          repo-token: "${{ secrets.GITHUB_TOKEN }}"
+          pattern: "**/dist/**/*.min.js"
