@@ -15,7 +15,6 @@ export function runTests(frameworkName) {
 		if (fs.existsSync(htmlPath)) {
 			run(frameworkName, () => {
 				const htmlUrl = pathToFileURL(htmlPath).toString();
-				console.log("htmlUrl:", htmlUrl);
 				return page.goto(htmlUrl);
 			});
 		}
