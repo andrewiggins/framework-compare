@@ -1,18 +1,19 @@
-import { existsSync } from "fs";
-import nodeResolve from "@rollup/plugin-node-resolve";
-import { terser } from "rollup-plugin-terser";
-import { listDirsSync, frameworkOutput } from "../scripts/util.js";
+const path = require("path");
+const fs = require("fs");
+const nodeResolve = require("@rollup/plugin-node-resolve").default;
+const { terser } = require("rollup-plugin-terser");
+const { listDirsSync, frameworkOutput } = require("../scripts/util");
 
 /**
  * @param {string} frameworkName
  * @param {(environment: Environment) => any[]} plugins
  */
-export function generateConfigs(frameworkName, plugins) {
+function generateConfigs(frameworkName, plugins) {
 	return listDirsSync("./src")
 		.map(appFolder => {
 			const jsIndexPath = `./src/${appFolder}/index.js`;
 			const jsxIndexPath = `./src/${appFolder}/index.jsx`;
-			const entry = existsSync(jsxIndexPath) ? jsxIndexPath : jsIndexPath;
+			const entry = fs.existsSync(jsxIndexPath) ? jsxIndexPath : jsIndexPath;
 			const outputDir = frameworkOutput(frameworkName, appFolder);
 			return [
 				generateConfig(outputDir, entry, false, plugins),
@@ -65,3 +66,5 @@ function generateConfig(
 		}
 	};
 }
+
+module.exports = { generateConfigs };

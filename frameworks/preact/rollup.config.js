@@ -1,5 +1,5 @@
-import babel from "@rollup/plugin-babel";
-import { generateConfigs } from "../bundleHelpers.js";
+const babel = require("@rollup/plugin-babel").default;
+const { generateConfigs } = require("../bundleHelpers");
 
 const plugins = () => [
 	babel({
@@ -8,4 +8,4 @@ const plugins = () => [
 	})
 ];
 
-export default generateConfigs("preact", plugins);
+module.exports = generateConfigs("preact", plugins);

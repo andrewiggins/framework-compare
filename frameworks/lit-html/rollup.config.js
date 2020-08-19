@@ -1,3 +1,3 @@
-import { generateConfigs } from "../bundleHelpers.js";
+const { generateConfigs } = require("../bundleHelpers");
 
-export default generateConfigs("lit-html", () => []);
+module.exports = generateConfigs("lit-html", () => []);
