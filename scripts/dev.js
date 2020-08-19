@@ -63,11 +63,7 @@ function watchFramework(framework) {
 }
 
 function startDevServer() {
-	runNode(p("node_modules/serve/bin/serve.js"), [
-		p(),
-		"-c",
-		p("scripts/serve.json")
-	]);
+	runNode(p("node_modules/sirv-cli/bin.js"), [p(), "--dev"]);
 }
 
 async function main() {
