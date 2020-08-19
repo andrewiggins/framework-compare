@@ -4,7 +4,7 @@
 		><select
 			id="trip-type"
 			class="form-select"
-			v-on:input="e => listeners.setTripType(e.target.value)"
+			v-on:input="e => onSetTripType(e.target.value)"
 		>
 			<option value="one-way">one-way flight</option>
 			<option value="return">return flight</option>
@@ -13,5 +13,7 @@
 </template>
 
 <script>
-export default {};
+export default {
+	props: ["onSetTripType"]
+};
 </script>

@@ -11,7 +11,7 @@ import {
  * @param {() => Promise<any>} appSetup
  */
 export default function run(frameworkName, appSetup) {
-	describe.only("7GUIs Flight Booker", () => {
+	describe("7GUIs Flight Booker", () => {
 		const tripTypeSel = appSel("#trip-type");
 		const departingSel = appSel("#Departing-date");
 		const returningSel = appSel("#Returning-date");

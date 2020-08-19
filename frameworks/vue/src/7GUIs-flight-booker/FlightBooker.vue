@@ -1,8 +1,5 @@
 <template>
-	<TripType
-		tripType="{tripType}"
-		v-on:setTripType="newTripType => (tripType = newTripType)"
-	/>
+	<TripType v-on:setTripType="newTripType => (tripType = newTripType)" />
 
 	<DateEntry
 		label="Departing"

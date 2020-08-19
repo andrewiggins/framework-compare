@@ -6,7 +6,7 @@
 			class="form-input"
 			type="text"
 			v-bind:value="date"
-			v-on:input="e => listeners.setDate(e.target.value)"
+			v-on:input="e => onSetDate(e.target.value)"
 			v-bind:disabled="disabled || false"
 		/>
 		<p v-if="errorMsg" class="form-input-hint">{{ errorMsg }}</p>
@@ -15,6 +15,6 @@
 
 <script>
 export default {
-	props: ["errorMsg", "label", "date", "disabled"]
+	props: ["errorMsg", "label", "date", "disabled", "onSetDate"]
 };
 </script>
