@@ -1,57 +1,59 @@
-const path = require("path");
-const { writeFile, readFile } = require("fs").promises;
+import path from "path";
+import { writeFile, readFile } from "fs/promises";
 
-const rollup = require("rollup");
-const nodeResolve = require("@rollup/plugin-node-resolve").default;
-const commonjs = require("@rollup/plugin-commonjs");
-const sucrase = require("@rollup/plugin-sucrase");
-const { terser } = require("rollup-plugin-terser");
-const { h } = require("preact");
-const { render } = require("preact-render-to-string");
-const postcss = require("postcss");
-const reporter = require("postcss-reporter/lib/formatter")();
-const cssnano = require("cssnano");
-const autoprefixer = require("autoprefixer");
-const scssParser = require("postcss-scss");
-const sass = require("postcss-node-sass");
+import { rollup } from "rollup";
+import nodeResolve from "@rollup/plugin-node-resolve";
+import commonjs from "@rollup/plugin-commonjs";
+import sucrase from "@rollup/plugin-sucrase";
+import { terser } from "rollup-plugin-terser";
+import { h } from "preact";
+import { render } from "preact-render-to-string";
+import postcss from "postcss";
+import formatter from "postcss-reporter/lib/formatter.js";
+import cssnano from "cssnano";
+import autoprefixer from "autoprefixer";
+import scssParser from "postcss-scss";
+import sass from "postcss-node-sass";
 
-const { buildFrameworkData } = require("./data");
-const { p, outputPath, ensureDir, listFiles } = require("./util");
+import { buildFrameworkData } from "./data.js";
+import { p, outputPath, ensureDir, listFiles } from "./util.js";
 
-const { buildIntroPage } = require("./routes/intro");
-const { buildSummaryView } = require("./routes/summary");
-const { buildAppViews } = require("./routes/appViews");
+import { buildIntroPage } from "./routes/intro.js";
+import { buildSummaryView } from "./routes/summary.js";
+import { buildAppViews } from "./routes/appViews.js";
+
+const reporter = formatter();
 
 /**
  * @typedef {import('./components/build')} Components
  * @returns {Promise<Components>}
  */
 async function compileComponents() {
+	/** @type {import('rollup').RollupOptions & { output: import('rollup').OutputOptions }} */
 	const config = {
 		input: p("scripts/components/build.js"),
 		output: {
 			file: p("scripts/components/index.js"),
-			format: /** @type {import('rollup').ModuleFormat} */ ("commonjs")
+			format: "es"
 		},
+		external: ["path"],
 		plugins: [
 			sucrase({
 				transforms: ["jsx"],
 				jsxPragma: "h",
 				production: true
 			}),
-			// @ts-ignore
 			commonjs(),
-			// @ts-ignore
 			nodeResolve({
-				preferBuiltIns: true
+				preferBuiltins: true
 			})
 		]
 	};
 
-	const bundle = await rollup.rollup(config);
+	const bundle = await rollup(config);
 	await bundle.write(config.output);
 
-	return require("./components/index");
+	return import("./components/index.js");
 }
 
 /**
@@ -138,11 +140,12 @@ async function buildJSBundles() {
 		.filter(file => file.endsWith(".js"))
 		.map(name => p("scripts/bundles", name));
 
+	/** @type {import('rollup').RollupOptions & { output: import('rollup').OutputOptions }} */
 	const config = {
 		input: filePaths,
 		output: {
 			dir: p("dist"),
-			format: /** @type {import('rollup').ModuleFormat} */ ("iife")
+			format: "iife"
 		},
 		plugins: [
 			sucrase({
@@ -150,15 +153,13 @@ async function buildJSBundles() {
 				jsxPragma: "h",
 				production: true
 			}),
-			// @ts-ignore
 			commonjs(),
-			// @ts-ignore
 			nodeResolve(),
 			terser()
 		]
 	};
 
-	const bundle = await rollup.rollup(config);
+	const bundle = await rollup(config);
 	await bundle.write(config.output);
 }
 
