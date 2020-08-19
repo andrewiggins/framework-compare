@@ -1,5 +1,5 @@
 import { h } from "preact";
-import { appSorter, getDisplayName, groupByApp, relativeUrl } from "./util";
+import { appSorter, getDisplayName, groupByApp, relativeUrl } from "./util.js";
 
 const active = "active";
 

@@ -1,5 +1,5 @@
-const { publish } = require("gh-pages");
-const { p } = require("./util");
+import { publish } from "gh-pages";
+import { p } from "./util.js";
 
 publish(
 	p(),

@@ -1,7 +1,7 @@
-const path = require("path");
-const { readdir } = require("fs").promises;
-const { spawn } = require("child_process");
-const { p } = require("./util");
+import { extname } from "path";
+import { readdir } from "fs/promises";
+import { spawn } from "child_process";
+import { p } from "./util.js";
 
 // https://github.com/mysticatea/npm-run-all/issues/105
 // https://git.io/fjKbw
@@ -27,7 +27,7 @@ function runYarn(scriptName, cwd = p()) {
 	// Largely inspired by npm-run-all source: https://git.io/fjKNS
 	const npmPath = process.env.npm_execpath;
 	const npmPathIsJs =
-		typeof npmPath === "string" && /\.m?js/.test(path.extname(npmPath));
+		typeof npmPath === "string" && /\.m?js/.test(extname(npmPath));
 	const execPath = npmPathIsJs ? process.execPath : npmPath || "yarn";
 	const spawnArgs = ["run"];
 
@@ -63,11 +63,7 @@ function watchFramework(framework) {
 }
 
 function startDevServer() {
-	runNode(p("node_modules/serve/bin/serve.js"), [
-		p(),
-		"-c",
-		p("scripts/serve.json")
-	]);
+	runNode(p("node_modules/sirv-cli/bin.js"), [p(), "--dev"]);
 }
 
 async function main() {

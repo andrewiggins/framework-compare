@@ -1,18 +1,19 @@
-const { readFile } = require("fs").promises;
-const getGzipSize = require("gzip-size");
-const { default: getBrotliSize } = require("brotli-size");
-const Prism = require("prismjs");
-const loadLanguages = require("prismjs/components/");
-const {
+import { readFile } from "fs/promises";
+import getGzipSize from "gzip-size";
+import brotliSize from "brotli-size";
+import Prism from "prismjs";
+import loadLanguages from "prismjs/components/index.js";
+import {
 	toUrl,
 	frameworkOutput,
 	listDirs,
 	listFiles,
 	srcPath
-} = require("./util");
+} from "./util.js";
 
 loadLanguages(["jsx"]);
 
+const getBrotliSize = brotliSize.default;
 const getLang = ext => (ext === "vue" ? "html" : ext);
 
 /**
@@ -120,7 +121,7 @@ async function getBundleFiles(frameworkId, appId) {
  * @typedef {Array<{ id: string; apps: AppData[] }>} FrameworkData
  * @returns {Promise<FrameworkData>}
  */
-async function buildFrameworkData() {
+export async function buildFrameworkData() {
 	const frameworks = await listDirs(frameworkOutput());
 	return await Promise.all(
 		frameworks.map(async framework => {
@@ -176,7 +177,3 @@ async function buildAppData(frameworkId, appId) {
 		bundles
 	};
 }
-
-module.exports = {
-	buildFrameworkData
-};
