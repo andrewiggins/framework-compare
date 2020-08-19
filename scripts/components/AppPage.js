@@ -1,8 +1,8 @@
 import { h, Fragment } from "preact";
 import cc from "classcat";
 import prettyBytes from "pretty-bytes";
-import { relativeUrl } from "./util";
-import { SettingsCog } from "./SettingsCog";
+import { relativeUrl } from "./util.js";
+import { SettingsCog } from "./SettingsCog.js";
 
 const NEW_LINE_EXP = /\n(?!$)/g;
 

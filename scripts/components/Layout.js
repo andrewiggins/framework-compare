@@ -1,8 +1,8 @@
 import { h } from "preact";
-import { Nav } from "./Nav";
-import { Footer } from "./Footer";
-import { PageHeader } from "./PageHeader";
-import { relativeUrl } from "./util";
+import { Nav } from "./Nav.js";
+import { Footer } from "./Footer.js";
+import { PageHeader } from "./PageHeader.js";
+import { relativeUrl } from "./util.js";
 
 /**
  * @typedef Props

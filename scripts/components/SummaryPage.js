@@ -1,6 +1,6 @@
 import { h, Fragment } from "preact";
-import { appSorter, getDisplayName } from "./util";
 import prettyBytes from "pretty-bytes";
+import { appSorter, getDisplayName } from "./util.js";
 
 /**
  * @param {{ frameworkData: import('../data').FrameworkData }} props

@@ -1,5 +1,5 @@
 import { h, Fragment } from "preact";
-import { PageHeader } from "./PageHeader";
+import { PageHeader } from "./PageHeader.js";
 
 export const IntroPage = props => (
 	<Fragment>

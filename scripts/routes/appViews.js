@@ -1,14 +1,14 @@
-const { writeFile } = require("fs").promises;
-const path = require("path");
-const { h } = require("preact");
-const { ensureDir, getDisplayName } = require("../util");
+import path from "path";
+import { writeFile } from "fs/promises";
+import { h } from "preact";
+import { ensureDir, getDisplayName } from "../util.js";
 
 /**
  * @param {import('../build').Renderer} renderPage
  * @param {import('../build').Components["AppPage"]} AppPage
  * @param {import('../data').FrameworkData} frameworkData
  */
-async function buildAppViews(renderPage, AppPage, frameworkData) {
+export async function buildAppViews(renderPage, AppPage, frameworkData) {
 	/** @type {Array<import('../data').AppData>} */
 	const allApps = frameworkData.reduce(
 		(apps, framework) => apps.concat(framework.apps),
@@ -34,7 +34,3 @@ async function buildAppViews(renderPage, AppPage, frameworkData) {
 		})
 	);
 }
-
-module.exports = {
-	buildAppViews
-};
