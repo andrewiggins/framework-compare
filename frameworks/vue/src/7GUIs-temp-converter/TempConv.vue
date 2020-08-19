@@ -1,12 +1,6 @@
-<!--
-	Since Vue replaces the element given in el,
-	we redefine it here so tests work
--->
 <template>
-	<div id="app">
-		<input v-model.number="cFormatted" type="number" /> °c =
-		<input v-model.number="fFormatted" type="number" /> °f
-	</div>
+	<input v-model.number="cFormatted" type="number" /> °c =
+	<input v-model.number="fFormatted" type="number" /> °f
 </template>
 
 <script>

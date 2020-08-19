@@ -1,16 +1,20 @@
-<template functional>
-	<div class="form-group" v-bind:class="{ 'has-error': props.errorMsg }">
-		<label class="form-label" v-bind:for="props.label + '-date'">{{
-			props.label
-		}}</label
+<template>
+	<div class="form-group" v-bind:class="{ 'has-error': errorMsg }">
+		<label class="form-label" v-bind:for="label + '-date'">{{ label }}</label
 		><input
-			v-bind:id="props.label + '-date'"
+			v-bind:id="label + '-date'"
 			class="form-input"
 			type="text"
-			v-bind:value="props.date"
-			v-on:input="e => listeners.setDate(e.target.value)"
-			v-bind:disabled="props.disabled || false"
+			v-bind:value="date"
+			v-on:input="e => onSetDate(e.target.value)"
+			v-bind:disabled="disabled || false"
 		/>
-		<p v-if="props.errorMsg" class="form-input-hint">{{ props.errorMsg }}</p>
+		<p v-if="errorMsg" class="form-input-hint">{{ errorMsg }}</p>
 	</div>
 </template>
+
+<script>
+export default {
+	props: ["errorMsg", "label", "date", "disabled", "onSetDate"]
+};
+</script>
