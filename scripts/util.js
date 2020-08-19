@@ -1,15 +1,9 @@
 import path from "path";
 import { fileURLToPath } from "url";
-import { readdirSync } from "fs";
 import { stat, mkdir, readdir } from "fs/promises";
 
 // @ts-ignore
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-export const listDirsSync = source =>
-	readdirSync(source, { withFileTypes: true })
-		.filter(child => child.isDirectory())
-		.map(child => child.name);
 
 export const listDirs = async source =>
 	(await readdir(source, { withFileTypes: true }))
