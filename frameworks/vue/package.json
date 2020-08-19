@@ -4,8 +4,8 @@
   "version": "0.0.1",
   "license": "MIT",
   "scripts": {
-    "build": "rollup -c rollup.config.js",
-    "watch": "rollup -c rollup.config.js --watch"
+    "build": "rollup -c",
+    "watch": "rollup -c --watch"
   },
   "dependencies": {
     "vue": "^2.6.10"

@@ -1,7 +1,7 @@
-const babel = require("@rollup/plugin-babel").default;
-const replace = require("@rollup/plugin-replace");
-const commonjs = require("@rollup/plugin-commonjs");
-const { generateConfigs } = require("../bundleHelpers");
+import babel from "@rollup/plugin-babel";
+import replace from "@rollup/plugin-replace";
+import commonjs from "@rollup/plugin-commonjs";
+import { generateConfigs } from "../bundleHelpers.js";
 
 const plugins = environment => [
 	babel({
@@ -16,4 +16,4 @@ const plugins = environment => [
 	commonjs()
 ];
 
-module.exports = generateConfigs("react", plugins);
+export default generateConfigs("react", plugins);
