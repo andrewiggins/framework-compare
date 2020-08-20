@@ -1,4 +1,4 @@
-import { getAppHtml, toHtmlString, minifyHtml } from "../util";
+import { getAppHtml, toHtmlString, formatHtml } from "../util";
 
 /**
  * @param {string} frameworkName
@@ -6,7 +6,7 @@ import { getAppHtml, toHtmlString, minifyHtml } from "../util";
  */
 export default function run(frameworkName, appSetup) {
 	function getMarkup() {
-		return minifyHtml(
+		return formatHtml(
 			<fieldset class="crud-wrapper">
 				<legend>People manager</legend>
 				<div class="form-group">

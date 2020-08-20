@@ -1,4 +1,4 @@
-import { delay, getAppHtml, appSel, toHtmlString, minifyHtml } from "../util";
+import { delay, getAppHtml, appSel, toHtmlString, formatHtml } from "../util";
 
 /**
  * @param {string} frameworkName
@@ -46,7 +46,7 @@ export default function run(frameworkName, appSetup) {
 				return '"elapsed">0.0s<';
 			});
 
-			const expectedHtml = minifyHtml(
+			const expectedHtml = formatHtml(
 				<>
 					<label>
 						Elapsed time: <progress />

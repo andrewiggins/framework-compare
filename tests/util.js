@@ -1,6 +1,7 @@
 import path from "path";
 import { JSDOM } from "jsdom";
 import { minify } from "html-minifier";
+import prettier from "prettier";
 
 const { document } = new JSDOM(`<!DOCTYPE html><p>Hello world</p>`).window;
 
@@ -8,13 +9,15 @@ export function delay(ms) {
 	return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-export function minifyHtml(html) {
-	return minify(html, {
+export function formatHtml(html) {
+	const minified = minify(html, {
 		collapseWhitespace: true,
 		sortAttributes: true,
 		removeComments: true,
 		collapseBooleanAttributes: true
 	});
+
+	return prettier.format(minified, { parser: "html" });
 }
 
 /**
@@ -24,7 +27,7 @@ export const appSel = sel => (sel ? `#app ${sel}` : "#app");
 
 export async function getAppHtml() {
 	const html = await page.$eval(appSel(), el => el.innerHTML);
-	return minifyHtml(html.replace(/ value="[0-9a-zA-z_\-\.]*"/g, ""));
+	return formatHtml(html.replace(/ value="[0-9a-zA-z_\-\.]*"/g, ""));
 }
 
 export function repoRoot(...args) {
