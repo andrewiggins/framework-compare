@@ -1,7 +1,7 @@
-import { publish } from "gh-pages";
+import ghPages from "gh-pages";
 import { p } from "./util.js";
 
-publish(
+ghPages.publish(
 	p(),
 	{
 		src: ["index.html", "dist/**/*"]
