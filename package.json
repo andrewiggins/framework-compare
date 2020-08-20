@@ -5,10 +5,10 @@
   "description": "Compare implementations of some basic webpages in different frameworks",
   "main": "index.js",
   "scripts": {
-    "build": "rimraf dist && yarn workspaces run build",
+    "build": "node ./scripts/build.js",
     "dev": "node ./scripts/dev.js",
     "deploy": "yarn build && yarn test && node ./scripts/deploy.js",
-    "serve": "serve -c scripts/serve.json",
+    "serve": "sirv --dev",
     "test": "jest"
   },
   "repository": {
@@ -37,6 +37,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.11.1",
+    "@kristoferbaxter/async": "^1.0.0",
     "@rollup/plugin-node-resolve": "9.0.0",
     "@types/jest": "^26.0.10",
     "babel-jest": "^26.3.0",

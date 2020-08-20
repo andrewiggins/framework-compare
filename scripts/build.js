@@ -1,5 +1,7 @@
 import path from "path";
 import { writeFile, readFile } from "fs/promises";
+import { execFile } from "child_process";
+import { promisify } from "util";
 
 import { rollup } from "rollup";
 import nodeResolve from "@rollup/plugin-node-resolve";
@@ -14,15 +16,22 @@ import cssnano from "cssnano";
 import autoprefixer from "autoprefixer";
 import scssParser from "postcss-scss";
 import sass from "postcss-node-sass";
+import { pool } from "@kristoferbaxter/async";
+import rimraf from "rimraf";
 
 import { buildFrameworkData } from "./data.js";
-import { p, outputPath, ensureDir, listFiles } from "./util.js";
+import { p, outputPath, ensureDir, listFiles, listDirs } from "./util.js";
 
 import { buildIntroPage } from "./routes/intro.js";
 import { buildSummaryView } from "./routes/summary.js";
 import { buildAppViews } from "./routes/appViews.js";
 
+const execFileAsync = promisify(execFile);
 const reporter = formatter();
+const rimrafAsync = glob =>
+	new Promise((resolve, reject) => {
+		rimraf(glob, error => (error ? reject(error) : resolve()));
+	});
 
 /**
  * @typedef {import('./components/build')} Components
@@ -163,7 +172,7 @@ async function buildJSBundles() {
 	await bundle.write(config.output);
 }
 
-async function build() {
+async function buildSiteAssets() {
 	const stage1 = "Compiling components and data";
 	console.time(stage1);
 	const [frameworkData, components] = await Promise.all([
@@ -191,4 +200,61 @@ async function build() {
 	console.timeEnd(stage3);
 }
 
-build().catch(e => console.error(e));
+/**
+ * @param {string} workspaceName
+ */
+async function buildWorkspace(workspaceName) {
+	console.log(`Building ${workspaceName}...`);
+
+	const cmd = process.platform == "win32" ? "yarn.cmd" : "yarn";
+	const args = ["workspace", workspaceName, "run", "build"];
+	const { stdout, stderr } = await execFileAsync(cmd, args);
+
+	console.log(`Output from ${workspaceName}:`);
+	console.log(stdout);
+	console.log(stderr);
+}
+
+/**
+ * @param {string[]} requests Frameworks to build
+ */
+async function build(requests) {
+	const label = "Total Build Time";
+	console.time(label);
+
+	// read frameworks dir package.json (to get workspace name)
+	const allFrameworks = await listDirs(p("frameworks"));
+	const allPkgs = await Promise.all(
+		allFrameworks
+			.map(f => p("frameworks", f, "package.json"))
+			.map(async pkgPath => JSON.parse(await readFile(pkgPath, "utf8")))
+	);
+
+	// find all matching frameworks (matching package names)
+	/** @type {string[]} */
+	let workspaceNames;
+	if (requests == null || requests.length == 0) {
+		workspaceNames = allPkgs.map(pkg => pkg.name);
+		await rimrafAsync(outputPath());
+	} else {
+		workspaceNames = allPkgs.filter(
+			pkg => requests.find(r => pkg.name.startsWith(r)) != null
+		);
+	}
+
+	if (workspaceNames == null || workspaceNames.length == 0) {
+		throw new Error(
+			`No frameworks were found matching "${requests.join(" ")}"`
+		);
+	}
+
+	// in async pool, run `yarn` for each workspace
+	await pool(workspaceNames, buildWorkspace);
+
+	// call buildSiteAssets
+	await buildSiteAssets();
+
+	console.timeEnd(label);
+}
+
+build(process.argv.slice(2)).catch(e => console.error(e));
