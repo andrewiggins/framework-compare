@@ -8,7 +8,12 @@ export function PersonSelect({ persons, selectedId, onChange }) {
 	return (
 		<div class="form-group">
 			<label class="form-label">Select a person to edit:</label>
-			<select size={5} onChange={onChange} class="form-select">
+			<select
+				id="people-select"
+				size={5}
+				onChange={onChange}
+				class="form-select"
+			>
 				{persons.map(person => {
 					return (
 						<option

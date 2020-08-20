@@ -91,8 +91,6 @@ class App extends Component {
 		// TODO: handle rejections
 		create(name, surname).then(person => {
 			this.setState({
-				// TODO: Which inputs do we disable? If not all, then we need to handle
-				// one of the inputs changing while the request happens
 				selectedPersonId: person.id,
 				persons: this.state.persons.concat(person),
 				loading: null
@@ -112,8 +110,6 @@ class App extends Component {
 			});
 
 			this.setState({
-				// TODO: Which inputs do we disable? If not all, then we need to handle
-				// one of the inputs changing while the request happens
 				selectedPersonId: person.id,
 				persons,
 				loading: null
@@ -143,8 +139,6 @@ class App extends Component {
 				oldIndex < persons.length ? persons[oldIndex] : persons[oldIndex - 1];
 
 			this.setState({
-				// TODO: Which inputs do we disable? If not all, then we need to handle
-				// one of the inputs changing while the request happens
 				selectedPersonId: newSelectedPerson.id,
 				name: newSelectedPerson.name,
 				surname: newSelectedPerson.surname,
@@ -208,6 +202,7 @@ class App extends Component {
 				/>
 				<div class="form-group btn-group btn-group-block">
 					<button
+						id="create"
 						type="button"
 						class="btn"
 						onClick={this.onCreate}
@@ -216,6 +211,7 @@ class App extends Component {
 						Create
 					</button>
 					<button
+						id="update"
 						type="button"
 						class="btn"
 						onClick={this.onUpdate}
@@ -224,6 +220,7 @@ class App extends Component {
 						Update
 					</button>
 					<button
+						id="delete"
 						type="button"
 						class="btn"
 						onClick={this.onDelete}
@@ -240,25 +237,3 @@ class App extends Component {
 }
 
 render(<App />, document.getElementById("app"));
-
-// Tests:
-// - list all works (loading is shown, list is shown)
-// - list all rejects
-// - filter includes selection (list is updated, still selected, inputs show right value)
-// - filter removes selection (list is updated, select next valid item, inputs shows new selection)
-// - inputs show validation error if name input is empty (create & updated are disabled, error message under name is shown)
-// - create works (form disabled, form re-enabled, added to list, selected in list, inputs show name)
-// - create rejects
-// - update works (form disabled, form re-enabled, updated name in list, selected in list, input shows updated name)
-// - update is disabled if names are the same
-// - update rejects
-// - delete works (form disabled, form re-enabled, removed from list, next item selected, input shows new selection)
-// - delete rejects
-// - All deletes: should update the text fields
-// - All deletes: verify filter + delete work (next selected person shouldn't be filtered)
-// - Delete all people from top
-// - Delete all people from bottom
-// - Delete first person (n)
-// - Delete middle person (5?)
-// - Delete second to last person (4 total)
-// - Delete last person (n)
