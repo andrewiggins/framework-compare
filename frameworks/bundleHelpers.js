@@ -2,6 +2,7 @@ const path = require("path");
 const { readdirSync, existsSync } = require("fs");
 const nodeResolve = require("@rollup/plugin-node-resolve").default;
 const { terser } = require("rollup-plugin-terser");
+const visualizer = require("rollup-plugin-visualizer");
 
 const frameworkOutput = (...args) =>
 	path.join(__dirname, "../dist/frameworks", ...args);
@@ -22,30 +23,41 @@ function generateConfigs(frameworkName, plugins) {
 			const jsxIndexPath = `./src/${appFolder}/index.jsx`;
 			const entry = existsSync(jsxIndexPath) ? jsxIndexPath : jsIndexPath;
 			const outputDir = frameworkOutput(frameworkName, appFolder);
-			return generateConfig(outputDir, entry, plugins);
+
+			return generateConfig(
+				`${frameworkName} - ${appFolder}`,
+				outputDir,
+				entry,
+				plugins
+			);
 		})
 		.flat();
 }
 
 /**
  * @typedef {"development" | "production"} Environment
+ * @param {string} title,
  * @param {string} outputDir
  * @param {string} input
- * @param {(environment: Environment) => any[]} customPlugins
+ * @param {(environment: Environment) => import('rollup').Plugin[]} customPlugins
  * @param {Environment} [environment = "production"]
  * @returns {import('rollup').RollupOptions}
  */
 function generateConfig(
+	title,
 	outputDir,
 	input,
 	customPlugins,
 	environment = "production"
 ) {
-	// @ts-ignore
 	let plugins = [
 		...customPlugins(environment),
 		nodeResolve({
 			extensions: [".mjs", ".js", ".jsx", ".json", ".node"]
+		}),
+		visualizer({
+			filename: path.join(outputDir, "bundleStats.html"),
+			title: `${title} - Bundle Stats`
 		})
 	];
 

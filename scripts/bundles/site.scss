@@ -13,7 +13,6 @@ a:visited {
 	color: #5755d9;
 }
 
-
 /*******************************
 
 Spectre fixes
@@ -260,4 +259,10 @@ App Page styles
 	pre {
 		margin-bottom: 0;
 	}
+}
+
+.bundles.panel .panel-header {
+	display: flex;
+	align-items: baseline;
+	gap: 12px;
 }

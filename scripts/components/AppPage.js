@@ -81,10 +81,15 @@ function SourcesPanel({ app, hidden }) {
  * @param {{ app: import('../data').AppData; currentUrl: string; }} props
  */
 function BundlesPanel({ app, currentUrl }) {
+	const statsRawUrl = app.htmlUrl.replace(/index.html$/, "bundleStats.html");
+	const statsUrl = relativeUrl(currentUrl, statsRawUrl);
 	return (
 		<div id="bundles" class="bundles panel">
 			<div class="panel-header">
 				<h2 class="panel-title h4">Bundles</h2>
+				<a href={statsUrl} target="_blank">
+					Stats
+				</a>
 			</div>
 			<div class="panel-body">
 				<SizeTable app={app} currentUrl={currentUrl} />
