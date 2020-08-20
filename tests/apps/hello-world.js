@@ -11,7 +11,7 @@ export default function run(frameworkName, appSetup) {
 		});
 
 		it("renders the correct HTML", async () => {
-			await expect(getAppHtml()).resolves.toEqual("<div>Hello World!</div>");
+			await expect(getAppHtml()).resolves.toEqual("<div>Hello World!</div>\n");
 		});
 	});
 }

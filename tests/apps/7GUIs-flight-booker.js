@@ -3,7 +3,7 @@ import {
 	toHtmlString,
 	appSel,
 	backspaceInput,
-	minifyHtml
+	formatHtml
 } from "../util";
 
 /**
@@ -31,7 +31,7 @@ export default function run(frameworkName, appSetup) {
 		});
 
 		it("renders the correct HTML", async () => {
-			const expectedHtml = minifyHtml(
+			const expectedHtml = formatHtml(
 				<>
 					<div class="form-group">
 						<label class="form-label" for="trip-type">
