@@ -7,90 +7,6 @@
     subClass.__proto__ = superClass;
   }
 
-  function _getPrototypeOf(o) {
-    _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) {
-      return o.__proto__ || Object.getPrototypeOf(o);
-    };
-    return _getPrototypeOf(o);
-  }
-
-  function _setPrototypeOf(o, p) {
-    _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) {
-      o.__proto__ = p;
-      return o;
-    };
-
-    return _setPrototypeOf(o, p);
-  }
-
-  function isNativeReflectConstruct() {
-    if (typeof Reflect === "undefined" || !Reflect.construct) return false;
-    if (Reflect.construct.sham) return false;
-    if (typeof Proxy === "function") return true;
-
-    try {
-      Date.prototype.toString.call(Reflect.construct(Date, [], function () {}));
-      return true;
-    } catch (e) {
-      return false;
-    }
-  }
-
-  function _construct(Parent, args, Class) {
-    if (isNativeReflectConstruct()) {
-      _construct = Reflect.construct;
-    } else {
-      _construct = function _construct(Parent, args, Class) {
-        var a = [null];
-        a.push.apply(a, args);
-        var Constructor = Function.bind.apply(Parent, a);
-        var instance = new Constructor();
-        if (Class) _setPrototypeOf(instance, Class.prototype);
-        return instance;
-      };
-    }
-
-    return _construct.apply(null, arguments);
-  }
-
-  function _isNativeFunction(fn) {
-    return Function.toString.call(fn).indexOf("[native code]") !== -1;
-  }
-
-  function _wrapNativeSuper(Class) {
-    var _cache = typeof Map === "function" ? new Map() : undefined;
-
-    _wrapNativeSuper = function _wrapNativeSuper(Class) {
-      if (Class === null || !_isNativeFunction(Class)) return Class;
-
-      if (typeof Class !== "function") {
-        throw new TypeError("Super expression must either be null or a function");
-      }
-
-      if (typeof _cache !== "undefined") {
-        if (_cache.has(Class)) return _cache.get(Class);
-
-        _cache.set(Class, Wrapper);
-      }
-
-      function Wrapper() {
-        return _construct(Class, arguments, _getPrototypeOf(this).constructor);
-      }
-
-      Wrapper.prototype = Object.create(Class.prototype, {
-        constructor: {
-          value: Wrapper,
-          enumerable: false,
-          writable: true,
-          configurable: true
-        }
-      });
-      return _setPrototypeOf(Wrapper, Class);
-    };
-
-    return _wrapNativeSuper(Class);
-  }
-
   function _assertThisInitialized(self) {
     if (self === void 0) {
       throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
@@ -149,7 +65,7 @@
   }
 
   function attr(node, attribute, value) {
-    if (value == null) node.removeAttribute(attribute);else node.setAttribute(attribute, value);
+    if (value == null) node.removeAttribute(attribute);else if (node.getAttribute(attribute) !== value) node.setAttribute(attribute, value);
   }
 
   function children(element) {
@@ -189,17 +105,23 @@
     render_callbacks.push(fn);
   }
 
+  var flushing = false;
+  var seen_callbacks = new Set();
+
   function flush() {
-    var seen_callbacks = new Set();
+    if (flushing) return;
+    flushing = true;
 
     do {
       // first, call beforeUpdate functions
       // and update components
-      while (dirty_components.length) {
-        var component = dirty_components.shift();
+      for (var i = 0; i < dirty_components.length; i += 1) {
+        var component = dirty_components[i];
         set_current_component(component);
         update(component.$$);
       }
+
+      dirty_components.length = 0;
 
       while (binding_callbacks.length) {
         binding_callbacks.pop()();
@@ -208,13 +130,13 @@
       // subsequent updates...
 
 
-      for (var i = 0; i < render_callbacks.length; i += 1) {
-        var callback = render_callbacks[i];
+      for (var _i = 0; _i < render_callbacks.length; _i += 1) {
+        var callback = render_callbacks[_i];
 
         if (!seen_callbacks.has(callback)) {
-          callback(); // ...so guard against infinite loops
-
+          // ...so guard against infinite loops
           seen_callbacks.add(callback);
+          callback();
         }
       }
 
@@ -226,14 +148,17 @@
     }
 
     update_scheduled = false;
+    flushing = false;
+    seen_callbacks.clear();
   }
 
   function update($$) {
-    if ($$.fragment) {
-      $$.update($$.dirty);
+    if ($$.fragment !== null) {
+      $$.update();
       run_all($$.before_update);
-      $$.fragment.p($$.dirty, $$.ctx);
-      $$.dirty = null;
+      var dirty = $$.dirty;
+      $$.dirty = [-1];
+      $$.fragment && $$.fragment.p($$.ctx, dirty);
       $$.after_update.forEach(add_render_callback);
     }
   }
@@ -253,7 +178,7 @@
         on_mount = _component$$$.on_mount,
         on_destroy = _component$$$.on_destroy,
         after_update = _component$$$.after_update;
-    fragment.m(target, anchor); // onMount happens before the initial afterUpdate
+    fragment && fragment.m(target, anchor); // onMount happens before the initial afterUpdate
 
     add_render_callback(function () {
       var new_on_destroy = on_mount.map(run).filter(is_function);
@@ -272,35 +197,41 @@
   }
 
   function destroy_component(component, detaching) {
-    if (component.$$.fragment) {
-      run_all(component.$$.on_destroy);
-      component.$$.fragment.d(detaching); // TODO null out other refs, including component.$$ (but need to
+    var $$ = component.$$;
+
+    if ($$.fragment !== null) {
+      run_all($$.on_destroy);
+      $$.fragment && $$.fragment.d(detaching); // TODO null out other refs, including component.$$ (but need to
       // preserve final state?)
 
-      component.$$.on_destroy = component.$$.fragment = null;
-      component.$$.ctx = {};
+      $$.on_destroy = $$.fragment = null;
+      $$.ctx = [];
     }
   }
 
-  function make_dirty(component, key) {
-    if (!component.$$.dirty) {
+  function make_dirty(component, i) {
+    if (component.$$.dirty[0] === -1) {
       dirty_components.push(component);
       schedule_update();
-      component.$$.dirty = blank_object();
+      component.$$.dirty.fill(0);
     }
 
-    component.$$.dirty[key] = true;
+    component.$$.dirty[i / 31 | 0] |= 1 << i % 31;
   }
 
-  function init(component, options, instance, create_fragment, not_equal, prop_names) {
+  function init(component, options, instance, create_fragment, not_equal, props, dirty) {
+    if (dirty === void 0) {
+      dirty = [-1];
+    }
+
     var parent_component = current_component;
     set_current_component(component);
-    var props = options.props || {};
+    var prop_values = options.props || {};
     var $$ = component.$$ = {
       fragment: null,
       ctx: null,
       // state
-      props: prop_names,
+      props: props,
       update: noop,
       not_equal: not_equal,
       bound: blank_object(),
@@ -312,33 +243,34 @@
       context: new Map(parent_component ? parent_component.$$.context : []),
       // everything else
       callbacks: blank_object(),
-      dirty: null
+      dirty: dirty
     };
     var ready = false;
-    $$.ctx = instance ? instance(component, props, function (key, ret, value) {
-      if (value === void 0) {
-        value = ret;
-      }
+    $$.ctx = instance ? instance(component, prop_values, function (i, ret) {
+      var value = (arguments.length <= 2 ? 0 : arguments.length - 2) ? arguments.length <= 2 ? undefined : arguments[2] : ret;
 
-      if ($$.ctx && not_equal($$.ctx[key], $$.ctx[key] = value)) {
-        if ($$.bound[key]) $$.bound[key](value);
-        if (ready) make_dirty(component, key);
+      if ($$.ctx && not_equal($$.ctx[i], $$.ctx[i] = value)) {
+        if ($$.bound[i]) $$.bound[i](value);
+        if (ready) make_dirty(component, i);
       }
 
       return ret;
-    }) : props;
+    }) : [];
     $$.update();
     ready = true;
-    run_all($$.before_update);
-    $$.fragment = create_fragment($$.ctx);
+    run_all($$.before_update); // `false` as a special case of no DOM component
+
+    $$.fragment = create_fragment ? create_fragment($$.ctx) : false;
 
     if (options.target) {
       if (options.hydrate) {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        $$.fragment.l(children(options.target));
+        var nodes = children(options.target); // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+
+        $$.fragment && $$.fragment.l(nodes);
+        nodes.forEach(detach);
       } else {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        $$.fragment.c();
+        $$.fragment && $$.fragment.c();
       }
 
       if (options.intro) transition_in(component.$$.fragment);
@@ -349,65 +281,7 @@
     set_current_component(parent_component);
   }
 
-  var SvelteElement;
-
-  if (typeof HTMLElement !== 'undefined') {
-    SvelteElement =
-    /*#__PURE__*/
-    function (_HTMLElement) {
-      _inheritsLoose(SvelteElement, _HTMLElement);
-
-      function SvelteElement() {
-        var _this;
-
-        _this = _HTMLElement.call(this) || this;
-
-        _this.attachShadow({
-          mode: 'open'
-        });
-
-        return _this;
-      }
-
-      var _proto2 = SvelteElement.prototype;
-
-      _proto2.connectedCallback = function connectedCallback() {
-        // @ts-ignore todo: improve typings
-        for (var key in this.$$.slotted) {
-          // @ts-ignore todo: improve typings
-          this.appendChild(this.$$.slotted[key]);
-        }
-      };
-
-      _proto2.attributeChangedCallback = function attributeChangedCallback(attr, _oldValue, newValue) {
-        this[attr] = newValue;
-      };
-
-      _proto2.$destroy = function $destroy() {
-        destroy_component(this, 1);
-        this.$destroy = noop;
-      };
-
-      _proto2.$on = function $on(type, callback) {
-        // TODO should this delegate to addEventListener?
-        var callbacks = this.$$.callbacks[type] || (this.$$.callbacks[type] = []);
-        callbacks.push(callback);
-        return function () {
-          var index = callbacks.indexOf(callback);
-          if (index !== -1) callbacks.splice(index, 1);
-        };
-      };
-
-      _proto2.$set = function $set() {// overridden by instance, if it has props
-      };
-
-      return SvelteElement;
-    }(_wrapNativeSuper(HTMLElement));
-  }
-
-  var SvelteComponent =
-  /*#__PURE__*/
-  function () {
+  var SvelteComponent = /*#__PURE__*/function () {
     function SvelteComponent() {}
 
     var _proto3 = SvelteComponent.prototype;
@@ -433,35 +307,52 @@
   }();
 
   function create_fragment(ctx) {
-    var button, t0, t1, dispose;
+    var button;
+    var t0;
+    var t1;
+    var dispose;
     return {
       c: function c() {
         button = element("button");
         t0 = text("count: ");
-        t1 = text(ctx.count);
+        t1 = text(
+        /*count*/
+        ctx[0]);
         attr(button, "class", "btn badge");
-        attr(button, "data-badge", ctx.count);
-        set_style(button, "margin-top", ".5rem");
-        dispose = listen(button, "click", ctx.click_handler);
+        attr(button, "data-badge",
+        /*count*/
+        ctx[0]);
+        set_style(button, "margin-top", "0.5rem");
       },
-      m: function m(target, anchor) {
+      m: function m(target, anchor, remount) {
         insert(target, button, anchor);
         append(button, t0);
         append(button, t1);
+        if (remount) dispose();
+        dispose = listen(button, "click",
+        /*click_handler*/
+        ctx[1]);
       },
-      p: function p(changed, ctx) {
-        if (changed.count) {
-          set_data(t1, ctx.count);
-          attr(button, "data-badge", ctx.count);
+      p: function p(ctx, _ref) {
+        var dirty = _ref[0];
+        if (dirty &
+        /*count*/
+        1) set_data(t1,
+        /*count*/
+        ctx[0]);
+
+        if (dirty &
+        /*count*/
+        1) {
+          attr(button, "data-badge",
+          /*count*/
+          ctx[0]);
         }
       },
       i: noop,
       o: noop,
       d: function d(detaching) {
-        if (detaching) {
-          detach(button);
-        }
-
+        if (detaching) detach(button);
         dispose();
       }
     };
@@ -471,25 +362,20 @@
     var count = 0;
 
     var click_handler = function click_handler() {
-      return $$invalidate('count', count += 1);
+      return $$invalidate(0, count += 1);
     };
 
-    return {
-      count: count,
-      click_handler: click_handler
-    };
+    return [count, click_handler];
   }
 
-  var Counter =
-  /*#__PURE__*/
-  function (_SvelteComponent) {
+  var Counter = /*#__PURE__*/function (_SvelteComponent) {
     _inheritsLoose(Counter, _SvelteComponent);
 
     function Counter(options) {
       var _this;
 
       _this = _SvelteComponent.call(this) || this;
-      init(_assertThisInitialized(_this), options, instance, create_fragment, safe_not_equal, []);
+      init(_assertThisInitialized(_this), options, instance, create_fragment, safe_not_equal, {});
       return _this;
     }
 

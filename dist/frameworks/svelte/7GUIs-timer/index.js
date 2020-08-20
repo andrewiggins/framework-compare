@@ -7,90 +7,6 @@
     subClass.__proto__ = superClass;
   }
 
-  function _getPrototypeOf(o) {
-    _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) {
-      return o.__proto__ || Object.getPrototypeOf(o);
-    };
-    return _getPrototypeOf(o);
-  }
-
-  function _setPrototypeOf(o, p) {
-    _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) {
-      o.__proto__ = p;
-      return o;
-    };
-
-    return _setPrototypeOf(o, p);
-  }
-
-  function isNativeReflectConstruct() {
-    if (typeof Reflect === "undefined" || !Reflect.construct) return false;
-    if (Reflect.construct.sham) return false;
-    if (typeof Proxy === "function") return true;
-
-    try {
-      Date.prototype.toString.call(Reflect.construct(Date, [], function () {}));
-      return true;
-    } catch (e) {
-      return false;
-    }
-  }
-
-  function _construct(Parent, args, Class) {
-    if (isNativeReflectConstruct()) {
-      _construct = Reflect.construct;
-    } else {
-      _construct = function _construct(Parent, args, Class) {
-        var a = [null];
-        a.push.apply(a, args);
-        var Constructor = Function.bind.apply(Parent, a);
-        var instance = new Constructor();
-        if (Class) _setPrototypeOf(instance, Class.prototype);
-        return instance;
-      };
-    }
-
-    return _construct.apply(null, arguments);
-  }
-
-  function _isNativeFunction(fn) {
-    return Function.toString.call(fn).indexOf("[native code]") !== -1;
-  }
-
-  function _wrapNativeSuper(Class) {
-    var _cache = typeof Map === "function" ? new Map() : undefined;
-
-    _wrapNativeSuper = function _wrapNativeSuper(Class) {
-      if (Class === null || !_isNativeFunction(Class)) return Class;
-
-      if (typeof Class !== "function") {
-        throw new TypeError("Super expression must either be null or a function");
-      }
-
-      if (typeof _cache !== "undefined") {
-        if (_cache.has(Class)) return _cache.get(Class);
-
-        _cache.set(Class, Wrapper);
-      }
-
-      function Wrapper() {
-        return _construct(Class, arguments, _getPrototypeOf(this).constructor);
-      }
-
-      Wrapper.prototype = Object.create(Class.prototype, {
-        constructor: {
-          value: Wrapper,
-          enumerable: false,
-          writable: true,
-          configurable: true
-        }
-      });
-      return _setPrototypeOf(Wrapper, Class);
-    };
-
-    return _wrapNativeSuper(Class);
-  }
-
   function _assertThisInitialized(self) {
     if (self === void 0) {
       throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
@@ -153,7 +69,7 @@
   }
 
   function attr(node, attribute, value) {
-    if (value == null) node.removeAttribute(attribute);else node.setAttribute(attribute, value);
+    if (value == null) node.removeAttribute(attribute);else if (node.getAttribute(attribute) !== value) node.setAttribute(attribute, value);
   }
 
   function to_number(value) {
@@ -208,17 +124,23 @@
     render_callbacks.push(fn);
   }
 
+  var flushing = false;
+  var seen_callbacks = new Set();
+
   function flush() {
-    var seen_callbacks = new Set();
+    if (flushing) return;
+    flushing = true;
 
     do {
       // first, call beforeUpdate functions
       // and update components
-      while (dirty_components.length) {
-        var component = dirty_components.shift();
+      for (var i = 0; i < dirty_components.length; i += 1) {
+        var component = dirty_components[i];
         set_current_component(component);
         update(component.$$);
       }
+
+      dirty_components.length = 0;
 
       while (binding_callbacks.length) {
         binding_callbacks.pop()();
@@ -227,13 +149,13 @@
       // subsequent updates...
 
 
-      for (var i = 0; i < render_callbacks.length; i += 1) {
-        var callback = render_callbacks[i];
+      for (var _i = 0; _i < render_callbacks.length; _i += 1) {
+        var callback = render_callbacks[_i];
 
         if (!seen_callbacks.has(callback)) {
-          callback(); // ...so guard against infinite loops
-
+          // ...so guard against infinite loops
           seen_callbacks.add(callback);
+          callback();
         }
       }
 
@@ -245,14 +167,17 @@
     }
 
     update_scheduled = false;
+    flushing = false;
+    seen_callbacks.clear();
   }
 
   function update($$) {
-    if ($$.fragment) {
-      $$.update($$.dirty);
+    if ($$.fragment !== null) {
+      $$.update();
       run_all($$.before_update);
-      $$.fragment.p($$.dirty, $$.ctx);
-      $$.dirty = null;
+      var dirty = $$.dirty;
+      $$.dirty = [-1];
+      $$.fragment && $$.fragment.p($$.ctx, dirty);
       $$.after_update.forEach(add_render_callback);
     }
   }
@@ -272,7 +197,7 @@
         on_mount = _component$$$.on_mount,
         on_destroy = _component$$$.on_destroy,
         after_update = _component$$$.after_update;
-    fragment.m(target, anchor); // onMount happens before the initial afterUpdate
+    fragment && fragment.m(target, anchor); // onMount happens before the initial afterUpdate
 
     add_render_callback(function () {
       var new_on_destroy = on_mount.map(run).filter(is_function);
@@ -291,35 +216,41 @@
   }
 
   function destroy_component(component, detaching) {
-    if (component.$$.fragment) {
-      run_all(component.$$.on_destroy);
-      component.$$.fragment.d(detaching); // TODO null out other refs, including component.$$ (but need to
+    var $$ = component.$$;
+
+    if ($$.fragment !== null) {
+      run_all($$.on_destroy);
+      $$.fragment && $$.fragment.d(detaching); // TODO null out other refs, including component.$$ (but need to
       // preserve final state?)
 
-      component.$$.on_destroy = component.$$.fragment = null;
-      component.$$.ctx = {};
+      $$.on_destroy = $$.fragment = null;
+      $$.ctx = [];
     }
   }
 
-  function make_dirty(component, key) {
-    if (!component.$$.dirty) {
+  function make_dirty(component, i) {
+    if (component.$$.dirty[0] === -1) {
       dirty_components.push(component);
       schedule_update();
-      component.$$.dirty = blank_object();
+      component.$$.dirty.fill(0);
     }
 
-    component.$$.dirty[key] = true;
+    component.$$.dirty[i / 31 | 0] |= 1 << i % 31;
   }
 
-  function init(component, options, instance, create_fragment, not_equal, prop_names) {
+  function init(component, options, instance, create_fragment, not_equal, props, dirty) {
+    if (dirty === void 0) {
+      dirty = [-1];
+    }
+
     var parent_component = current_component;
     set_current_component(component);
-    var props = options.props || {};
+    var prop_values = options.props || {};
     var $$ = component.$$ = {
       fragment: null,
       ctx: null,
       // state
-      props: prop_names,
+      props: props,
       update: noop,
       not_equal: not_equal,
       bound: blank_object(),
@@ -331,33 +262,34 @@
       context: new Map(parent_component ? parent_component.$$.context : []),
       // everything else
       callbacks: blank_object(),
-      dirty: null
+      dirty: dirty
     };
     var ready = false;
-    $$.ctx = instance ? instance(component, props, function (key, ret, value) {
-      if (value === void 0) {
-        value = ret;
-      }
+    $$.ctx = instance ? instance(component, prop_values, function (i, ret) {
+      var value = (arguments.length <= 2 ? 0 : arguments.length - 2) ? arguments.length <= 2 ? undefined : arguments[2] : ret;
 
-      if ($$.ctx && not_equal($$.ctx[key], $$.ctx[key] = value)) {
-        if ($$.bound[key]) $$.bound[key](value);
-        if (ready) make_dirty(component, key);
+      if ($$.ctx && not_equal($$.ctx[i], $$.ctx[i] = value)) {
+        if ($$.bound[i]) $$.bound[i](value);
+        if (ready) make_dirty(component, i);
       }
 
       return ret;
-    }) : props;
+    }) : [];
     $$.update();
     ready = true;
-    run_all($$.before_update);
-    $$.fragment = create_fragment($$.ctx);
+    run_all($$.before_update); // `false` as a special case of no DOM component
+
+    $$.fragment = create_fragment ? create_fragment($$.ctx) : false;
 
     if (options.target) {
       if (options.hydrate) {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        $$.fragment.l(children(options.target));
+        var nodes = children(options.target); // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+
+        $$.fragment && $$.fragment.l(nodes);
+        nodes.forEach(detach);
       } else {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        $$.fragment.c();
+        $$.fragment && $$.fragment.c();
       }
 
       if (options.intro) transition_in(component.$$.fragment);
@@ -368,65 +300,7 @@
     set_current_component(parent_component);
   }
 
-  var SvelteElement;
-
-  if (typeof HTMLElement !== 'undefined') {
-    SvelteElement =
-    /*#__PURE__*/
-    function (_HTMLElement) {
-      _inheritsLoose(SvelteElement, _HTMLElement);
-
-      function SvelteElement() {
-        var _this;
-
-        _this = _HTMLElement.call(this) || this;
-
-        _this.attachShadow({
-          mode: 'open'
-        });
-
-        return _this;
-      }
-
-      var _proto2 = SvelteElement.prototype;
-
-      _proto2.connectedCallback = function connectedCallback() {
-        // @ts-ignore todo: improve typings
-        for (var key in this.$$.slotted) {
-          // @ts-ignore todo: improve typings
-          this.appendChild(this.$$.slotted[key]);
-        }
-      };
-
-      _proto2.attributeChangedCallback = function attributeChangedCallback(attr, _oldValue, newValue) {
-        this[attr] = newValue;
-      };
-
-      _proto2.$destroy = function $destroy() {
-        destroy_component(this, 1);
-        this.$destroy = noop;
-      };
-
-      _proto2.$on = function $on(type, callback) {
-        // TODO should this delegate to addEventListener?
-        var callbacks = this.$$.callbacks[type] || (this.$$.callbacks[type] = []);
-        callbacks.push(callback);
-        return function () {
-          var index = callbacks.indexOf(callback);
-          if (index !== -1) callbacks.splice(index, 1);
-        };
-      };
-
-      _proto2.$set = function $set() {// overridden by instance, if it has props
-      };
-
-      return SvelteElement;
-    }(_wrapNativeSuper(HTMLElement));
-  }
-
-  var SvelteComponent =
-  /*#__PURE__*/
-  function () {
+  var SvelteComponent = /*#__PURE__*/function () {
     function SvelteComponent() {}
 
     var _proto3 = SvelteComponent.prototype;
@@ -452,23 +326,25 @@
   }();
 
   function create_fragment(ctx) {
-    var label0,
-        t0,
-        progress,
-        progress_value_value,
-        t1,
-        div0,
-        t2_value = (ctx.elapsed / 1000).toFixed(1) + "",
-        t2,
-        t3,
-        t4,
-        label1,
-        t5,
-        input,
-        t6,
-        div1,
-        button,
-        dispose;
+    var label0;
+    var t0;
+    var progress;
+    var progress_value_value;
+    var t1;
+    var div0;
+    var t2_value = (
+    /*elapsed*/
+    ctx[0] / 1000).toFixed(1) + "";
+    var t2;
+    var t3;
+    var t4;
+    var label1;
+    var t5;
+    var input;
+    var t6;
+    var div1;
+    var button;
+    var dispose;
     return {
       c: function c() {
         label0 = element("label");
@@ -480,21 +356,24 @@
         t3 = text("s");
         t4 = space();
         label1 = element("label");
-        t5 = text("Duration:\r\n\t");
+        t5 = text("Duration:\n\t");
         input = element("input");
         t6 = space();
         div1 = element("div");
         button = element("button");
         button.textContent = "Reset";
-        progress.value = progress_value_value = ctx.elapsed / ctx.duration;
+        progress.value = progress_value_value =
+        /*elapsed*/
+        ctx[0] /
+        /*duration*/
+        ctx[1];
         attr(div0, "class", "elapsed");
         attr(input, "type", "range");
         attr(input, "min", "1");
         attr(input, "max", "20000");
         attr(button, "class", "btn btn-primary");
-        dispose = [listen(input, "change", ctx.input_change_input_handler), listen(input, "input", ctx.input_change_input_handler), listen(button, "click", ctx.reset)];
       },
-      m: function m(target, anchor) {
+      m: function m(target, anchor, remount) {
         insert(target, label0, anchor);
         append(label0, t0);
         append(label0, progress);
@@ -506,35 +385,58 @@
         insert(target, label1, anchor);
         append(label1, t5);
         append(label1, input);
-        set_input_value(input, ctx.duration);
+        set_input_value(input,
+        /*duration*/
+        ctx[1]);
         insert(target, t6, anchor);
         insert(target, div1, anchor);
         append(div1, button);
+        if (remount) run_all(dispose);
+        dispose = [listen(input, "change",
+        /*input_change_input_handler*/
+        ctx[5]), listen(input, "input",
+        /*input_change_input_handler*/
+        ctx[5]), listen(button, "click",
+        /*reset*/
+        ctx[2])];
       },
-      p: function p(changed, ctx) {
-        if ((changed.elapsed || changed.duration) && progress_value_value !== (progress_value_value = ctx.elapsed / ctx.duration)) {
+      p: function p(ctx, _ref) {
+        var dirty = _ref[0];
+
+        if (dirty &
+        /*elapsed, duration*/
+        3 && progress_value_value !== (progress_value_value =
+        /*elapsed*/
+        ctx[0] /
+        /*duration*/
+        ctx[1])) {
           progress.value = progress_value_value;
         }
 
-        if (changed.elapsed && t2_value !== (t2_value = (ctx.elapsed / 1000).toFixed(1) + "")) {
-          set_data(t2, t2_value);
-        }
+        if (dirty &
+        /*elapsed*/
+        1 && t2_value !== (t2_value = (
+        /*elapsed*/
+        ctx[0] / 1000).toFixed(1) + "")) set_data(t2, t2_value);
 
-        if (changed.duration) set_input_value(input, ctx.duration);
+        if (dirty &
+        /*duration*/
+        2) {
+          set_input_value(input,
+          /*duration*/
+          ctx[1]);
+        }
       },
       i: noop,
       o: noop,
       d: function d(detaching) {
-        if (detaching) {
-          detach(label0);
-          detach(t1);
-          detach(div0);
-          detach(t4);
-          detach(label1);
-          detach(t6);
-          detach(div1);
-        }
-
+        if (detaching) detach(label0);
+        if (detaching) detach(t1);
+        if (detaching) detach(div0);
+        if (detaching) detach(t4);
+        if (detaching) detach(label1);
+        if (detaching) detach(t6);
+        if (detaching) detach(div1);
         run_all(dispose);
       }
     };
@@ -547,8 +449,8 @@
     var frame;
 
     function reset() {
-      $$invalidate('elapsed', elapsed = 0);
-      $$invalidate('last_time', last_time = performance.now());
+      $$invalidate(0, elapsed = 0);
+      $$invalidate(3, last_time = performance.now());
     }
 
     onDestroy(function () {
@@ -557,46 +459,33 @@
 
     function input_change_input_handler() {
       duration = to_number(this.value);
-      $$invalidate('duration', duration);
+      $$invalidate(1, duration);
     }
 
-    $$self.$$.update = function ($$dirty) {
-      if ($$dirty === void 0) {
-        $$dirty = {
-          elapsed: 1,
-          duration: 1,
-          last_time: 1
-        };
-      }
-
-      if ($$dirty.elapsed || $$dirty.duration || $$dirty.last_time) {
-        if (elapsed < duration) {
+    $$self.$$.update = function () {
+      if ($$self.$$.dirty &
+      /*elapsed, duration, last_time*/
+      11) {
+         if (elapsed < duration) {
           frame = requestAnimationFrame(function (time) {
-            $$invalidate('elapsed', elapsed += Math.min(time - last_time, duration - elapsed));
-            $$invalidate('last_time', last_time = time);
+            $$invalidate(0, elapsed += Math.min(time - last_time, duration - elapsed));
+            $$invalidate(3, last_time = time);
           });
         }
       }
     };
 
-    return {
-      elapsed: elapsed,
-      duration: duration,
-      reset: reset,
-      input_change_input_handler: input_change_input_handler
-    };
+    return [elapsed, duration, reset, last_time, frame, input_change_input_handler];
   }
 
-  var Timer =
-  /*#__PURE__*/
-  function (_SvelteComponent) {
+  var Timer = /*#__PURE__*/function (_SvelteComponent) {
     _inheritsLoose(Timer, _SvelteComponent);
 
     function Timer(options) {
       var _this;
 
       _this = _SvelteComponent.call(this) || this;
-      init(_assertThisInitialized(_this), options, instance, create_fragment, safe_not_equal, []);
+      init(_assertThisInitialized(_this), options, instance, create_fragment, safe_not_equal, {});
       return _this;
     }
 

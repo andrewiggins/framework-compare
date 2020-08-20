@@ -7,90 +7,6 @@
     subClass.__proto__ = superClass;
   }
 
-  function _getPrototypeOf(o) {
-    _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) {
-      return o.__proto__ || Object.getPrototypeOf(o);
-    };
-    return _getPrototypeOf(o);
-  }
-
-  function _setPrototypeOf(o, p) {
-    _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) {
-      o.__proto__ = p;
-      return o;
-    };
-
-    return _setPrototypeOf(o, p);
-  }
-
-  function isNativeReflectConstruct() {
-    if (typeof Reflect === "undefined" || !Reflect.construct) return false;
-    if (Reflect.construct.sham) return false;
-    if (typeof Proxy === "function") return true;
-
-    try {
-      Date.prototype.toString.call(Reflect.construct(Date, [], function () {}));
-      return true;
-    } catch (e) {
-      return false;
-    }
-  }
-
-  function _construct(Parent, args, Class) {
-    if (isNativeReflectConstruct()) {
-      _construct = Reflect.construct;
-    } else {
-      _construct = function _construct(Parent, args, Class) {
-        var a = [null];
-        a.push.apply(a, args);
-        var Constructor = Function.bind.apply(Parent, a);
-        var instance = new Constructor();
-        if (Class) _setPrototypeOf(instance, Class.prototype);
-        return instance;
-      };
-    }
-
-    return _construct.apply(null, arguments);
-  }
-
-  function _isNativeFunction(fn) {
-    return Function.toString.call(fn).indexOf("[native code]") !== -1;
-  }
-
-  function _wrapNativeSuper(Class) {
-    var _cache = typeof Map === "function" ? new Map() : undefined;
-
-    _wrapNativeSuper = function _wrapNativeSuper(Class) {
-      if (Class === null || !_isNativeFunction(Class)) return Class;
-
-      if (typeof Class !== "function") {
-        throw new TypeError("Super expression must either be null or a function");
-      }
-
-      if (typeof _cache !== "undefined") {
-        if (_cache.has(Class)) return _cache.get(Class);
-
-        _cache.set(Class, Wrapper);
-      }
-
-      function Wrapper() {
-        return _construct(Class, arguments, _getPrototypeOf(this).constructor);
-      }
-
-      Wrapper.prototype = Object.create(Class.prototype, {
-        constructor: {
-          value: Wrapper,
-          enumerable: false,
-          writable: true,
-          configurable: true
-        }
-      });
-      return _setPrototypeOf(Wrapper, Class);
-    };
-
-    return _wrapNativeSuper(Class);
-  }
-
   function _assertThisInitialized(self) {
     if (self === void 0) {
       throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
@@ -153,7 +69,7 @@
   }
 
   function attr(node, attribute, value) {
-    if (value == null) node.removeAttribute(attribute);else node.setAttribute(attribute, value);
+    if (value == null) node.removeAttribute(attribute);else if (node.getAttribute(attribute) !== value) node.setAttribute(attribute, value);
   }
 
   function children(element) {
@@ -215,17 +131,23 @@
     flush_callbacks.push(fn);
   }
 
+  var flushing = false;
+  var seen_callbacks = new Set();
+
   function flush() {
-    var seen_callbacks = new Set();
+    if (flushing) return;
+    flushing = true;
 
     do {
       // first, call beforeUpdate functions
       // and update components
-      while (dirty_components.length) {
-        var component = dirty_components.shift();
+      for (var i = 0; i < dirty_components.length; i += 1) {
+        var component = dirty_components[i];
         set_current_component(component);
         update(component.$$);
       }
+
+      dirty_components.length = 0;
 
       while (binding_callbacks.length) {
         binding_callbacks.pop()();
@@ -234,13 +156,13 @@
       // subsequent updates...
 
 
-      for (var i = 0; i < render_callbacks.length; i += 1) {
-        var callback = render_callbacks[i];
+      for (var _i = 0; _i < render_callbacks.length; _i += 1) {
+        var callback = render_callbacks[_i];
 
         if (!seen_callbacks.has(callback)) {
-          callback(); // ...so guard against infinite loops
-
+          // ...so guard against infinite loops
           seen_callbacks.add(callback);
+          callback();
         }
       }
 
@@ -252,14 +174,17 @@
     }
 
     update_scheduled = false;
+    flushing = false;
+    seen_callbacks.clear();
   }
 
   function update($$) {
-    if ($$.fragment) {
-      $$.update($$.dirty);
+    if ($$.fragment !== null) {
+      $$.update();
       run_all($$.before_update);
-      $$.fragment.p($$.dirty, $$.ctx);
-      $$.dirty = null;
+      var dirty = $$.dirty;
+      $$.dirty = [-1];
+      $$.fragment && $$.fragment.p($$.ctx, dirty);
       $$.after_update.forEach(add_render_callback);
     }
   }
@@ -291,9 +216,16 @@
   }
 
   function bind(component, name, callback) {
-    if (component.$$.props.indexOf(name) === -1) return;
-    component.$$.bound[name] = callback;
-    callback(component.$$.ctx[name]);
+    var index = component.$$.props[name];
+
+    if (index !== undefined) {
+      component.$$.bound[index] = callback;
+      callback(component.$$.ctx[index]);
+    }
+  }
+
+  function create_component(block) {
+    block && block.c();
   }
 
   function mount_component(component, target, anchor) {
@@ -302,7 +234,7 @@
         on_mount = _component$$$.on_mount,
         on_destroy = _component$$$.on_destroy,
         after_update = _component$$$.after_update;
-    fragment.m(target, anchor); // onMount happens before the initial afterUpdate
+    fragment && fragment.m(target, anchor); // onMount happens before the initial afterUpdate
 
     add_render_callback(function () {
       var new_on_destroy = on_mount.map(run).filter(is_function);
@@ -321,35 +253,41 @@
   }
 
   function destroy_component(component, detaching) {
-    if (component.$$.fragment) {
-      run_all(component.$$.on_destroy);
-      component.$$.fragment.d(detaching); // TODO null out other refs, including component.$$ (but need to
+    var $$ = component.$$;
+
+    if ($$.fragment !== null) {
+      run_all($$.on_destroy);
+      $$.fragment && $$.fragment.d(detaching); // TODO null out other refs, including component.$$ (but need to
       // preserve final state?)
 
-      component.$$.on_destroy = component.$$.fragment = null;
-      component.$$.ctx = {};
+      $$.on_destroy = $$.fragment = null;
+      $$.ctx = [];
     }
   }
 
-  function make_dirty(component, key) {
-    if (!component.$$.dirty) {
+  function make_dirty(component, i) {
+    if (component.$$.dirty[0] === -1) {
       dirty_components.push(component);
       schedule_update();
-      component.$$.dirty = blank_object();
+      component.$$.dirty.fill(0);
     }
 
-    component.$$.dirty[key] = true;
+    component.$$.dirty[i / 31 | 0] |= 1 << i % 31;
   }
 
-  function init(component, options, instance, create_fragment, not_equal, prop_names) {
+  function init(component, options, instance, create_fragment, not_equal, props, dirty) {
+    if (dirty === void 0) {
+      dirty = [-1];
+    }
+
     var parent_component = current_component;
     set_current_component(component);
-    var props = options.props || {};
+    var prop_values = options.props || {};
     var $$ = component.$$ = {
       fragment: null,
       ctx: null,
       // state
-      props: prop_names,
+      props: props,
       update: noop,
       not_equal: not_equal,
       bound: blank_object(),
@@ -361,33 +299,34 @@
       context: new Map(parent_component ? parent_component.$$.context : []),
       // everything else
       callbacks: blank_object(),
-      dirty: null
+      dirty: dirty
     };
     var ready = false;
-    $$.ctx = instance ? instance(component, props, function (key, ret, value) {
-      if (value === void 0) {
-        value = ret;
-      }
+    $$.ctx = instance ? instance(component, prop_values, function (i, ret) {
+      var value = (arguments.length <= 2 ? 0 : arguments.length - 2) ? arguments.length <= 2 ? undefined : arguments[2] : ret;
 
-      if ($$.ctx && not_equal($$.ctx[key], $$.ctx[key] = value)) {
-        if ($$.bound[key]) $$.bound[key](value);
-        if (ready) make_dirty(component, key);
+      if ($$.ctx && not_equal($$.ctx[i], $$.ctx[i] = value)) {
+        if ($$.bound[i]) $$.bound[i](value);
+        if (ready) make_dirty(component, i);
       }
 
       return ret;
-    }) : props;
+    }) : [];
     $$.update();
     ready = true;
-    run_all($$.before_update);
-    $$.fragment = create_fragment($$.ctx);
+    run_all($$.before_update); // `false` as a special case of no DOM component
+
+    $$.fragment = create_fragment ? create_fragment($$.ctx) : false;
 
     if (options.target) {
       if (options.hydrate) {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        $$.fragment.l(children(options.target));
+        var nodes = children(options.target); // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+
+        $$.fragment && $$.fragment.l(nodes);
+        nodes.forEach(detach);
       } else {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        $$.fragment.c();
+        $$.fragment && $$.fragment.c();
       }
 
       if (options.intro) transition_in(component.$$.fragment);
@@ -398,65 +337,7 @@
     set_current_component(parent_component);
   }
 
-  var SvelteElement;
-
-  if (typeof HTMLElement !== 'undefined') {
-    SvelteElement =
-    /*#__PURE__*/
-    function (_HTMLElement) {
-      _inheritsLoose(SvelteElement, _HTMLElement);
-
-      function SvelteElement() {
-        var _this;
-
-        _this = _HTMLElement.call(this) || this;
-
-        _this.attachShadow({
-          mode: 'open'
-        });
-
-        return _this;
-      }
-
-      var _proto2 = SvelteElement.prototype;
-
-      _proto2.connectedCallback = function connectedCallback() {
-        // @ts-ignore todo: improve typings
-        for (var key in this.$$.slotted) {
-          // @ts-ignore todo: improve typings
-          this.appendChild(this.$$.slotted[key]);
-        }
-      };
-
-      _proto2.attributeChangedCallback = function attributeChangedCallback(attr, _oldValue, newValue) {
-        this[attr] = newValue;
-      };
-
-      _proto2.$destroy = function $destroy() {
-        destroy_component(this, 1);
-        this.$destroy = noop;
-      };
-
-      _proto2.$on = function $on(type, callback) {
-        // TODO should this delegate to addEventListener?
-        var callbacks = this.$$.callbacks[type] || (this.$$.callbacks[type] = []);
-        callbacks.push(callback);
-        return function () {
-          var index = callbacks.indexOf(callback);
-          if (index !== -1) callbacks.splice(index, 1);
-        };
-      };
-
-      _proto2.$set = function $set() {// overridden by instance, if it has props
-      };
-
-      return SvelteElement;
-    }(_wrapNativeSuper(HTMLElement));
-  }
-
-  var SvelteComponent =
-  /*#__PURE__*/
-  function () {
+  var SvelteComponent = /*#__PURE__*/function () {
     function SvelteComponent() {}
 
     var _proto3 = SvelteComponent.prototype;
@@ -534,7 +415,14 @@
   var returnFlight = "return";
 
   function create_fragment(ctx) {
-    var div, label, select, option0, t1, option1, t2, dispose;
+    var div;
+    var label;
+    var select;
+    var option0;
+    var t1;
+    var option1;
+    var t2;
+    var dispose;
     return {
       c: function c() {
         div = element("div");
@@ -551,15 +439,19 @@
         option0.value = option0.__value;
         option1.__value = returnFlight;
         option1.value = option1.__value;
-        if (ctx.tripType === void 0) add_render_callback(function () {
-          return ctx.select_change_handler.call(select);
-        });
         attr(select, "id", "trip-type");
         attr(select, "class", "form-select");
+        if (
+        /*tripType*/
+        ctx[0] === void 0) add_render_callback(function () {
+          return (
+            /*select_change_handler*/
+            ctx[1].call(select)
+          );
+        });
         attr(div, "class", "form-group");
-        dispose = listen(select, "change", ctx.select_change_handler);
       },
-      m: function m(target, anchor) {
+      m: function m(target, anchor, remount) {
         insert(target, div, anchor);
         append(div, label);
         append(div, select);
@@ -567,18 +459,29 @@
         append(option0, t1);
         append(select, option1);
         append(option1, t2);
-        select_option(select, ctx.tripType);
+        select_option(select,
+        /*tripType*/
+        ctx[0]);
+        if (remount) dispose();
+        dispose = listen(select, "change",
+        /*select_change_handler*/
+        ctx[1]);
       },
-      p: function p(changed, ctx) {
-        if (changed.tripType) select_option(select, ctx.tripType);
+      p: function p(ctx, _ref) {
+        var dirty = _ref[0];
+
+        if (dirty &
+        /*tripType*/
+        1) {
+          select_option(select,
+          /*tripType*/
+          ctx[0]);
+        }
       },
       i: noop,
       o: noop,
       d: function d(detaching) {
-        if (detaching) {
-          detach(div);
-        }
-
+        if (detaching) detach(div);
         dispose();
       }
     };
@@ -589,31 +492,26 @@
 
     function select_change_handler() {
       tripType = select_value(this);
-      $$invalidate('tripType', tripType);
-      $$invalidate('returnFlight', returnFlight);
-      $$invalidate('oneWayFlight', oneWayFlight);
+      $$invalidate(0, tripType);
     }
 
     $$self.$set = function ($$props) {
-      if ('tripType' in $$props) $$invalidate('tripType', tripType = $$props.tripType);
+      if ("tripType" in $$props) $$invalidate(0, tripType = $$props.tripType);
     };
 
-    return {
-      tripType: tripType,
-      select_change_handler: select_change_handler
-    };
+    return [tripType, select_change_handler];
   }
 
-  var TripType =
-  /*#__PURE__*/
-  function (_SvelteComponent) {
+  var TripType = /*#__PURE__*/function (_SvelteComponent) {
     _inheritsLoose(TripType, _SvelteComponent);
 
     function TripType(options) {
       var _this;
 
       _this = _SvelteComponent.call(this) || this;
-      init(_assertThisInitialized(_this), options, instance, create_fragment, safe_not_equal, ["tripType"]);
+      init(_assertThisInitialized(_this), options, instance, create_fragment, safe_not_equal, {
+        tripType: 0
+      });
       return _this;
     }
 
@@ -621,73 +519,116 @@
   }(SvelteComponent);
 
   function create_if_block(ctx) {
-    var p, t;
+    var p;
+    var t;
     return {
       c: function c() {
         p = element("p");
-        t = text(ctx.errorMsg);
+        t = text(
+        /*errorMsg*/
+        ctx[2]);
         attr(p, "class", "form-input-hint");
       },
       m: function m(target, anchor) {
         insert(target, p, anchor);
         append(p, t);
       },
-      p: function p(changed, ctx) {
-        if (changed.errorMsg) {
-          set_data(t, ctx.errorMsg);
-        }
+      p: function p(ctx, dirty) {
+        if (dirty &
+        /*errorMsg*/
+        4) set_data(t,
+        /*errorMsg*/
+        ctx[2]);
       },
       d: function d(detaching) {
-        if (detaching) {
-          detach(p);
-        }
+        if (detaching) detach(p);
       }
     };
   }
 
   function create_fragment$1(ctx) {
-    var div, label_1, t0, input, t1, div_class_value, dispose;
-    var if_block = ctx.errorMsg && create_if_block(ctx);
+    var div;
+    var label_1;
+    var t0;
+    var input;
+    var t1;
+    var div_class_value;
+    var dispose;
+    var if_block =
+    /*errorMsg*/
+    ctx[2] && create_if_block(ctx);
     return {
       c: function c() {
         div = element("div");
         label_1 = element("label");
-        t0 = text(ctx.label);
+        t0 = text(
+        /*label*/
+        ctx[1]);
         input = element("input");
         t1 = space();
         if (if_block) if_block.c();
         attr(label_1, "class", "form-label");
-        attr(label_1, "for", ctx.inputId);
-        attr(input, "id", ctx.inputId);
+        attr(label_1, "for",
+        /*inputId*/
+        ctx[4]);
+        attr(input, "id",
+        /*inputId*/
+        ctx[4]);
         attr(input, "class", "form-input");
         attr(input, "type", "text");
-        input.disabled = ctx.disabled;
-        attr(div, "class", div_class_value = "form-group " + (ctx.errorMsg ? 'has-error' : ''));
-        dispose = listen(input, "input", ctx.input_input_handler);
+        input.disabled =
+        /*disabled*/
+        ctx[3];
+        attr(div, "class", div_class_value = "form-group " + (
+        /*errorMsg*/
+        ctx[2] ? "has-error" : ""));
       },
-      m: function m(target, anchor) {
+      m: function m(target, anchor, remount) {
         insert(target, div, anchor);
         append(div, label_1);
         append(label_1, t0);
         append(div, input);
-        set_input_value(input, ctx.date);
+        set_input_value(input,
+        /*date*/
+        ctx[0]);
         append(div, t1);
         if (if_block) if_block.m(div, null);
+        if (remount) dispose();
+        dispose = listen(input, "input",
+        /*input_input_handler*/
+        ctx[5]);
       },
-      p: function p(changed, ctx) {
-        if (changed.label) {
-          set_data(t0, ctx.label);
+      p: function p(ctx, _ref) {
+        var dirty = _ref[0];
+        if (dirty &
+        /*label*/
+        2) set_data(t0,
+        /*label*/
+        ctx[1]);
+
+        if (dirty &
+        /*disabled*/
+        8) {
+          input.disabled =
+          /*disabled*/
+          ctx[3];
         }
 
-        if (changed.date && input.value !== ctx.date) set_input_value(input, ctx.date);
-
-        if (changed.disabled) {
-          input.disabled = ctx.disabled;
+        if (dirty &
+        /*date*/
+        1 && input.value !==
+        /*date*/
+        ctx[0]) {
+          set_input_value(input,
+          /*date*/
+          ctx[0]);
         }
 
-        if (ctx.errorMsg) {
+        if (
+        /*errorMsg*/
+        ctx[2]) {
           if (if_block) {
-            if_block.p(changed, ctx);
+            if_block.p(ctx, dirty);
           } else {
             if_block = create_if_block(ctx);
             if_block.c();
@@ -698,17 +639,18 @@
           if_block = null;
         }
 
-        if (changed.errorMsg && div_class_value !== (div_class_value = "form-group " + (ctx.errorMsg ? 'has-error' : ''))) {
+        if (dirty &
+        /*errorMsg*/
+        4 && div_class_value !== (div_class_value = "form-group " + (
+        /*errorMsg*/
+        ctx[2] ? "has-error" : ""))) {
           attr(div, "class", div_class_value);
         }
       },
       i: noop,
       o: noop,
       d: function d(detaching) {
-        if (detaching) {
-          detach(div);
-        }
-
+        if (detaching) detach(div);
         if (if_block) if_block.d();
         dispose();
       }
@@ -716,45 +658,41 @@
   }
 
   function instance$1($$self, $$props, $$invalidate) {
-    var label = $$props.label,
-        date = $$props.date,
-        errorMsg = $$props.errorMsg,
-        _$$props$disabled = $$props.disabled,
+    var label = $$props.label;
+    var date = $$props.date;
+    var errorMsg = $$props.errorMsg;
+    var _$$props$disabled = $$props.disabled,
         disabled = _$$props$disabled === void 0 ? false : _$$props$disabled;
     var inputId = label + "-date";
 
     function input_input_handler() {
       date = this.value;
-      $$invalidate('date', date);
+      $$invalidate(0, date);
     }
 
     $$self.$set = function ($$props) {
-      if ('label' in $$props) $$invalidate('label', label = $$props.label);
-      if ('date' in $$props) $$invalidate('date', date = $$props.date);
-      if ('errorMsg' in $$props) $$invalidate('errorMsg', errorMsg = $$props.errorMsg);
-      if ('disabled' in $$props) $$invalidate('disabled', disabled = $$props.disabled);
+      if ("label" in $$props) $$invalidate(1, label = $$props.label);
+      if ("date" in $$props) $$invalidate(0, date = $$props.date);
+      if ("errorMsg" in $$props) $$invalidate(2, errorMsg = $$props.errorMsg);
+      if ("disabled" in $$props) $$invalidate(3, disabled = $$props.disabled);
     };
 
-    return {
-      label: label,
-      date: date,
-      errorMsg: errorMsg,
-      disabled: disabled,
-      inputId: inputId,
-      input_input_handler: input_input_handler
-    };
+    return [date, label, errorMsg, disabled, inputId, input_input_handler];
   }
 
-  var DateEntry =
-  /*#__PURE__*/
-  function (_SvelteComponent) {
+  var DateEntry = /*#__PURE__*/function (_SvelteComponent) {
     _inheritsLoose(DateEntry, _SvelteComponent);
 
     function DateEntry(options) {
       var _this;
 
       _this = _SvelteComponent.call(this) || this;
-      init(_assertThisInitialized(_this), options, instance$1, create_fragment$1, safe_not_equal, ["label", "date", "errorMsg", "disabled"]);
+      init(_assertThisInitialized(_this), options, instance$1, create_fragment$1, safe_not_equal, {
+        label: 1,
+        date: 0,
+        errorMsg: 2,
+        disabled: 3
+      });
       return _this;
     }
 
@@ -762,94 +700,114 @@
   }(SvelteComponent);
 
   function create_fragment$2(ctx) {
-    var updating_tripType, t0, updating_date, t1, updating_date_1, t2, div, button, t3, current, dispose;
+    var updating_tripType;
+    var t0;
+    var updating_date;
+    var t1;
+    var updating_date_1;
+    var t2;
+    var div;
+    var button;
+    var t3;
+    var current;
+    var dispose;
 
     function triptype_tripType_binding(value) {
-      ctx.triptype_tripType_binding.call(null, value);
-      updating_tripType = true;
-      add_flush_callback(function () {
-        return updating_tripType = false;
-      });
+      /*triptype_tripType_binding*/
+      ctx[8].call(null, value);
     }
 
     var triptype_props = {};
 
-    if (ctx.tripType !== void 0) {
-      triptype_props.tripType = ctx.tripType;
+    if (
+    /*tripType*/
+    ctx[2] !== void 0) {
+      triptype_props.tripType =
+      /*tripType*/
+      ctx[2];
     }
 
     var triptype = new TripType({
       props: triptype_props
     });
     binding_callbacks.push(function () {
-      return bind(triptype, 'tripType', triptype_tripType_binding);
+      return bind(triptype, "tripType", triptype_tripType_binding);
     });
 
-    function dateentry0_date_binding(value_1) {
-      ctx.dateentry0_date_binding.call(null, value_1);
-      updating_date = true;
-      add_flush_callback(function () {
-        return updating_date = false;
-      });
+    function dateentry0_date_binding(value) {
+      /*dateentry0_date_binding*/
+      ctx[9].call(null, value);
     }
 
     var dateentry0_props = {
       label: "Departing",
-      errorMsg: ctx.departingError
+      errorMsg:
+      /*departingError*/
+      ctx[3]
     };
 
-    if (ctx.departing !== void 0) {
-      dateentry0_props.date = ctx.departing;
+    if (
+    /*departing*/
+    ctx[0] !== void 0) {
+      dateentry0_props.date =
+      /*departing*/
+      ctx[0];
     }
 
     var dateentry0 = new DateEntry({
       props: dateentry0_props
     });
     binding_callbacks.push(function () {
-      return bind(dateentry0, 'date', dateentry0_date_binding);
+      return bind(dateentry0, "date", dateentry0_date_binding);
     });
 
-    function dateentry1_date_binding(value_2) {
-      ctx.dateentry1_date_binding.call(null, value_2);
-      updating_date_1 = true;
-      add_flush_callback(function () {
-        return updating_date_1 = false;
-      });
+    function dateentry1_date_binding(value) {
+      /*dateentry1_date_binding*/
+      ctx[10].call(null, value);
     }
 
     var dateentry1_props = {
       label: "Returning",
-      errorMsg: ctx.returningError,
-      disabled: ctx.tripType == oneWayFlight$1
+      errorMsg:
+      /*returningError*/
+      ctx[4],
+      disabled:
+      /*tripType*/
+      ctx[2] == oneWayFlight$1
     };
 
-    if (ctx.returning !== void 0) {
-      dateentry1_props.date = ctx.returning;
+    if (
+    /*returning*/
+    ctx[1] !== void 0) {
+      dateentry1_props.date =
+      /*returning*/
+      ctx[1];
     }
 
     var dateentry1 = new DateEntry({
       props: dateentry1_props
     });
     binding_callbacks.push(function () {
-      return bind(dateentry1, 'date', dateentry1_date_binding);
+      return bind(dateentry1, "date", dateentry1_date_binding);
     });
     return {
       c: function c() {
-        triptype.$$.fragment.c();
+        create_component(triptype.$$.fragment);
         t0 = space();
-        dateentry0.$$.fragment.c();
+        create_component(dateentry0.$$.fragment);
         t1 = space();
-        dateentry1.$$.fragment.c();
+        create_component(dateentry1.$$.fragment);
         t2 = space();
         div = element("div");
         button = element("button");
         t3 = text("book");
         attr(button, "class", "btn btn-primary");
-        button.disabled = ctx.isBookDisabled;
+        button.disabled =
+        /*isBookDisabled*/
+        ctx[5];
         attr(div, "class", "form-group");
-        dispose = listen(button, "click", ctx.bookFlight);
       },
-      m: function m(target, anchor) {
+      m: function m(target, anchor, remount) {
         mount_component(triptype, target, anchor);
         insert(target, t0, anchor);
         mount_component(dateentry0, target, anchor);
@@ -860,35 +818,80 @@
         append(div, button);
         append(button, t3);
         current = true;
+        if (remount) dispose();
+        dispose = listen(button, "click",
+        /*bookFlight*/
+        ctx[6]);
       },
-      p: function p(changed, ctx) {
+      p: function p(ctx, _ref) {
+        var dirty = _ref[0];
         var triptype_changes = {};
 
-        if (!updating_tripType && changed.tripType) {
-          triptype_changes.tripType = ctx.tripType;
+        if (!updating_tripType && dirty &
+        /*tripType*/
+        4) {
+          updating_tripType = true;
+          triptype_changes.tripType =
+          /*tripType*/
+          ctx[2];
+          add_flush_callback(function () {
+            return updating_tripType = false;
+          });
         }
 
         triptype.$set(triptype_changes);
         var dateentry0_changes = {};
-        if (changed.departingError) dateentry0_changes.errorMsg = ctx.departingError;
+        if (dirty &
+        /*departingError*/
+        8) dateentry0_changes.errorMsg =
+        /*departingError*/
+        ctx[3];
 
-        if (!updating_date && changed.departing) {
-          dateentry0_changes.date = ctx.departing;
+        if (!updating_date && dirty &
+        /*departing*/
+        1) {
+          updating_date = true;
+          dateentry0_changes.date =
+          /*departing*/
+          ctx[0];
+          add_flush_callback(function () {
+            return updating_date = false;
+          });
         }
 
         dateentry0.$set(dateentry0_changes);
         var dateentry1_changes = {};
-        if (changed.returningError) dateentry1_changes.errorMsg = ctx.returningError;
-        if (changed.tripType) dateentry1_changes.disabled = ctx.tripType == oneWayFlight$1;
+        if (dirty &
+        /*returningError*/
+        16) dateentry1_changes.errorMsg =
+        /*returningError*/
+        ctx[4];
+        if (dirty &
+        /*tripType*/
+        4) dateentry1_changes.disabled =
+        /*tripType*/
+        ctx[2] == oneWayFlight$1;
 
-        if (!updating_date_1 && changed.returning) {
-          dateentry1_changes.date = ctx.returning;
+        if (!updating_date_1 && dirty &
+        /*returning*/
+        2) {
+          updating_date_1 = true;
+          dateentry1_changes.date =
+          /*returning*/
+          ctx[1];
+          add_flush_callback(function () {
+            return updating_date_1 = false;
+          });
         }
 
         dateentry1.$set(dateentry1_changes);
 
-        if (!current || changed.isBookDisabled) {
-          button.disabled = ctx.isBookDisabled;
+        if (!current || dirty &
+        /*isBookDisabled*/
+        32) {
+          button.disabled =
+          /*isBookDisabled*/
+          ctx[5];
         }
       },
       i: function i(local) {
@@ -906,24 +909,12 @@
       },
       d: function d(detaching) {
         destroy_component(triptype, detaching);
-
-        if (detaching) {
-          detach(t0);
-        }
-
+        if (detaching) detach(t0);
         destroy_component(dateentry0, detaching);
-
-        if (detaching) {
-          detach(t1);
-        }
-
+        if (detaching) detach(t1);
         destroy_component(dateentry1, detaching);
-
-        if (detaching) {
-          detach(t2);
-          detach(div);
-        }
-
+        if (detaching) detach(t2);
+        if (detaching) detach(div);
         dispose();
       }
     };
@@ -932,19 +923,19 @@
   var oneWayFlight$1 = "one-way";
   var returnFlight$1 = "return";
 
-  function getErrorMessage(date) {
-    try {
-      validateDate(date);
-      return null;
-    } catch (error) {
-      return error.message;
-    }
-  }
-
   function instance$2($$self, $$props, $$invalidate) {
     var departing = today();
     var returning = departing;
     var tripType = oneWayFlight$1;
+
+    function getErrorMessage(date) {
+      try {
+        validateDate(date);
+        return null;
+      } catch (error) {
+        return error.message;
+      }
+    }
 
     function bookFlight() {
       var type = tripType == returnFlight$1 ? "return" : "one-way";
@@ -959,75 +950,62 @@
 
     function triptype_tripType_binding(value) {
       tripType = value;
-      $$invalidate('tripType', tripType);
+      $$invalidate(2, tripType);
     }
 
-    function dateentry0_date_binding(value_1) {
-      departing = value_1;
-      $$invalidate('departing', departing);
+    function dateentry0_date_binding(value) {
+      departing = value;
+      $$invalidate(0, departing);
     }
 
-    function dateentry1_date_binding(value_2) {
-      returning = value_2;
-      $$invalidate('returning', returning);
+    function dateentry1_date_binding(value) {
+      returning = value;
+      $$invalidate(1, returning);
     }
 
-    var departingError, returningError, isBookDisabled;
+    var departingError;
+    var returningError;
+    var isBookDisabled;
 
-    $$self.$$.update = function ($$dirty) {
-      if ($$dirty === void 0) {
-        $$dirty = {
-          departing: 1,
-          returning: 1,
-          departingError: 1,
-          returningError: 1,
-          tripType: 1
-        };
+    $$self.$$.update = function () {
+      if ($$self.$$.dirty &
+      /*departing*/
+      1) {
+         $$invalidate(3, departingError = getErrorMessage(departing));
       }
 
-      if ($$dirty.departing) {
-        $$invalidate('departingError', departingError = getErrorMessage(departing));
+      if ($$self.$$.dirty &
+      /*returning*/
+      2) {
+         $$invalidate(4, returningError = getErrorMessage(returning));
       }
 
-      if ($$dirty.returning) {
-        $$invalidate('returningError', returningError = getErrorMessage(returning));
-      }
-
-      if ($$dirty.departingError || $$dirty.returningError || $$dirty.tripType || $$dirty.returning || $$dirty.departing) {
-        if (departingError == null && returningError == null && tripType == returnFlight$1 && returning < departing) {
-          $$invalidate('returningError', returningError = "Returning date must be on or after departing date.");
+      if ($$self.$$.dirty &
+      /*departingError, returningError, tripType, returning, departing*/
+      31) {
+         if (departingError == null && returningError == null && tripType == returnFlight$1 && returning < departing) {
+          $$invalidate(4, returningError = "Returning date must be on or after departing date.");
         }
       }
 
-      if ($$dirty.departingError || $$dirty.returningError) {
-        $$invalidate('isBookDisabled', isBookDisabled = departingError || returningError);
+      if ($$self.$$.dirty &
+      /*departingError, returningError*/
+      24) {
+         $$invalidate(5, isBookDisabled = departingError || returningError);
       }
     };
 
-    return {
-      departing: departing,
-      returning: returning,
-      tripType: tripType,
-      bookFlight: bookFlight,
-      departingError: departingError,
-      returningError: returningError,
-      isBookDisabled: isBookDisabled,
-      triptype_tripType_binding: triptype_tripType_binding,
-      dateentry0_date_binding: dateentry0_date_binding,
-      dateentry1_date_binding: dateentry1_date_binding
-    };
+    return [departing, returning, tripType, departingError, returningError, isBookDisabled, bookFlight, getErrorMessage, triptype_tripType_binding, dateentry0_date_binding, dateentry1_date_binding];
   }
 
-  var FlightBooker =
-  /*#__PURE__*/
-  function (_SvelteComponent) {
+  var FlightBooker = /*#__PURE__*/function (_SvelteComponent) {
     _inheritsLoose(FlightBooker, _SvelteComponent);
 
     function FlightBooker(options) {
       var _this;
 
       _this = _SvelteComponent.call(this) || this;
-      init(_assertThisInitialized(_this), options, instance$2, create_fragment$2, safe_not_equal, []);
+      init(_assertThisInitialized(_this), options, instance$2, create_fragment$2, safe_not_equal, {});
       return _this;
     }
 
