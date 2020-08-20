@@ -1,6 +1,3 @@
-let id = 0;
-const newId = () => `${++id}`;
-
 /**
  * @typedef Timer
  * @property {number} expiresAt
@@ -29,6 +26,7 @@ const newId = () => `${++id}`;
  * @typedef Config
  * @property {number} durationMs
  * @property {boolean} areNewRequestsPaused
+ * @property {() => string} newId
  * @property {Timer | null} timer
  * @property {Map<string, Request>} requests
  * @property {(id: RequestId) => void} pause
@@ -38,9 +36,13 @@ const newId = () => `${++id}`;
 
 /** @returns {Config} */
 export function createMockFetchConfig() {
+	let id = 0;
+
 	return {
 		durationMs: 3 * 1000,
 		areNewRequestsPaused: false,
+
+		newId: () => `${++id}`,
 
 		// TODO: Build request editing module
 		//
@@ -52,22 +54,50 @@ export function createMockFetchConfig() {
 		// timeout. If so, replace the current timeout with a new one for the new
 		// request.
 		//
-		// User Control mode:
+		// Interactive mode:
 		//
 		// If the UI control is displayed, instead of relying to timers to resolve
 		// requests, we will run a animation loop to animate the UI control and expire
 		// requests in progress.
 
-		// Consider using a buffer (16 ms?) for detecting if a request should complete
-		// now or not.
-
 		timer: null,
 
 		requests: new Map(),
 
-		pause(id) {},
+		pause(id) {
+			const request = this.requests.get(id);
+			if (!request) {
+				throw new Error(`No request with id "${id}" exists.`);
+			}
 
-		resume(id) {},
+			const now = Date.now();
+			if (request.expiresAt == null || now > request.expiresAt) {
+				// Request already paused or completed
+				return;
+			}
+
+			request.elapsedTime = request.duration - (request.expiresAt - now);
+			request.expiresAt = null;
+		},
+
+		resume(id) {
+			const request = this.requests.get(id);
+			if (!request) {
+				throw new Error(`No request with id "${id}" exists.`);
+			}
+
+			if (request.expiresAt != null) {
+				throw new Error(`Request is not paused. Can not resume it.`);
+			}
+
+			const now = Date.now();
+			const remainingTime = request.duration - request.elapsedTime;
+			request.expiresAt = now + remainingTime;
+
+			// Ensure timer is properly set with the request with the next expiration
+			// which could be the request we just updated
+			resolveRequests(this);
+		},
 
 		log(...msg) {}
 	};
@@ -92,15 +122,16 @@ export function createMockFetch(config) {
 				resolve();
 			};
 
-			rejecter = () => {
-				config.log(`Rejecting ${name}`);
-				reject();
-			};
+			// TODO: Consider how to enable this...
+			// rejecter = () => {
+			// 	config.log(`Rejecting ${name}`);
+			// 	reject();
+			// };
 		});
 
 		/** @type {Request} */
 		const request = {
-			id: newId(),
+			id: config.newId(),
 			duration: config.durationMs,
 			expiresAt: null,
 			elapsedTime: 0,
@@ -140,6 +171,7 @@ export function createMockFetch(config) {
 function setTimer(config, request, now) {
 	if (config.timer) {
 		window.clearTimeout(config.timer.timeoutId);
+		config.timer = null;
 	}
 
 	const timeoutId = window.setTimeout(
@@ -156,12 +188,14 @@ function resolveRequests(config) {
 	const now = Date.now();
 	const toRemove = [];
 
-	/** @type {Request} */
+	/** @type {Request} Request with the next expiration */
 	let nextRequest = null;
 	for (let [id, request] of config.requests.entries()) {
-		// If this request will expire within 16 ms of now (or has already expired)
-		// then go ahead and resolve it
-		if (request.expiresAt - now < 16) {
+		if (request.expiresAt == null) {
+			continue;
+		} else if (request.expiresAt - now < 16) {
+			// If this request will expire within 16 ms of now (or has already expired)
+			// then go ahead and resolve it
 			request.resolve();
 			toRemove.push(id);
 		} else if (
@@ -178,5 +212,7 @@ function resolveRequests(config) {
 
 	if (nextRequest) {
 		setTimer(config, nextRequest, now);
+	} else {
+		config.timer = null;
 	}
 }

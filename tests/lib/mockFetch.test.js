@@ -184,6 +184,305 @@ describe("mockFetch library", () => {
 			expect(config.log).toHaveBeenNthCalledWith(3, "Resolving GET /test/req3");
 			expect(await req3).toBe(3);
 		});
+
+		describe("pause & resume", () => {
+			it("should pause a request past previous duration and resume request with remaining duration", async () => {
+				// Request: ====  ====
+				const req1 = mockFetch("/test/req1").then(() => 1);
+				config.pause("1");
+
+				jest.advanceTimersByTime(config.durationMs + 1);
+				expect(config.log).not.toHaveBeenCalled();
+
+				config.resume("1");
+				jest.advanceTimersByTime(config.durationMs + 1);
+
+				expect(config.log).toHaveBeenCalledTimes(1);
+				expect(config.log).toHaveBeenCalledWith("Resolving GET /test/req1");
+				expect(await req1).toBe(1);
+			});
+
+			it("should throw an error if request id doesn't exist", async () => {
+				expect(() => config.pause("1")).toThrow();
+				expect(() => config.resume("1")).toThrow();
+
+				mockFetch("/test/req1").then(() => 1);
+				expect(() => config.pause("2")).toThrow();
+				expect(() => config.resume("2")).toThrow();
+			});
+
+			it("calling pause twice still properly resumes", async () => {
+				const req1 = mockFetch("/test/req1").then(() => 1);
+				config.pause("1");
+
+				jest.advanceTimersByTime(config.durationMs);
+				config.pause("1");
+				expect(config.log).not.toHaveBeenCalled();
+
+				jest.advanceTimersByTime(config.durationMs);
+				expect(config.log).not.toHaveBeenCalled();
+
+				config.resume("1");
+				jest.advanceTimersByTime(config.durationMs + 1);
+
+				expect(config.log).toHaveBeenCalledTimes(1);
+				expect(config.log).toHaveBeenCalledWith("Resolving GET /test/req1");
+				expect(await req1).toBe(1);
+			});
+
+			it("calling resume on not paused request throws an error", async () => {
+				mockFetch("/test/req1").then(() => 1);
+				expect(() => config.resume("1")).toThrow();
+			});
+
+			it("immediate pause should not block existing requests", async () => {
+				// Request 1: =============
+				// Request 2:    =====         =====
+
+				const req1 = mockFetch("/test/req1").then(() => 1);
+				jest.advanceTimersByTime(config.durationMs / 2);
+
+				const req2 = mockFetch("/test/req2").then(() => 2);
+				config.pause("2");
+
+				jest.advanceTimersByTime(config.durationMs / 2 + 1);
+				expect(config.log).toHaveBeenCalledTimes(1);
+				expect(config.log).toHaveBeenCalledWith("Resolving GET /test/req1");
+				expect(await req1).toBe(1);
+
+				config.resume("2");
+				jest.advanceTimersByTime(config.durationMs + 1);
+
+				expect(config.log).toHaveBeenCalledTimes(2);
+				expect(config.log).toHaveBeenCalledWith("Resolving GET /test/req2");
+				expect(await req2).toBe(2);
+			});
+
+			it("immediate pause should not block new requests", async () => {
+				// Request 1: ====        ====
+				// Request 2:       ====
+				const req1 = mockFetch("/test/req1").then(() => 1);
+				config.pause("1");
+
+				jest.advanceTimersByTime(config.durationMs / 2);
+				const req2 = mockFetch("/test/req2").then(() => 2);
+
+				jest.advanceTimersByTime(config.durationMs + 1);
+				expect(config.log).toHaveBeenCalledTimes(1);
+				expect(config.log).toHaveBeenCalledWith("Resolving GET /test/req2");
+				expect(await req2).toBe(2);
+
+				config.resume("1");
+				jest.advanceTimersByTime(config.durationMs + 1);
+
+				expect(config.log).toHaveBeenCalledTimes(2);
+				expect(config.log).toHaveBeenCalledWith("Resolving GET /test/req1");
+				expect(await req1).toBe(1);
+			});
+
+			it("request1 pauses before request2, and resumes and completes within the request2", async () => {
+				// Request 1: ====    ====
+				// Request 2:       ========
+
+				// In auto mode for this test, req1 original timer will expire after
+				// req1 is paused and get replaced with new timer for req2. However,
+				// once req1 is resumed, that timer will get replaced with a new timer
+				// for req1 which completes before req2. Once req1 completes, a new
+				// timer is created for req2 to complete.
+
+				const req1 = mockFetch("/req1").then(() => 1);
+
+				// Pause req1 after half of its time
+				jest.advanceTimersByTime(config.durationMs / 2);
+				config.pause("1");
+
+				// Wait an additional 1/4 of req1 time before starting request 2
+				jest.advanceTimersByTime(config.durationMs / 4);
+				const req2 = mockFetch("/req2").then(() => 2);
+
+				// Ensure original req1 timer does not fire here (1/2 + 1/4 + 1/4)
+				jest.advanceTimersByTime(config.durationMs / 4 + 1);
+				expect(config.log).not.toHaveBeenCalled();
+				config.resume("1");
+
+				// Complete just req1
+				jest.advanceTimersByTime(config.durationMs / 2 + 1);
+				expect(config.log).toHaveBeenCalledTimes(1);
+				expect(config.log).toHaveBeenNthCalledWith(1, "Resolving GET /req1");
+				expect(await req1).toBe(1);
+
+				// Complete req2
+				jest.advanceTimersByTime(config.durationMs / 4 + 1);
+				expect(config.log).toHaveBeenCalledTimes(2);
+				expect(config.log).toHaveBeenNthCalledWith(2, "Resolving GET /req2");
+				expect(await req2).toBe(2);
+			});
+
+			it("request1 pauses before request2, resumes within the request2, and completes after request2", async () => {
+				// Request 1: ====        ====
+				// Request 2:       ========
+
+				const req1 = mockFetch("/req1").then(() => 1);
+
+				// Pause req1 after half of its time
+				jest.advanceTimersByTime(config.durationMs / 2);
+				config.pause("1");
+
+				// Wait an additional 1/4 of req1 time before starting req2
+				jest.advanceTimersByTime(config.durationMs / 4);
+				const req2 = mockFetch("/req2").then(() => 2);
+
+				// Ensure original req1 timer does not fire here (1/2 + 1/4 + 1/4)
+				jest.advanceTimersByTime(config.durationMs / 4 + 1);
+				expect(config.log).not.toHaveBeenCalled();
+
+				// Wait an additional 1/2 of req2 time before resuming req1
+				jest.advanceTimersByTime(config.durationMs / 2);
+				config.resume("1");
+				expect(config.log).not.toHaveBeenCalled();
+
+				// Complete req2
+				jest.advanceTimersByTime(config.durationMs / 4 + 1);
+				expect(config.log).toHaveBeenCalledTimes(1);
+				expect(config.log).toHaveBeenNthCalledWith(1, "Resolving GET /req2");
+				expect(await req2).toBe(2);
+
+				// Complete req1
+				jest.advanceTimersByTime(config.durationMs / 4 + 1);
+				expect(config.log).toHaveBeenCalledTimes(2);
+				expect(config.log).toHaveBeenNthCalledWith(2, "Resolving GET /req1");
+				expect(await req1).toBe(1);
+			});
+
+			it("delayed pause should not block new requests", async () => {
+				// Request 1: ====        ====
+				// Request 2:      ======
+				const req1 = mockFetch("/test/req1").then(() => 1);
+
+				jest.advanceTimersByTime(config.durationMs / 3);
+				config.pause("1");
+
+				jest.advanceTimersByTime(config.durationMs / 3);
+				const req2 = mockFetch("/test/req2").then(() => 2);
+
+				jest.advanceTimersByTime(config.durationMs + 1);
+				expect(config.log).toHaveBeenCalledTimes(1);
+				expect(config.log).toHaveBeenCalledWith("Resolving GET /test/req2");
+				expect(await req2).toBe(2);
+
+				config.resume("1");
+				jest.advanceTimersByTime(config.durationMs * (2 / 3) + 1);
+
+				expect(config.log).toHaveBeenCalledTimes(2);
+				expect(config.log).toHaveBeenCalledWith("Resolving GET /test/req1");
+				expect(await req1).toBe(1);
+			});
+
+			it("request pauses, resumes, and completes within another requests expiration", async () => {
+				// Request 1: ================
+				// Request 2:   ====    ====
+
+				const req2Duration = config.durationMs;
+				const req1Duration = config.durationMs * 2;
+				config.durationMs = req1Duration;
+
+				// Create initial request
+				const req1 = mockFetch("/req1").then(() => 1);
+
+				// After some time create second request
+				jest.advanceTimersByTime(req2Duration / 4);
+				config.durationMs = req2Duration;
+				const req2 = mockFetch("/req2").then(() => 2);
+
+				// After half of req2 duration, pause it
+				jest.advanceTimersByTime(req2Duration / 2);
+				config.pause("2");
+
+				// Advance time past req2 old timer and ensure it didn't do anything.
+				// Resume req2
+				jest.advanceTimersByTime(req2Duration / 2 + 1);
+				expect(config.log).not.toHaveBeenCalled();
+				config.resume("2");
+
+				// Complete req2
+				jest.advanceTimersByTime(req2Duration / 2 + 1);
+				expect(config.log).toHaveBeenCalledTimes(1);
+				expect(config.log).toHaveBeenNthCalledWith(1, "Resolving GET /req2");
+				expect(await req2).toBe(2);
+
+				// Complete req1
+				jest.advanceTimersByTime(req2Duration / 4 + 1);
+				expect(config.log).toHaveBeenCalledTimes(2);
+				expect(config.log).toHaveBeenNthCalledWith(2, "Resolving GET /req1");
+				expect(await req1).toBe(1);
+			});
+
+			it("request pauses and resumes within another request but completes after", async () => {
+				// Request 1: ================
+				// Request 2:   ====        ====
+
+				const req2Duration = config.durationMs;
+				const req1Duration = config.durationMs * 2;
+				config.durationMs = req1Duration;
+
+				// Create initial request
+				const req1 = mockFetch("/req1").then(() => 1);
+
+				// After some time create second request
+				jest.advanceTimersByTime(req2Duration / 4);
+				config.durationMs = req2Duration;
+				const req2 = mockFetch("/req2").then(() => 2);
+
+				// After half of req2 duration, pause it
+				jest.advanceTimersByTime(req2Duration / 2);
+				config.pause("2");
+
+				// Advance time past req2 old timer and ensure it didn't do anything.
+				// Advance time enough such that req2 will complete after req1.
+				jest.advanceTimersByTime(req2Duration + 1);
+				expect(config.log).not.toHaveBeenCalled();
+				config.resume("2");
+
+				// Complete req1
+				jest.advanceTimersByTime(req2Duration / 4 + 1);
+				expect(config.log).toHaveBeenCalledTimes(1);
+				expect(config.log).toHaveBeenNthCalledWith(1, "Resolving GET /req1");
+				expect(await req1).toBe(1);
+
+				// Complete req2
+				jest.advanceTimersByTime(req2Duration / 4 + 1);
+				expect(config.log).toHaveBeenCalledTimes(2);
+				expect(config.log).toHaveBeenNthCalledWith(2, "Resolving GET /req2");
+				expect(await req2).toBe(2);
+			});
+
+			it("delayed pause should not block existing requests", async () => {
+				// Request 1: =============
+				// Request 2:    =====         =====
+
+				const req1 = mockFetch("/test/req1").then(() => 1);
+				jest.advanceTimersByTime(config.durationMs / 3);
+
+				const req2 = mockFetch("/test/req2").then(() => 2);
+
+				jest.advanceTimersByTime(config.durationMs / 3);
+				config.pause("2");
+
+				jest.advanceTimersByTime(config.durationMs / 3 + 1);
+				expect(config.log).toHaveBeenCalledTimes(1);
+				expect(config.log).toHaveBeenCalledWith("Resolving GET /test/req1");
+				expect(await req1).toBe(1);
+
+				config.resume("2");
+				jest.advanceTimersByTime(config.durationMs * (2 / 3) + 1);
+
+				expect(config.log).toHaveBeenCalledTimes(2);
+				expect(config.log).toHaveBeenCalledWith("Resolving GET /test/req2");
+				expect(await req2).toBe(2);
+			});
+		});
+
+		describe("areNewRequestsPaused", () => {});
 	});
 
 	describe("interactive mode", () => {});
