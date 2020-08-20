@@ -14,9 +14,11 @@ export function runTests(frameworkName) {
 			`dist/frameworks/${frameworkName}/${appName}/index.html`
 		);
 		if (fs.existsSync(htmlPath)) {
-			run(frameworkName, () => {
-				const htmlUrl = pathToFileURL(htmlPath).toString();
-				return page.goto(htmlUrl);
+			run(frameworkName, options => {
+				const htmlUrl = pathToFileURL(htmlPath);
+				htmlUrl.searchParams.append("test", "1");
+
+				return page.goto(htmlUrl.toString(), options);
 			});
 		}
 	}
