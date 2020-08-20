@@ -482,7 +482,66 @@ describe("mockFetch library", () => {
 			});
 		});
 
-		describe("areNewRequestsPaused", () => {});
+		describe("areNewRequestsPaused", () => {
+			it("should pause all new requests", async () => {
+				// set to true
+				config.areNewRequestsPaused = true;
+
+				// create two requests
+				const req1 = mockFetch("/req1").then(() => 1);
+				const req2 = mockFetch("/req2").then(() => 2);
+
+				// verified paused
+				jest.advanceTimersByTime(config.durationMs + 1);
+				expect(config.log).not.toHaveBeenCalled();
+
+				// turn off
+				config.areNewRequestsPaused = false;
+
+				// create another request
+				const req3 = mockFetch("/req3").then(() => 3);
+
+				// verify it resolves
+				jest.advanceTimersByTime(config.durationMs + 1);
+				expect(config.log).toHaveBeenCalledTimes(1);
+				expect(config.log).toHaveBeenNthCalledWith(1, "Resolving GET /req3");
+				expect(await req3).toBe(3);
+
+				// resume two paused requests
+				config.resume("1");
+				config.resume("2");
+
+				// verify they resolve
+				jest.advanceTimersByTime(config.durationMs + 1);
+				expect(config.log).toHaveBeenCalledTimes(3);
+				expect(config.log).toHaveBeenNthCalledWith(2, "Resolving GET /req1");
+				expect(config.log).toHaveBeenNthCalledWith(3, "Resolving GET /req2");
+				expect(await req1).toBe(1);
+				expect(await req2).toBe(2);
+			});
+
+			it("should not affect exiting requests", async () => {
+				const req1 = mockFetch("/req1").then(() => 1);
+
+				jest.advanceTimersByTime(config.durationMs / 2);
+				config.areNewRequestsPaused = true;
+				const req2 = mockFetch("/req2").then(() => 2);
+
+				jest.advanceTimersByTime(config.durationMs / 2 + 1);
+				expect(config.log).toHaveBeenCalledTimes(1);
+				expect(config.log).toHaveBeenNthCalledWith(1, "Resolving GET /req1");
+				expect(await req1).toBe(1);
+
+				jest.advanceTimersByTime(config.durationMs / 2 + 1);
+				expect(config.log).toHaveBeenCalledTimes(1);
+				config.resume("2");
+
+				jest.advanceTimersByTime(config.durationMs);
+				expect(config.log).toHaveBeenCalledTimes(2);
+				expect(config.log).toHaveBeenNthCalledWith(2, "Resolving GET /req2");
+				expect(await req2).toBe(2);
+			});
+		});
 	});
 
 	describe("interactive mode", () => {});
