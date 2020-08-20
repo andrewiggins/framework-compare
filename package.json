@@ -5,7 +5,7 @@
   "description": "Compare implementations of some basic webpages in different frameworks",
   "main": "index.js",
   "scripts": {
-    "build": "rimraf dist && yarn workspaces run build && node ./scripts/build.js",
+    "build": "rimraf dist && yarn workspaces run build",
     "dev": "node ./scripts/dev.js",
     "deploy": "yarn build && yarn test && node ./scripts/deploy.js",
     "serve": "serve -c scripts/serve.json",
