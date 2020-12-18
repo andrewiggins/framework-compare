@@ -1,41 +1,4 @@
-/**
- * @typedef Timer
- * @property {number} expiresAt
- * @property {number} timeoutId
- */
-
-/**
- * @typedef {string} RequestId
- *
- * @typedef Request
- * @property {RequestId} id
- * @property {number | null} expiresAt When this request should resolve. If
- * null, request is paused and not scheduled to complete
- * @property {number} duration Total time this request should wait
- * @property {number | null} elapsedTime Tracks how much time of duration has
- * elapsed when a request is paused/resumed
- * @property {string} name Display name of request
- * @property {string} url
- * @property {RequestInit} options
- * @property {Promise<void>} promise
- * @property {() => void} resolve
- * @property {() => void} reject
- */
-
-/**
- * @typedef Config
- * @property {number} durationMs
- * @property {boolean} areNewRequestsPaused
- * @property {'auto' | 'interactive'} mode
- * @property {() => string} newId
- * @property {Timer | null} timer
- * @property {Map<string, Request>} requests
- * @property {(id: RequestId) => void} pause
- * @property {(id: RequestId) => void} resume
- * @property {(...msg: any[]) => void} log
- */
-
-/** @returns {Config} */
+/** @returns {import('./mockFetch').Config} */
 export function createMockFetchConfig() {
 	let id = 0;
 
@@ -133,7 +96,7 @@ export function createMockFetchConfig() {
 }
 
 /**
- * @param {Config} config
+ * @param {import('./mockFetch').Config} config
  */
 export function createMockFetch(config) {
 	/**
@@ -158,7 +121,7 @@ export function createMockFetch(config) {
 			// };
 		});
 
-		/** @type {Request} */
+		/** @type {import('./mockFetch').Request} */
 		const request = {
 			id: config.newId(),
 			duration: config.durationMs,
@@ -186,7 +149,7 @@ export function createMockFetch(config) {
 }
 
 /**
- * @param {Config} config
+ * @param {import('./mockFetch').Config} config
  */
 function scheduleUpdate(config) {
 	if (config.requests.size == 0) {
@@ -201,10 +164,10 @@ function scheduleUpdate(config) {
 }
 
 /**
- * @param {Config} config
+ * @param {import('./mockFetch').Config} config
  */
 function setTimer(config) {
-	/** @type {Request} Request with the next expiration */
+	/** @type {import('./mockFetch').Request} Request with the next expiration */
 	let nextRequest = null;
 	for (let request of config.requests.values()) {
 		if (nextRequest == null || request.expiresAt < nextRequest.expiresAt) {
@@ -238,7 +201,7 @@ function setTimer(config) {
 }
 
 /**
- * @param {Config} config
+ * @param {import('./mockFetch').Config} config
  */
 function resolveRequests(config) {
 	const now = Date.now();
