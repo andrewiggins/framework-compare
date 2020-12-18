@@ -4,7 +4,9 @@ const babel = require("@rollup/plugin-babel").default;
 const { generateConfigs } = require("../bundleHelpers");
 
 const plugins = () => [
-	svelte(),
+	svelte({
+		extensions: [".html"]
+	}),
 	babel({
 		babelHelpers: "bundled",
 		extensions: DEFAULT_EXTENSIONS.concat([".html"])

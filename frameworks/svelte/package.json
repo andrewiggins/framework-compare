@@ -8,12 +8,12 @@
     "watch": "rollup -c rollup.config.js --watch"
   },
   "dependencies": {
-    "svelte": "^3.6.1"
+    "svelte": "^3.31.0"
   },
   "devDependencies": {
     "@babel/core": "^7.12.10",
     "@babel/preset-env": "^7.12.11",
     "@rollup/plugin-babel": "5.2.2",
-    "rollup-plugin-svelte": "^5.2.3"
+    "rollup-plugin-svelte": "^7.0.0"
   }
 }

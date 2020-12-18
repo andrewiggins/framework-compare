@@ -247,9 +247,9 @@ async function build(requests) {
 		workspaceNames = allPkgs.map(pkg => pkg.name);
 		await rimrafAsync(outputPath());
 	} else {
-		workspaceNames = allPkgs.filter(
-			pkg => requests.find(r => pkg.name.startsWith(r)) != null
-		);
+		workspaceNames = allPkgs
+			.filter(pkg => requests.find(r => pkg.name.startsWith(r)) != null)
+			.map(pkg => pkg.name);
 	}
 
 	if (workspaceNames == null || workspaceNames.length == 0) {
