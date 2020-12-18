@@ -198,6 +198,16 @@ async function buildSiteAssets() {
 	console.time(stage3);
 	await Promise.all([buildSassBundles(), buildJSBundles()]);
 	console.timeEnd(stage3);
+
+	let sizeData = {};
+	for (let framework of frameworkData) {
+		sizeData[framework.id] = {};
+		for (let app of framework.apps) {
+			sizeData[framework.id][app.appId] = app.totalSizes;
+		}
+	}
+
+	await writeFile(p("sizes.json"), JSON.stringify(sizeData, null, 2), "utf8");
 }
 
 /**
