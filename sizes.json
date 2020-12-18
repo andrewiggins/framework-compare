@@ -199,34 +199,34 @@
   },
   "vue": {
     "hello-world": {
-      "raw": 185589,
-      "minified": 37741,
-      "gzip": 15128,
-      "brotli": 13802
+      "raw": 208452,
+      "minified": 42671,
+      "gzip": 16848,
+      "brotli": 15357
     },
     "7GUIs-counter": {
-      "raw": 186946,
-      "minified": 38206,
-      "gzip": 15356,
-      "brotli": 14061
+      "raw": 209796,
+      "minified": 43110,
+      "gzip": 17074,
+      "brotli": 15571
     },
     "7GUIs-temp-converter": {
-      "raw": 190751,
-      "minified": 39445,
-      "gzip": 15782,
-      "brotli": 14389
+      "raw": 213835,
+      "minified": 44374,
+      "gzip": 17476,
+      "brotli": 15964
     },
     "7GUIs-flight-booker": {
-      "raw": 194684,
-      "minified": 41636,
-      "gzip": 16539,
-      "brotli": 15179
+      "raw": 217914,
+      "minified": 46585,
+      "gzip": 18267,
+      "brotli": 16643
     },
     "7GUIs-timer": {
-      "raw": 192374,
-      "minified": 40162,
-      "gzip": 16105,
-      "brotli": 14719
+      "raw": 215456,
+      "minified": 45080,
+      "gzip": 17807,
+      "brotli": 16241
     }
   }
 }

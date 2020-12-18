@@ -8,11 +8,11 @@ const { generateConfigs } = require("../bundleHelpers");
 
 module.exports = generateConfigs("vue", environment => [
 	// @ts-ignore
+	vue(),
+	// @ts-ignore
 	replace({
 		"process.env.NODE_ENV": JSON.stringify(environment)
 	}),
 	// @ts-ignore
-	commonjs(),
-	// @ts-ignore
-	vue()
+	commonjs()
 ]);
