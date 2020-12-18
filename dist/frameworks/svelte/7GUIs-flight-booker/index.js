@@ -37,6 +37,10 @@
     return a != a ? b == b : a !== b || a && typeof a === 'object' || typeof a === 'function';
   }
 
+  function is_empty(obj) {
+    return Object.keys(obj).length === 0;
+  }
+
   function append(target, node) {
     target.appendChild(node);
   }
@@ -78,13 +82,11 @@
 
   function set_data(text, data) {
     data = '' + data;
-    if (text.data !== data) text.data = data;
+    if (text.wholeText !== data) text.data = data;
   }
 
   function set_input_value(input, value) {
-    if (value != null || input.value) {
-      input.value = value;
-    }
+    input.value = value == null ? '' : value;
   }
 
   function select_option(select, value) {
@@ -147,6 +149,7 @@
         update(component.$$);
       }
 
+      set_current_component(null);
       dirty_components.length = 0;
 
       while (binding_callbacks.length) {
@@ -299,14 +302,15 @@
       context: new Map(parent_component ? parent_component.$$.context : []),
       // everything else
       callbacks: blank_object(),
-      dirty: dirty
+      dirty: dirty,
+      skip_bound: false
     };
     var ready = false;
     $$.ctx = instance ? instance(component, prop_values, function (i, ret) {
       var value = (arguments.length <= 2 ? 0 : arguments.length - 2) ? arguments.length <= 2 ? undefined : arguments[2] : ret;
 
       if ($$.ctx && not_equal($$.ctx[i], $$.ctx[i] = value)) {
-        if ($$.bound[i]) $$.bound[i](value);
+        if (!$$.skip_bound && $$.bound[i]) $$.bound[i](value);
         if (ready) make_dirty(component, i);
       }
 
@@ -336,6 +340,10 @@
 
     set_current_component(parent_component);
   }
+  /**
+   * Base class for Svelte components. Used when dev=false.
+   */
+
 
   var SvelteComponent = /*#__PURE__*/function () {
     function SvelteComponent() {}
@@ -356,7 +364,12 @@
       };
     };
 
-    _proto3.$set = function $set() {// overridden by instance, if it has props
+    _proto3.$set = function $set($$props) {
+      if (this.$$set && !is_empty($$props)) {
+        this.$$.skip_bound = true;
+        this.$$set($$props);
+        this.$$.skip_bound = false;
+      }
     };
 
     return SvelteComponent;
@@ -422,6 +435,7 @@
     var t1;
     var option1;
     var t2;
+    var mounted;
     var dispose;
     return {
       c: function c() {
@@ -451,7 +465,7 @@
         });
         attr(div, "class", "form-group");
       },
-      m: function m(target, anchor, remount) {
+      m: function m(target, anchor) {
         insert(target, div, anchor);
         append(div, label);
         append(div, select);
@@ -462,16 +476,19 @@
         select_option(select,
         /*tripType*/
         ctx[0]);
-        if (remount) dispose();
-        dispose = listen(select, "change",
-        /*select_change_handler*/
-        ctx[1]);
+
+        if (!mounted) {
+          dispose = listen(select, "change",
+          /*select_change_handler*/
+          ctx[1]);
+          mounted = true;
+        }
       },
       p: function p(ctx, _ref) {
         var dirty = _ref[0];
 
         if (dirty &
-        /*tripType*/
+        /*tripType, returnFlight, oneWayFlight*/
         1) {
           select_option(select,
           /*tripType*/
@@ -482,6 +499,7 @@
       o: noop,
       d: function d(detaching) {
         if (detaching) detach(div);
+        mounted = false;
         dispose();
       }
     };
@@ -495,7 +513,7 @@
       $$invalidate(0, tripType);
     }
 
-    $$self.$set = function ($$props) {
+    $$self.$$set = function ($$props) {
       if ("tripType" in $$props) $$invalidate(0, tripType = $$props.tripType);
     };
 
@@ -553,6 +571,7 @@
     var input;
     var t1;
     var div_class_value;
+    var mounted;
     var dispose;
     var if_block =
     /*errorMsg*/
@@ -583,7 +602,7 @@
         /*errorMsg*/
         ctx[2] ? "has-error" : ""));
       },
-      m: function m(target, anchor, remount) {
+      m: function m(target, anchor) {
         insert(target, div, anchor);
         append(div, label_1);
         append(label_1, t0);
@@ -593,10 +612,13 @@
         ctx[0]);
         append(div, t1);
         if (if_block) if_block.m(div, null);
-        if (remount) dispose();
-        dispose = listen(input, "input",
-        /*input_input_handler*/
-        ctx[5]);
+
+        if (!mounted) {
+          dispose = listen(input, "input",
+          /*input_input_handler*/
+          ctx[5]);
+          mounted = true;
+        }
       },
       p: function p(ctx, _ref) {
         var dirty = _ref[0];
@@ -652,6 +674,7 @@
       d: function d(detaching) {
         if (detaching) detach(div);
         if (if_block) if_block.d();
+        mounted = false;
         dispose();
       }
     };
@@ -670,7 +693,7 @@
       $$invalidate(0, date);
     }
 
-    $$self.$set = function ($$props) {
+    $$self.$$set = function ($$props) {
       if ("label" in $$props) $$invalidate(1, label = $$props.label);
       if ("date" in $$props) $$invalidate(0, date = $$props.date);
       if ("errorMsg" in $$props) $$invalidate(2, errorMsg = $$props.errorMsg);
@@ -700,21 +723,25 @@
   }(SvelteComponent);
 
   function create_fragment$2(ctx) {
+    var triptype;
     var updating_tripType;
     var t0;
+    var dateentry0;
     var updating_date;
     var t1;
+    var dateentry1;
     var updating_date_1;
     var t2;
     var div;
     var button;
     var t3;
     var current;
+    var mounted;
     var dispose;
 
     function triptype_tripType_binding(value) {
       /*triptype_tripType_binding*/
-      ctx[8].call(null, value);
+      ctx[7].call(null, value);
     }
 
     var triptype_props = {};
@@ -727,7 +754,7 @@
       ctx[2];
     }
 
-    var triptype = new TripType({
+    triptype = new TripType({
       props: triptype_props
     });
     binding_callbacks.push(function () {
@@ -736,7 +763,7 @@
 
     function dateentry0_date_binding(value) {
       /*dateentry0_date_binding*/
-      ctx[9].call(null, value);
+      ctx[8].call(null, value);
     }
 
     var dateentry0_props = {
@@ -754,7 +781,7 @@
       ctx[0];
     }
 
-    var dateentry0 = new DateEntry({
+    dateentry0 = new DateEntry({
       props: dateentry0_props
     });
     binding_callbacks.push(function () {
@@ -763,7 +790,7 @@
 
     function dateentry1_date_binding(value) {
       /*dateentry1_date_binding*/
-      ctx[10].call(null, value);
+      ctx[9].call(null, value);
     }
 
     var dateentry1_props = {
@@ -784,7 +811,7 @@
       ctx[1];
     }
 
-    var dateentry1 = new DateEntry({
+    dateentry1 = new DateEntry({
       props: dateentry1_props
     });
     binding_callbacks.push(function () {
@@ -807,7 +834,7 @@
         ctx[5];
         attr(div, "class", "form-group");
       },
-      m: function m(target, anchor, remount) {
+      m: function m(target, anchor) {
         mount_component(triptype, target, anchor);
         insert(target, t0, anchor);
         mount_component(dateentry0, target, anchor);
@@ -818,10 +845,13 @@
         append(div, button);
         append(button, t3);
         current = true;
-        if (remount) dispose();
-        dispose = listen(button, "click",
-        /*bookFlight*/
-        ctx[6]);
+
+        if (!mounted) {
+          dispose = listen(button, "click",
+          /*bookFlight*/
+          ctx[6]);
+          mounted = true;
+        }
       },
       p: function p(ctx, _ref) {
         var dirty = _ref[0];
@@ -915,6 +945,7 @@
         destroy_component(dateentry1, detaching);
         if (detaching) detach(t2);
         if (detaching) detach(div);
+        mounted = false;
         dispose();
       }
     };
@@ -995,7 +1026,7 @@
       }
     };
 
-    return [departing, returning, tripType, departingError, returningError, isBookDisabled, bookFlight, getErrorMessage, triptype_tripType_binding, dateentry0_date_binding, dateentry1_date_binding];
+    return [departing, returning, tripType, departingError, returningError, isBookDisabled, bookFlight, triptype_tripType_binding, dateentry0_date_binding, dateentry1_date_binding];
   }
 
   var FlightBooker = /*#__PURE__*/function (_SvelteComponent) {

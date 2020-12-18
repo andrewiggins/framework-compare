@@ -98,7 +98,7 @@
                 : String(val);
     };
     const replacer = (_key, val) => {
-        if (val instanceof Map) {
+        if (isMap(val)) {
             return {
                 [`Map(${val.size})`]: [...val.entries()].reduce((entries, [key, val]) => {
                     entries[`${key} =>`] = val;
@@ -106,7 +106,7 @@
                 }, {})
             };
         }
-        else if (val instanceof Set) {
+        else if (isSet(val)) {
             return {
                 [`Set(${val.size})`]: [...val.values()]
             };
@@ -117,7 +117,7 @@
         return val;
     };
     const EMPTY_OBJ =  {};
-    const EMPTY_ARR = [];
+    const EMPTY_ARR =  [];
     const NOOP = () => { };
     /**
      * Always return false.
@@ -136,6 +136,8 @@
     const hasOwnProperty = Object.prototype.hasOwnProperty;
     const hasOwn = (val, key) => hasOwnProperty.call(val, key);
     const isArray = Array.isArray;
+    const isMap = (val) => toTypeString(val) === '[object Map]';
+    const isSet = (val) => toTypeString(val) === '[object Set]';
     const isFunction = (val) => typeof val === 'function';
     const isString = (val) => typeof val === 'string';
     const isSymbol = (val) => typeof val === 'symbol';
@@ -146,10 +148,17 @@
     const objectToString = Object.prototype.toString;
     const toTypeString = (value) => objectToString.call(value);
     const toRawType = (value) => {
+        // extract "RawType" from strings like "[object RawType]"
         return toTypeString(value).slice(8, -1);
     };
     const isPlainObject = (val) => toTypeString(val) === '[object Object]';
-    const isReservedProp = /*#__PURE__*/ makeMap('key,ref,' +
+    const isIntegerKey = (key) => isString(key) &&
+        key !== 'NaN' &&
+        key[0] !== '-' &&
+        '' + parseInt(key, 10) === key;
+    const isReservedProp = /*#__PURE__*/ makeMap(
+    // the leading comma is intentional so empty string "" is also included
+    ',key,ref,' +
         'onVnodeBeforeMount,onVnodeMounted,' +
         'onVnodeBeforeUpdate,onVnodeUpdated,' +
         'onVnodeBeforeUnmount,onVnodeUnmounted');
@@ -171,15 +180,15 @@
     /**
      * @private
      */
-    const hyphenate = cacheStringFunction((str) => {
-        return str.replace(hyphenateRE, '-$1').toLowerCase();
-    });
+    const hyphenate = cacheStringFunction((str) => str.replace(hyphenateRE, '-$1').toLowerCase());
     /**
      * @private
      */
-    const capitalize = cacheStringFunction((str) => {
-        return str.charAt(0).toUpperCase() + str.slice(1);
-    });
+    const capitalize = cacheStringFunction((str) => str.charAt(0).toUpperCase() + str.slice(1));
+    /**
+     * @private
+     */
+    const toHandlerKey = cacheStringFunction((str) => (str ? `on${capitalize(str)}` : ``));
     // compare whether a value has changed, accounting for NaN.
     const hasChanged = (value, oldValue) => value !== oldValue && (value === value || oldValue === oldValue);
     const invokeArrayFns = (fns, arg) => {
@@ -193,6 +202,10 @@
             enumerable: false,
             value
         });
+    };
+    const toNumber = (val) => {
+        const n = parseFloat(val);
+        return isNaN(n) ? val : n;
     };
     let _globalThis;
     const getGlobalThis = () => {
@@ -258,6 +271,7 @@
             }
         };
         effect.id = uid++;
+        effect.allowRecurse = !!options.allowRecurse;
         effect._isEffect = true;
         effect.active = true;
         effect.raw = fn;
@@ -314,7 +328,11 @@
         const effects = new Set();
         const add = (effectsToAdd) => {
             if (effectsToAdd) {
-                effectsToAdd.forEach(effect => effects.add(effect));
+                effectsToAdd.forEach(effect => {
+                    if (effect !== activeEffect || effect.allowRecurse) {
+                        effects.add(effect);
+                    }
+                });
             }
         };
         if (type === "clear" /* CLEAR */) {
@@ -335,14 +353,32 @@
                 add(depsMap.get(key));
             }
             // also run for iteration key on ADD | DELETE | Map.SET
-            const isAddOrDelete = type === "add" /* ADD */ ||
-                (type === "delete" /* DELETE */ && !isArray(target));
-            if (isAddOrDelete ||
-                (type === "set" /* SET */ && target instanceof Map)) {
-                add(depsMap.get(isArray(target) ? 'length' : ITERATE_KEY));
-            }
-            if (isAddOrDelete && target instanceof Map) {
-                add(depsMap.get(MAP_KEY_ITERATE_KEY));
+            switch (type) {
+                case "add" /* ADD */:
+                    if (!isArray(target)) {
+                        add(depsMap.get(ITERATE_KEY));
+                        if (isMap(target)) {
+                            add(depsMap.get(MAP_KEY_ITERATE_KEY));
+                        }
+                    }
+                    else if (isIntegerKey(key)) {
+                        // new index added to array -> length changes
+                        add(depsMap.get('length'));
+                    }
+                    break;
+                case "delete" /* DELETE */:
+                    if (!isArray(target)) {
+                        add(depsMap.get(ITERATE_KEY));
+                        if (isMap(target)) {
+                            add(depsMap.get(MAP_KEY_ITERATE_KEY));
+                        }
+                    }
+                    break;
+                case "set" /* SET */:
+                    if (isMap(target)) {
+                        add(depsMap.get(ITERATE_KEY));
+                    }
+                    break;
             }
         }
         const run = (effect) => {
@@ -365,20 +401,30 @@
     const shallowReadonlyGet = /*#__PURE__*/ createGetter(true, true);
     const arrayInstrumentations = {};
     ['includes', 'indexOf', 'lastIndexOf'].forEach(key => {
+        const method = Array.prototype[key];
         arrayInstrumentations[key] = function (...args) {
             const arr = toRaw(this);
             for (let i = 0, l = this.length; i < l; i++) {
                 track(arr, "get" /* GET */, i + '');
             }
             // we run the method using the original args first (which may be reactive)
-            const res = arr[key](...args);
+            const res = method.apply(arr, args);
             if (res === -1 || res === false) {
                 // if that didn't work, run it again using raw values.
-                return arr[key](...args.map(toRaw));
+                return method.apply(arr, args.map(toRaw));
             }
             else {
                 return res;
             }
+        };
+    });
+    ['push', 'pop', 'shift', 'unshift', 'splice'].forEach(key => {
+        const method = Array.prototype[key];
+        arrayInstrumentations[key] = function (...args) {
+            pauseTracking();
+            const res = method.apply(this, args);
+            resetTracking();
+            return res;
         };
     });
     function createGetter(isReadonly = false, shallow = false) {
@@ -390,14 +436,11 @@
                 return isReadonly;
             }
             else if (key === "__v_raw" /* RAW */ &&
-                receiver ===
-                    (isReadonly
-                        ? target["__v_readonly" /* READONLY */]
-                        : target["__v_reactive" /* REACTIVE */])) {
+                receiver === (isReadonly ? readonlyMap : reactiveMap).get(target)) {
                 return target;
             }
             const targetIsArray = isArray(target);
-            if (targetIsArray && hasOwn(arrayInstrumentations, key)) {
+            if (!isReadonly && targetIsArray && hasOwn(arrayInstrumentations, key)) {
                 return Reflect.get(arrayInstrumentations, key, receiver);
             }
             const res = Reflect.get(target, key, receiver);
@@ -413,8 +456,9 @@
                 return res;
             }
             if (isRef(res)) {
-                // ref unwrapping, only for Objects, not for Arrays.
-                return targetIsArray ? res : res.value;
+                // ref unwrapping - does not apply for Array + integer key.
+                const shouldUnwrap = !targetIsArray || !isIntegerKey(key);
+                return shouldUnwrap ? res.value : res;
             }
             if (isObject(res)) {
                 // Convert returned value into a proxy as well. we do the isObject check
@@ -437,7 +481,9 @@
                     return true;
                 }
             }
-            const hadKey = hasOwn(target, key);
+            const hadKey = isArray(target) && isIntegerKey(key)
+                ? Number(key) < target.length
+                : hasOwn(target, key);
             const result = Reflect.set(target, key, value, receiver);
             // don't trigger if target is something up in the prototype chain of original
             if (target === toRaw(receiver)) {
@@ -468,7 +514,7 @@
         return result;
     }
     function ownKeys(target) {
-        track(target, "iterate" /* ITERATE */, ITERATE_KEY);
+        track(target, "iterate" /* ITERATE */, isArray(target) ? 'length' : ITERATE_KEY);
         return Reflect.ownKeys(target);
     }
     const mutableHandlers = {
@@ -480,8 +526,6 @@
     };
     const readonlyHandlers = {
         get: readonlyGet,
-        has,
-        ownKeys,
         set(target, key) {
             return true;
         },
@@ -504,69 +548,75 @@
     const toReadonly = (value) => isObject(value) ? readonly(value) : value;
     const toShallow = (value) => value;
     const getProto = (v) => Reflect.getPrototypeOf(v);
-    function get$1(target, key, wrap) {
-        target = toRaw(target);
+    function get$1(target, key, isReadonly = false, isShallow = false) {
+        // #1772: readonly(reactive(Map)) should return readonly + reactive version
+        // of the value
+        target = target["__v_raw" /* RAW */];
+        const rawTarget = toRaw(target);
         const rawKey = toRaw(key);
         if (key !== rawKey) {
-            track(target, "get" /* GET */, key);
+            !isReadonly && track(rawTarget, "get" /* GET */, key);
         }
-        track(target, "get" /* GET */, rawKey);
-        const { has, get } = getProto(target);
-        if (has.call(target, key)) {
-            return wrap(get.call(target, key));
+        !isReadonly && track(rawTarget, "get" /* GET */, rawKey);
+        const { has } = getProto(rawTarget);
+        const wrap = isReadonly ? toReadonly : isShallow ? toShallow : toReactive;
+        if (has.call(rawTarget, key)) {
+            return wrap(target.get(key));
         }
-        else if (has.call(target, rawKey)) {
-            return wrap(get.call(target, rawKey));
+        else if (has.call(rawTarget, rawKey)) {
+            return wrap(target.get(rawKey));
         }
     }
-    function has$1(key) {
-        const target = toRaw(this);
+    function has$1(key, isReadonly = false) {
+        const target = this["__v_raw" /* RAW */];
+        const rawTarget = toRaw(target);
         const rawKey = toRaw(key);
         if (key !== rawKey) {
-            track(target, "has" /* HAS */, key);
+            !isReadonly && track(rawTarget, "has" /* HAS */, key);
         }
-        track(target, "has" /* HAS */, rawKey);
-        const has = getProto(target).has;
-        return has.call(target, key) || has.call(target, rawKey);
+        !isReadonly && track(rawTarget, "has" /* HAS */, rawKey);
+        return key === rawKey
+            ? target.has(key)
+            : target.has(key) || target.has(rawKey);
     }
-    function size(target) {
-        target = toRaw(target);
-        track(target, "iterate" /* ITERATE */, ITERATE_KEY);
-        return Reflect.get(getProto(target), 'size', target);
+    function size(target, isReadonly = false) {
+        target = target["__v_raw" /* RAW */];
+        !isReadonly && track(toRaw(target), "iterate" /* ITERATE */, ITERATE_KEY);
+        return Reflect.get(target, 'size', target);
     }
     function add(value) {
         value = toRaw(value);
         const target = toRaw(this);
         const proto = getProto(target);
         const hadKey = proto.has.call(target, value);
-        const result = proto.add.call(target, value);
+        target.add(value);
         if (!hadKey) {
             trigger(target, "add" /* ADD */, value, value);
         }
-        return result;
+        return this;
     }
     function set$1(key, value) {
         value = toRaw(value);
         const target = toRaw(this);
-        const { has, get, set } = getProto(target);
+        const { has, get } = getProto(target);
         let hadKey = has.call(target, key);
         if (!hadKey) {
             key = toRaw(key);
             hadKey = has.call(target, key);
         }
         const oldValue = get.call(target, key);
-        const result = set.call(target, key, value);
+        target.set(key, value);
         if (!hadKey) {
             trigger(target, "add" /* ADD */, key, value);
         }
         else if (hasChanged(value, oldValue)) {
             trigger(target, "set" /* SET */, key, value);
         }
-        return result;
+        return this;
     }
     function deleteEntry(key) {
         const target = toRaw(this);
-        const { has, get, delete: del } = getProto(target);
+        const { has, get } = getProto(target);
         let hadKey = has.call(target, key);
         if (!hadKey) {
             key = toRaw(key);
@@ -574,7 +624,7 @@
         }
         const oldValue = get ? get.call(target, key) : undefined;
         // forward the operation before queueing reactions
-        const result = del.call(target, key);
+        const result = target.delete(key);
         if (hadKey) {
             trigger(target, "delete" /* DELETE */, key, undefined);
         }
@@ -584,37 +634,38 @@
         const target = toRaw(this);
         const hadItems = target.size !== 0;
         // forward the operation before queueing reactions
-        const result = getProto(target).clear.call(target);
+        const result = target.clear();
         if (hadItems) {
             trigger(target, "clear" /* CLEAR */, undefined, undefined);
         }
         return result;
     }
-    function createForEach(isReadonly, shallow) {
+    function createForEach(isReadonly, isShallow) {
         return function forEach(callback, thisArg) {
             const observed = this;
-            const target = toRaw(observed);
-            const wrap = isReadonly ? toReadonly : shallow ? toShallow : toReactive;
-            !isReadonly && track(target, "iterate" /* ITERATE */, ITERATE_KEY);
-            // important: create sure the callback is
-            // 1. invoked with the reactive map as `this` and 3rd arg
-            // 2. the value received should be a corresponding reactive/readonly.
-            function wrappedCallback(value, key) {
+            const target = observed["__v_raw" /* RAW */];
+            const rawTarget = toRaw(target);
+            const wrap = isReadonly ? toReadonly : isShallow ? toShallow : toReactive;
+            !isReadonly && track(rawTarget, "iterate" /* ITERATE */, ITERATE_KEY);
+            return target.forEach((value, key) => {
+                // important: make sure the callback is
+                // 1. invoked with the reactive map as `this` and 3rd arg
+                // 2. the value received should be a corresponding reactive/readonly.
                 return callback.call(thisArg, wrap(value), wrap(key), observed);
-            }
-            return getProto(target).forEach.call(target, wrappedCallback);
+            });
         };
     }
-    function createIterableMethod(method, isReadonly, shallow) {
+    function createIterableMethod(method, isReadonly, isShallow) {
         return function (...args) {
-            const target = toRaw(this);
-            const isMap = target instanceof Map;
-            const isPair = method === 'entries' || (method === Symbol.iterator && isMap);
-            const isKeyOnly = method === 'keys' && isMap;
-            const innerIterator = getProto(target)[method].apply(target, args);
-            const wrap = isReadonly ? toReadonly : shallow ? toShallow : toReactive;
+            const target = this["__v_raw" /* RAW */];
+            const rawTarget = toRaw(target);
+            const targetIsMap = isMap(rawTarget);
+            const isPair = method === 'entries' || (method === Symbol.iterator && targetIsMap);
+            const isKeyOnly = method === 'keys' && targetIsMap;
+            const innerIterator = target[method](...args);
+            const wrap = isReadonly ? toReadonly : isShallow ? toShallow : toReactive;
             !isReadonly &&
-                track(target, "iterate" /* ITERATE */, isKeyOnly ? MAP_KEY_ITERATE_KEY : ITERATE_KEY);
+                track(rawTarget, "iterate" /* ITERATE */, isKeyOnly ? MAP_KEY_ITERATE_KEY : ITERATE_KEY);
             // return a wrapped iterator which returns observed versions of the
             // values emitted from the real iterator
             return {
@@ -642,7 +693,7 @@
     }
     const mutableInstrumentations = {
         get(key) {
-            return get$1(this, key, toReactive);
+            return get$1(this, key);
         },
         get size() {
             return size(this);
@@ -656,7 +707,7 @@
     };
     const shallowInstrumentations = {
         get(key) {
-            return get$1(this, key, toShallow);
+            return get$1(this, key, false, true);
         },
         get size() {
             return size(this);
@@ -670,12 +721,14 @@
     };
     const readonlyInstrumentations = {
         get(key) {
-            return get$1(this, key, toReadonly);
+            return get$1(this, key, true);
         },
         get size() {
-            return size(this);
+            return size(this, true);
         },
-        has: has$1,
+        has(key) {
+            return has$1.call(this, key, true);
+        },
         add: createReadonlyMethod("add" /* ADD */),
         set: createReadonlyMethod("set" /* SET */),
         delete: createReadonlyMethod("delete" /* DELETE */),
@@ -719,13 +772,27 @@
         get: createInstrumentationGetter(true, false)
     };
 
-    const collectionTypes = new Set([Set, Map, WeakMap, WeakSet]);
-    const isObservableType = /*#__PURE__*/ makeMap('Object,Array,Map,Set,WeakMap,WeakSet');
-    const canObserve = (value) => {
-        return (!value["__v_skip" /* SKIP */] &&
-            isObservableType(toRawType(value)) &&
-            !Object.isFrozen(value));
-    };
+    const reactiveMap = new WeakMap();
+    const readonlyMap = new WeakMap();
+    function targetTypeMap(rawType) {
+        switch (rawType) {
+            case 'Object':
+            case 'Array':
+                return 1 /* COMMON */;
+            case 'Map':
+            case 'Set':
+            case 'WeakMap':
+            case 'WeakSet':
+                return 2 /* COLLECTION */;
+            default:
+                return 0 /* INVALID */;
+        }
+    }
+    function getTargetType(value) {
+        return value["__v_skip" /* SKIP */] || !Object.isExtensible(value)
+            ? 0 /* INVALID */
+            : targetTypeMap(toRawType(value));
+    }
     function reactive(target) {
         // if trying to observe a readonly proxy, return the readonly version.
         if (target && target["__v_isReadonly" /* IS_READONLY */]) {
@@ -733,12 +800,18 @@
         }
         return createReactiveObject(target, false, mutableHandlers, mutableCollectionHandlers);
     }
-    // Return a reactive-copy of the original object, where only the root level
-    // properties are reactive, and does NOT unwrap refs nor recursively convert
-    // returned properties.
+    /**
+     * Return a shallowly-reactive copy of the original object, where only the root
+     * level properties are reactive. It also does not auto-unwrap refs (even at the
+     * root level).
+     */
     function shallowReactive(target) {
         return createReactiveObject(target, false, shallowReactiveHandlers, shallowCollectionHandlers);
     }
+    /**
+     * Creates a readonly copy of the original object. Note the returned copy is not
+     * made reactive, but `readonly` can be called on an already reactive object.
+     */
     function readonly(target) {
         return createReactiveObject(target, true, readonlyHandlers, readonlyCollectionHandlers);
     }
@@ -753,19 +826,19 @@
             return target;
         }
         // target already has corresponding Proxy
-        const reactiveFlag = isReadonly
-            ? "__v_readonly" /* READONLY */
-            : "__v_reactive" /* REACTIVE */;
-        if (hasOwn(target, reactiveFlag)) {
-            return target[reactiveFlag];
+        const proxyMap = isReadonly ? readonlyMap : reactiveMap;
+        const existingProxy = proxyMap.get(target);
+        if (existingProxy) {
+            return existingProxy;
         }
         // only a whitelist of value types can be observed.
-        if (!canObserve(target)) {
+        const targetType = getTargetType(target);
+        if (targetType === 0 /* INVALID */) {
             return target;
         }
-        const observed = new Proxy(target, collectionTypes.has(target.constructor) ? collectionHandlers : baseHandlers);
-        def(target, reactiveFlag, observed);
-        return observed;
+        const proxy = new Proxy(target, targetType === 2 /* COLLECTION */ ? collectionHandlers : baseHandlers);
+        proxyMap.set(target, proxy);
+        return proxy;
     }
     function isReactive(value) {
         if (isReadonly(value)) {
@@ -783,7 +856,7 @@
         return ((observed && toRaw(observed["__v_raw" /* RAW */])) || observed);
     }
     function isRef(r) {
-        return r ? r.__v_isRef === true : false;
+        return Boolean(r && r.__v_isRef === true);
     }
     function unref(ref) {
         return isRef(ref) ? ref.value : ref;
@@ -806,7 +879,53 @@
             ? objectWithRefs
             : new Proxy(objectWithRefs, shallowUnwrapHandlers);
     }
+    class ObjectRefImpl {
+        constructor(_object, _key) {
+            this._object = _object;
+            this._key = _key;
+            this.__v_isRef = true;
+        }
+        get value() {
+            return this._object[this._key];
+        }
+        set value(newVal) {
+            this._object[this._key] = newVal;
+        }
+    }
+    function toRef(object, key) {
+        return isRef(object[key])
+            ? object[key]
+            : new ObjectRefImpl(object, key);
+    }
 
+    class ComputedRefImpl {
+        constructor(getter, _setter, isReadonly) {
+            this._setter = _setter;
+            this._dirty = true;
+            this.__v_isRef = true;
+            this.effect = effect(getter, {
+                lazy: true,
+                scheduler: () => {
+                    if (!this._dirty) {
+                        this._dirty = true;
+                        trigger(toRaw(this), "set" /* SET */, 'value');
+                    }
+                }
+            });
+            this["__v_isReadonly" /* IS_READONLY */] = isReadonly;
+        }
+        get value() {
+            if (this._dirty) {
+                this._value = this.effect();
+                this._dirty = false;
+            }
+            track(toRaw(this), "get" /* GET */, 'value');
+            return this._value;
+        }
+        set value(newValue) {
+            this._setter(newValue);
+        }
+    }
     function computed(getterOrOptions) {
         let getter;
         let setter;
@@ -818,36 +937,7 @@
             getter = getterOrOptions.get;
             setter = getterOrOptions.set;
         }
-        let dirty = true;
-        let value;
-        let computed;
-        const runner = effect(getter, {
-            lazy: true,
-            scheduler: () => {
-                if (!dirty) {
-                    dirty = true;
-                    trigger(computed, "set" /* SET */, 'value');
-                }
-            }
-        });
-        computed = {
-            __v_isRef: true,
-            ["__v_isReadonly" /* IS_READONLY */]: isFunction(getterOrOptions) || !getterOrOptions.set,
-            // expose effect so computed can be stopped
-            effect: runner,
-            get value() {
-                if (dirty) {
-                    value = runner();
-                    dirty = false;
-                }
-                track(computed, "get" /* GET */, 'value');
-                return value;
-            },
-            set value(newValue) {
-                setter(newValue);
-            }
-        };
-        return computed;
+        return new ComputedRefImpl(getter, setter, isFunction(getterOrOptions) || !getterOrOptions.set);
     }
 
     const stack = [];
@@ -983,7 +1073,7 @@
         }
         return values;
     }
-    function handleError(err, instance, type) {
+    function handleError(err, instance, type, throwInDev = true) {
         const contextVNode = instance ? instance.vnode : null;
         if (instance) {
             let cur = instance.parent;
@@ -995,7 +1085,7 @@
                 const errorCapturedHooks = cur.ec;
                 if (errorCapturedHooks) {
                     for (let i = 0; i < errorCapturedHooks.length; i++) {
-                        if (errorCapturedHooks[i](err, exposedInstance, errorInfo)) {
+                        if (errorCapturedHooks[i](err, exposedInstance, errorInfo) === false) {
                             return;
                         }
                     }
@@ -1009,54 +1099,46 @@
                 return;
             }
         }
-        logError(err);
+        logError(err, type, contextVNode, throwInDev);
     }
-    function logError(err, type, contextVNode) {
+    function logError(err, type, contextVNode, throwInDev = true) {
         {
             // recover in prod to reduce the impact on end-user
             console.error(err);
         }
     }
 
-    const queue = [];
-    const postFlushCbs = [];
-    const resolvedPromise = Promise.resolve();
-    let currentFlushPromise = null;
     let isFlushing = false;
     let isFlushPending = false;
-    let flushIndex = -1;
-    let pendingPostFlushCbs = null;
-    let pendingPostFlushIndex = 0;
+    const queue = [];
+    let flushIndex = 0;
+    const pendingPreFlushCbs = [];
+    let activePreFlushCbs = null;
+    let preFlushIndex = 0;
+    const pendingPostFlushCbs = [];
+    let activePostFlushCbs = null;
+    let postFlushIndex = 0;
+    const resolvedPromise = Promise.resolve();
+    let currentFlushPromise = null;
+    let currentPreFlushParentJob = null;
+    const RECURSION_LIMIT = 100;
     function nextTick(fn) {
         const p = currentFlushPromise || resolvedPromise;
-        return fn ? p.then(fn) : p;
+        return fn ? p.then(this ? fn.bind(this) : fn) : p;
     }
     function queueJob(job) {
-        if (!queue.includes(job, flushIndex + 1)) {
+        // the dedupe search uses the startIndex argument of Array.includes()
+        // by default the search index includes the current job that is being run
+        // so it cannot recursively trigger itself again.
+        // if the job is a watch() callback, the search will start with a +1 index to
+        // allow it recursively trigger itself - it is the user's responsibility to
+        // ensure it doesn't end up in an infinite loop.
+        if ((!queue.length ||
+            !queue.includes(job, isFlushing && job.allowRecurse ? flushIndex + 1 : flushIndex)) &&
+            job !== currentPreFlushParentJob) {
             queue.push(job);
             queueFlush();
         }
-    }
-    function invalidateJob(job) {
-        const i = queue.indexOf(job);
-        if (i > -1) {
-            queue[i] = null;
-        }
-    }
-    function queuePostFlushCb(cb) {
-        if (!isArray(cb)) {
-            if (!pendingPostFlushCbs ||
-                !pendingPostFlushCbs.includes(cb, pendingPostFlushIndex + 1)) {
-                postFlushCbs.push(cb);
-            }
-        }
-        else {
-            // if cb is an array, it is a component lifecycle hook which can only be
-            // triggered by a job, which is already deduped in the main queue, so
-            // we can skip dupicate check here to improve perf
-            postFlushCbs.push(...cb);
-        }
-        queueFlush();
     }
     function queueFlush() {
         if (!isFlushing && !isFlushPending) {
@@ -1064,21 +1146,71 @@
             currentFlushPromise = resolvedPromise.then(flushJobs);
         }
     }
-    function flushPostFlushCbs(seen) {
-        if (postFlushCbs.length) {
-            pendingPostFlushCbs = [...new Set(postFlushCbs)];
-            postFlushCbs.length = 0;
-            for (pendingPostFlushIndex = 0; pendingPostFlushIndex < pendingPostFlushCbs.length; pendingPostFlushIndex++) {
-                pendingPostFlushCbs[pendingPostFlushIndex]();
-            }
-            pendingPostFlushCbs = null;
-            pendingPostFlushIndex = 0;
+    function invalidateJob(job) {
+        const i = queue.indexOf(job);
+        if (i > -1) {
+            queue.splice(i, 1);
         }
     }
-    const getId = (job) => (job.id == null ? Infinity : job.id);
+    function queueCb(cb, activeQueue, pendingQueue, index) {
+        if (!isArray(cb)) {
+            if (!activeQueue ||
+                !activeQueue.includes(cb, cb.allowRecurse ? index + 1 : index)) {
+                pendingQueue.push(cb);
+            }
+        }
+        else {
+            // if cb is an array, it is a component lifecycle hook which can only be
+            // triggered by a job, which is already deduped in the main queue, so
+            // we can skip duplicate check here to improve perf
+            pendingQueue.push(...cb);
+        }
+        queueFlush();
+    }
+    function queuePreFlushCb(cb) {
+        queueCb(cb, activePreFlushCbs, pendingPreFlushCbs, preFlushIndex);
+    }
+    function queuePostFlushCb(cb) {
+        queueCb(cb, activePostFlushCbs, pendingPostFlushCbs, postFlushIndex);
+    }
+    function flushPreFlushCbs(seen, parentJob = null) {
+        if (pendingPreFlushCbs.length) {
+            currentPreFlushParentJob = parentJob;
+            activePreFlushCbs = [...new Set(pendingPreFlushCbs)];
+            pendingPreFlushCbs.length = 0;
+            for (preFlushIndex = 0; preFlushIndex < activePreFlushCbs.length; preFlushIndex++) {
+                activePreFlushCbs[preFlushIndex]();
+            }
+            activePreFlushCbs = null;
+            preFlushIndex = 0;
+            currentPreFlushParentJob = null;
+            // recursively flush until it drains
+            flushPreFlushCbs(seen, parentJob);
+        }
+    }
+    function flushPostFlushCbs(seen) {
+        if (pendingPostFlushCbs.length) {
+            const deduped = [...new Set(pendingPostFlushCbs)];
+            pendingPostFlushCbs.length = 0;
+            // #1947 already has active queue, nested flushPostFlushCbs call
+            if (activePostFlushCbs) {
+                activePostFlushCbs.push(...deduped);
+                return;
+            }
+            activePostFlushCbs = deduped;
+            activePostFlushCbs.sort((a, b) => getId(a) - getId(b));
+            for (postFlushIndex = 0; postFlushIndex < activePostFlushCbs.length; postFlushIndex++) {
+                activePostFlushCbs[postFlushIndex]();
+            }
+            activePostFlushCbs = null;
+            postFlushIndex = 0;
+        }
+    }
+    const getId = (job) => job.id == null ? Infinity : job.id;
     function flushJobs(seen) {
         isFlushPending = false;
         isFlushing = true;
+        flushPreFlushCbs(seen);
         // Sort queue before flush.
         // This ensures that:
         // 1. Components are updated from parent to child. (because parent is always
@@ -1086,42 +1218,154 @@
         //    priority number)
         // 2. If a component is unmounted during a parent component's update,
         //    its update can be skipped.
-        // Jobs can never be null before flush starts, since they are only invalidated
-        // during execution of another flushed job.
         queue.sort((a, b) => getId(a) - getId(b));
-        for (flushIndex = 0; flushIndex < queue.length; flushIndex++) {
-            const job = queue[flushIndex];
-            if (job) {
-                callWithErrorHandling(job, null, 14 /* SCHEDULER */);
+        try {
+            for (flushIndex = 0; flushIndex < queue.length; flushIndex++) {
+                const job = queue[flushIndex];
+                if (job) {
+                    if (("production" !== 'production')) ;
+                    callWithErrorHandling(job, null, 14 /* SCHEDULER */);
+                }
             }
         }
-        flushIndex = -1;
-        queue.length = 0;
-        flushPostFlushCbs();
-        isFlushing = false;
-        currentFlushPromise = null;
-        // some postFlushCb queued jobs!
-        // keep flushing until it drains.
-        if (queue.length || postFlushCbs.length) {
-            flushJobs();
+        finally {
+            flushIndex = 0;
+            queue.length = 0;
+            flushPostFlushCbs();
+            isFlushing = false;
+            currentFlushPromise = null;
+            // some postFlushCb queued jobs!
+            // keep flushing until it drains.
+            if (queue.length || pendingPostFlushCbs.length) {
+                flushJobs(seen);
+            }
+        }
+    }
+    function checkRecursiveUpdates(seen, fn) {
+        if (!seen.has(fn)) {
+            seen.set(fn, 1);
+        }
+        else {
+            const count = seen.get(fn);
+            if (count > RECURSION_LIMIT) {
+                throw new Error(`Maximum recursive updates exceeded. ` +
+                    `This means you have a reactive effect that is mutating its own ` +
+                    `dependencies and thus recursively triggering itself. Possible sources ` +
+                    `include component template, render function, updated hook or ` +
+                    `watcher source function.`);
+            }
+            else {
+                seen.set(fn, count + 1);
+            }
         }
     }
 
-    // mark the current rendering instance for asset resolution (e.g.
-    // resolveComponent, resolveDirective) during render
+    function emit(instance, event, ...rawArgs) {
+        const props = instance.vnode.props || EMPTY_OBJ;
+        let args = rawArgs;
+        const isModelListener = event.startsWith('update:');
+        // for v-model update:xxx events, apply modifiers on args
+        const modelArg = isModelListener && event.slice(7);
+        if (modelArg && modelArg in props) {
+            const modifiersKey = `${modelArg === 'modelValue' ? 'model' : modelArg}Modifiers`;
+            const { number, trim } = props[modifiersKey] || EMPTY_OBJ;
+            if (trim) {
+                args = rawArgs.map(a => a.trim());
+            }
+            else if (number) {
+                args = rawArgs.map(toNumber);
+            }
+        }
+        if ( __VUE_PROD_DEVTOOLS__) ;
+        // convert handler name to camelCase. See issue #2249
+        let handlerName = toHandlerKey(camelize(event));
+        let handler = props[handlerName];
+        // for v-model update:xxx events, also trigger kebab-case equivalent
+        // for props passed via kebab-case
+        if (!handler && isModelListener) {
+            handlerName = toHandlerKey(hyphenate(event));
+            handler = props[handlerName];
+        }
+        if (handler) {
+            callWithAsyncErrorHandling(handler, instance, 6 /* COMPONENT_EVENT_HANDLER */, args);
+        }
+        const onceHandler = props[handlerName + `Once`];
+        if (onceHandler) {
+            if (!instance.emitted) {
+                (instance.emitted = {})[handlerName] = true;
+            }
+            else if (instance.emitted[handlerName]) {
+                return;
+            }
+            callWithAsyncErrorHandling(onceHandler, instance, 6 /* COMPONENT_EVENT_HANDLER */, args);
+        }
+    }
+    function normalizeEmitsOptions(comp, appContext, asMixin = false) {
+        if (!appContext.deopt && comp.__emits !== undefined) {
+            return comp.__emits;
+        }
+        const raw = comp.emits;
+        let normalized = {};
+        // apply mixin/extends props
+        let hasExtends = false;
+        if (__VUE_OPTIONS_API__ && !isFunction(comp)) {
+            const extendEmits = (raw) => {
+                hasExtends = true;
+                extend(normalized, normalizeEmitsOptions(raw, appContext, true));
+            };
+            if (!asMixin && appContext.mixins.length) {
+                appContext.mixins.forEach(extendEmits);
+            }
+            if (comp.extends) {
+                extendEmits(comp.extends);
+            }
+            if (comp.mixins) {
+                comp.mixins.forEach(extendEmits);
+            }
+        }
+        if (!raw && !hasExtends) {
+            return (comp.__emits = null);
+        }
+        if (isArray(raw)) {
+            raw.forEach(key => (normalized[key] = null));
+        }
+        else {
+            extend(normalized, raw);
+        }
+        return (comp.__emits = normalized);
+    }
+    // Check if an incoming prop key is a declared emit event listener.
+    // e.g. With `emits: { click: null }`, props named `onClick` and `onclick` are
+    // both considered matched listeners.
+    function isEmitListener(options, key) {
+        if (!options || !isOn(key)) {
+            return false;
+        }
+        key = key.slice(2).replace(/Once$/, '');
+        return (hasOwn(options, key[0].toLowerCase() + key.slice(1)) ||
+            hasOwn(options, hyphenate(key)) ||
+            hasOwn(options, key));
+    }
+
+    /**
+     * mark the current rendering instance for asset resolution (e.g.
+     * resolveComponent, resolveDirective) during render
+     */
     let currentRenderingInstance = null;
     function setCurrentRenderingInstance(instance) {
         currentRenderingInstance = instance;
     }
-    // dev only flag to track whether $attrs was used during render.
-    // If $attrs was used during render then the warning for failed attrs
-    // fallthrough can be suppressed.
+    /**
+     * dev only flag to track whether $attrs was used during render.
+     * If $attrs was used during render then the warning for failed attrs
+     * fallthrough can be suppressed.
+     */
     let accessedAttrs = false;
     function markAttrsAccessed() {
         accessedAttrs = true;
     }
     function renderComponentRoot(instance) {
-        const { type: Component, parent, vnode, proxy, withProxy, props, slots, attrs, emit, render, renderCache, data, setupState, ctx } = instance;
+        const { type: Component, vnode, proxy, withProxy, props, propsOptions: [propsOptions], slots, attrs, emit, render, renderCache, data, setupState, ctx } = instance;
         let result;
         currentRenderingInstance = instance;
         try {
@@ -1137,9 +1381,7 @@
                 // functional
                 const render = Component;
                 // in dev, mark attrs accessed if optional props (attrs === props)
-                if (("production" !== 'production') && attrs === props) {
-                    markAttrsAccessed();
-                }
+                if (("production" !== 'production') && attrs === props) ;
                 result = normalizeVNode(render.length > 1
                     ? render(props, ("production" !== 'production')
                         ? {
@@ -1161,94 +1403,36 @@
             // to have comments along side the root element which makes it a fragment
             let root = result;
             let setRoot = undefined;
-            if (("production" !== 'production')) {
-                ;
-                [root, setRoot] = getChildRoot(result);
-            }
+            if (("production" !== 'production') && result.patchFlag & 2048 /* DEV_ROOT_FRAGMENT */) ;
             if (Component.inheritAttrs !== false && fallthroughAttrs) {
                 const keys = Object.keys(fallthroughAttrs);
                 const { shapeFlag } = root;
                 if (keys.length) {
                     if (shapeFlag & 1 /* ELEMENT */ ||
                         shapeFlag & 6 /* COMPONENT */) {
-                        if (shapeFlag & 1 /* ELEMENT */ && keys.some(isModelListener)) {
-                            // #1643, #1543
-                            // component v-model listeners should only fallthrough for component
-                            // HOCs
-                            fallthroughAttrs = filterModelListeners(fallthroughAttrs);
+                        if (propsOptions && keys.some(isModelListener)) {
+                            // If a v-model listener (onUpdate:xxx) has a corresponding declared
+                            // prop, it indicates this component expects to handle v-model and
+                            // it should not fallthrough.
+                            // related: #1543, #1643, #1989
+                            fallthroughAttrs = filterModelListeners(fallthroughAttrs, propsOptions);
                         }
                         root = cloneVNode(root, fallthroughAttrs);
                     }
-                    else if (("production" !== 'production') && !accessedAttrs && root.type !== Comment) {
-                        const allAttrs = Object.keys(attrs);
-                        const eventAttrs = [];
-                        const extraAttrs = [];
-                        for (let i = 0, l = allAttrs.length; i < l; i++) {
-                            const key = allAttrs[i];
-                            if (isOn(key)) {
-                                // ignore v-model handlers when they fail to fallthrough
-                                if (!isModelListener(key)) {
-                                    // remove `on`, lowercase first letter to reflect event casing
-                                    // accurately
-                                    eventAttrs.push(key[2].toLowerCase() + key.slice(3));
-                                }
-                            }
-                            else {
-                                extraAttrs.push(key);
-                            }
-                        }
-                        if (extraAttrs.length) {
-                            warn(`Extraneous non-props attributes (` +
-                                `${extraAttrs.join(', ')}) ` +
-                                `were passed to component but could not be automatically inherited ` +
-                                `because component renders fragment or text root nodes.`);
-                        }
-                        if (eventAttrs.length) {
-                            warn(`Extraneous non-emits event listeners (` +
-                                `${eventAttrs.join(', ')}) ` +
-                                `were passed to component but could not be automatically inherited ` +
-                                `because component renders fragment or text root nodes. ` +
-                                `If the listener is intended to be a component custom event listener only, ` +
-                                `declare it using the "emits" option.`);
-                        }
-                    }
+                    else if (("production" !== 'production') && !accessedAttrs && root.type !== Comment) ;
                 }
-            }
-            // inherit scopeId
-            const scopeId = vnode.scopeId;
-            // vite#536: if subtree root is created from parent slot if would already
-            // have the correct scopeId, in this case adding the scopeId will cause
-            // it to be removed if the original slot vnode is reused.
-            const needScopeId = scopeId && root.scopeId !== scopeId;
-            const treeOwnerId = parent && parent.type.__scopeId;
-            const slotScopeId = treeOwnerId && treeOwnerId !== scopeId ? treeOwnerId + '-s' : null;
-            if (needScopeId || slotScopeId) {
-                const extras = {};
-                if (needScopeId)
-                    extras[scopeId] = '';
-                if (slotScopeId)
-                    extras[slotScopeId] = '';
-                root = cloneVNode(root, extras);
             }
             // inherit directives
             if (vnode.dirs) {
-                if (("production" !== 'production') && !isElementRoot(root)) {
-                    warn(`Runtime directive used on component with non-element root node. ` +
-                        `The directives will not function as intended.`);
-                }
-                root.dirs = vnode.dirs;
+                if (("production" !== 'production') && !isElementRoot(root)) ;
+                root.dirs = root.dirs ? root.dirs.concat(vnode.dirs) : vnode.dirs;
             }
             // inherit transition data
             if (vnode.transition) {
-                if (("production" !== 'production') && !isElementRoot(root)) {
-                    warn(`Component inside <Transition> renders non-element root node ` +
-                        `that cannot be animated.`);
-                }
+                if (("production" !== 'production') && !isElementRoot(root)) ;
                 root.transition = vnode.transition;
             }
-            if (("production" !== 'production') && setRoot) {
-                setRoot(root);
-            }
+            if (("production" !== 'production') && setRoot) ;
             else {
                 result = root;
             }
@@ -1262,35 +1446,54 @@
     }
     /**
      * dev only
+     * In dev mode, template root level comments are rendered, which turns the
+     * template into a fragment root, but we need to locate the single element
+     * root for attrs and scope id processing.
      */
     const getChildRoot = (vnode) => {
-        if (vnode.type !== Fragment) {
-            return [vnode, undefined];
-        }
         const rawChildren = vnode.children;
         const dynamicChildren = vnode.dynamicChildren;
-        const children = rawChildren.filter(child => {
-            return !(isVNode(child) &&
-                child.type === Comment &&
-                child.children !== 'v-if');
-        });
-        if (children.length !== 1) {
+        const childRoot = filterSingleRoot(rawChildren);
+        if (!childRoot) {
             return [vnode, undefined];
         }
-        const childRoot = children[0];
         const index = rawChildren.indexOf(childRoot);
         const dynamicIndex = dynamicChildren ? dynamicChildren.indexOf(childRoot) : -1;
         const setRoot = (updatedRoot) => {
             rawChildren[index] = updatedRoot;
-            if (dynamicIndex > -1) {
-                dynamicChildren[dynamicIndex] = updatedRoot;
-            }
-            else if (dynamicChildren && updatedRoot.patchFlag > 0) {
-                dynamicChildren.push(updatedRoot);
+            if (dynamicChildren) {
+                if (dynamicIndex > -1) {
+                    dynamicChildren[dynamicIndex] = updatedRoot;
+                }
+                else if (updatedRoot.patchFlag > 0) {
+                    vnode.dynamicChildren = [...dynamicChildren, updatedRoot];
+                }
             }
         };
         return [normalizeVNode(childRoot), setRoot];
     };
+    function filterSingleRoot(children) {
+        let singleRoot;
+        for (let i = 0; i < children.length; i++) {
+            const child = children[i];
+            if (isVNode(child)) {
+                // ignore user comment
+                if (child.type !== Comment || child.children === 'v-if') {
+                    if (singleRoot) {
+                        // has more than 1 non-comment child, return now
+                        return;
+                    }
+                    else {
+                        singleRoot = child;
+                    }
+                }
+            }
+            else {
+                return;
+            }
+        }
+        return singleRoot;
+    }
     const getFunctionalFallthrough = (attrs) => {
         let res;
         for (const key in attrs) {
@@ -1300,10 +1503,10 @@
         }
         return res;
     };
-    const filterModelListeners = (attrs) => {
+    const filterModelListeners = (attrs, props) => {
         const res = {};
         for (const key in attrs) {
-            if (!isModelListener(key)) {
+            if (!isModelListener(key) || !(key.slice(9) in props)) {
                 res[key] = attrs[key];
             }
         }
@@ -1316,13 +1519,14 @@
         );
     };
     function shouldUpdateComponent(prevVNode, nextVNode, optimized) {
-        const { props: prevProps, children: prevChildren } = prevVNode;
+        const { props: prevProps, children: prevChildren, component } = prevVNode;
         const { props: nextProps, children: nextChildren, patchFlag } = nextVNode;
+        const emits = component.emitsOptions;
         // force child update for runtime directive or transition on component vnode.
         if (nextVNode.dirs || nextVNode.transition) {
             return true;
         }
-        if (optimized && patchFlag > 0) {
+        if (optimized && patchFlag >= 0) {
             if (patchFlag & 1024 /* DYNAMIC_SLOTS */) {
                 // slot content that references values that might have changed,
                 // e.g. in a v-for
@@ -1333,13 +1537,14 @@
                     return !!nextProps;
                 }
                 // presence of this flag indicates props are always non-null
-                return hasPropsChanged(prevProps, nextProps);
+                return hasPropsChanged(prevProps, nextProps, emits);
             }
             else if (patchFlag & 8 /* PROPS */) {
                 const dynamicProps = nextVNode.dynamicProps;
                 for (let i = 0; i < dynamicProps.length; i++) {
                     const key = dynamicProps[i];
-                    if (nextProps[key] !== prevProps[key]) {
+                    if (nextProps[key] !== prevProps[key] &&
+                        !isEmitListener(emits, key)) {
                         return true;
                     }
                 }
@@ -1362,18 +1567,19 @@
             if (!nextProps) {
                 return true;
             }
-            return hasPropsChanged(prevProps, nextProps);
+            return hasPropsChanged(prevProps, nextProps, emits);
         }
         return false;
     }
-    function hasPropsChanged(prevProps, nextProps) {
+    function hasPropsChanged(prevProps, nextProps, emitsOptions) {
         const nextKeys = Object.keys(nextProps);
         if (nextKeys.length !== Object.keys(prevProps).length) {
             return true;
         }
         for (let i = 0; i < nextKeys.length; i++) {
             const key = nextKeys[i];
-            if (nextProps[key] !== prevProps[key]) {
+            if (nextProps[key] !== prevProps[key] &&
+                !isEmitListener(emitsOptions, key)) {
                 return true;
             }
         }
@@ -1388,8 +1594,35 @@
     }
 
     const isSuspense = (type) => type.__isSuspense;
+    function normalizeSuspenseChildren(vnode) {
+        const { shapeFlag, children } = vnode;
+        let content;
+        let fallback;
+        if (shapeFlag & 32 /* SLOTS_CHILDREN */) {
+            content = normalizeSuspenseSlot(children.default);
+            fallback = normalizeSuspenseSlot(children.fallback);
+        }
+        else {
+            content = normalizeSuspenseSlot(children);
+            fallback = normalizeVNode(null);
+        }
+        return {
+            content,
+            fallback
+        };
+    }
+    function normalizeSuspenseSlot(s) {
+        if (isFunction(s)) {
+            s = s();
+        }
+        if (isArray(s)) {
+            const singleChild = filterSingleRoot(s);
+            s = singleChild;
+        }
+        return normalizeVNode(s);
+    }
     function queueEffectWithSuspense(fn, suspense) {
-        if (suspense && !suspense.isResolved) {
+        if (suspense && suspense.pendingBranch) {
             if (isArray(fn)) {
                 suspense.effects.push(...fn);
             }
@@ -1402,6 +1635,9 @@
         }
     }
 
+    let isRenderingCompiledSlot = 0;
+    const setCompiledSlotRendering = (n) => (isRenderingCompiledSlot += n);
+
     /**
      * Wrap a slot function to memoize current rendering instance
      * @private
@@ -1409,396 +1645,28 @@
     function withCtx(fn, ctx = currentRenderingInstance) {
         if (!ctx)
             return fn;
-        return function renderFnWithContext() {
+        const renderFnWithContext = (...args) => {
+            // If a user calls a compiled slot inside a template expression (#1745), it
+            // can mess up block tracking, so by default we need to push a null block to
+            // avoid that. This isn't necessary if rendering a compiled `<slot>`.
+            if (!isRenderingCompiledSlot) {
+                openBlock(true /* null block that disables tracking */);
+            }
             const owner = currentRenderingInstance;
             setCurrentRenderingInstance(ctx);
-            const res = fn.apply(null, arguments);
+            const res = fn(...args);
             setCurrentRenderingInstance(owner);
+            if (!isRenderingCompiledSlot) {
+                closeBlock();
+            }
             return res;
         };
+        renderFnWithContext._c = true;
+        return renderFnWithContext;
     }
 
     // SFC scoped style ID management.
     let currentScopeId = null;
-
-    const isTeleport = (type) => type.__isTeleport;
-    const NULL_DYNAMIC_COMPONENT = Symbol();
-
-    const Fragment = Symbol( undefined);
-    const Text = Symbol( undefined);
-    const Comment = Symbol( undefined);
-    const Static = Symbol( undefined);
-    // Since v-if and v-for are the two possible ways node structure can dynamically
-    // change, once we consider v-if branches and each v-for fragment a block, we
-    // can divide a template into nested blocks, and within each block the node
-    // structure would be stable. This allows us to skip most children diffing
-    // and only worry about the dynamic nodes (indicated by patch flags).
-    const blockStack = [];
-    let currentBlock = null;
-    /**
-     * Open a block.
-     * This must be called before `createBlock`. It cannot be part of `createBlock`
-     * because the children of the block are evaluated before `createBlock` itself
-     * is called. The generated code typically looks like this:
-     *
-     * ```js
-     * function render() {
-     *   return (openBlock(),createBlock('div', null, [...]))
-     * }
-     * ```
-     * disableTracking is true when creating a v-for fragment block, since a v-for
-     * fragment always diffs its children.
-     *
-     * @private
-     */
-    function openBlock(disableTracking = false) {
-        blockStack.push((currentBlock = disableTracking ? null : []));
-    }
-    /**
-     * Create a block root vnode. Takes the same exact arguments as `createVNode`.
-     * A block root keeps track of dynamic nodes within the block in the
-     * `dynamicChildren` array.
-     *
-     * @private
-     */
-    function createBlock(type, props, children, patchFlag, dynamicProps) {
-        const vnode = createVNode(type, props, children, patchFlag, dynamicProps, true /* isBlock: prevent a block from tracking itself */);
-        // save current block children on the block vnode
-        vnode.dynamicChildren = currentBlock || EMPTY_ARR;
-        // close block
-        blockStack.pop();
-        currentBlock = blockStack[blockStack.length - 1] || null;
-        // a block is always going to be patched, so track it as a child of its
-        // parent block
-        if (currentBlock) {
-            currentBlock.push(vnode);
-        }
-        return vnode;
-    }
-    function isVNode(value) {
-        return value ? value.__v_isVNode === true : false;
-    }
-    function isSameVNodeType(n1, n2) {
-        return n1.type === n2.type && n1.key === n2.key;
-    }
-    const InternalObjectKey = `__vInternal`;
-    const normalizeKey = ({ key }) => key != null ? key : null;
-    const normalizeRef = ({ ref }) => {
-        return (ref != null
-            ? isArray(ref)
-                ? ref
-                : [currentRenderingInstance, ref]
-            : null);
-    };
-    const createVNode = ( _createVNode);
-    function _createVNode(type, props = null, children = null, patchFlag = 0, dynamicProps = null, isBlockNode = false) {
-        if (!type || type === NULL_DYNAMIC_COMPONENT) {
-            type = Comment;
-        }
-        if (isVNode(type)) {
-            const cloned = cloneVNode(type, props);
-            if (children) {
-                normalizeChildren(cloned, children);
-            }
-            return cloned;
-        }
-        // class component normalization.
-        if (isFunction(type) && '__vccOpts' in type) {
-            type = type.__vccOpts;
-        }
-        // class & style normalization.
-        if (props) {
-            // for reactive or proxy objects, we need to clone it to enable mutation.
-            if (isProxy(props) || InternalObjectKey in props) {
-                props = extend({}, props);
-            }
-            let { class: klass, style } = props;
-            if (klass && !isString(klass)) {
-                props.class = normalizeClass(klass);
-            }
-            if (isObject(style)) {
-                // reactive state objects need to be cloned since they are likely to be
-                // mutated
-                if (isProxy(style) && !isArray(style)) {
-                    style = extend({}, style);
-                }
-                props.style = normalizeStyle(style);
-            }
-        }
-        // encode the vnode type information into a bitmap
-        const shapeFlag = isString(type)
-            ? 1 /* ELEMENT */
-            :  isSuspense(type)
-                ? 128 /* SUSPENSE */
-                : isTeleport(type)
-                    ? 64 /* TELEPORT */
-                    : isObject(type)
-                        ? 4 /* STATEFUL_COMPONENT */
-                        : isFunction(type)
-                            ? 2 /* FUNCTIONAL_COMPONENT */
-                            : 0;
-        const vnode = {
-            __v_isVNode: true,
-            __v_skip: true,
-            type,
-            props,
-            key: props && normalizeKey(props),
-            ref: props && normalizeRef(props),
-            scopeId: currentScopeId,
-            children: null,
-            component: null,
-            suspense: null,
-            dirs: null,
-            transition: null,
-            el: null,
-            anchor: null,
-            target: null,
-            targetAnchor: null,
-            staticCount: 0,
-            shapeFlag,
-            patchFlag,
-            dynamicProps,
-            dynamicChildren: null,
-            appContext: null
-        };
-        normalizeChildren(vnode, children);
-        // presence of a patch flag indicates this node needs patching on updates.
-        // component nodes also should always be patched, because even if the
-        // component doesn't need to update, it needs to persist the instance on to
-        // the next vnode so that it can be properly unmounted later.
-        if (
-            !isBlockNode &&
-            currentBlock &&
-            // the EVENTS flag is only for hydration and if it is the only flag, the
-            // vnode should not be considered dynamic due to handler caching.
-            patchFlag !== 32 /* HYDRATE_EVENTS */ &&
-            (patchFlag > 0 || shapeFlag & 6 /* COMPONENT */)) {
-            currentBlock.push(vnode);
-        }
-        return vnode;
-    }
-    function cloneVNode(vnode, extraProps) {
-        // This is intentionally NOT using spread or extend to avoid the runtime
-        // key enumeration cost.
-        const { props, patchFlag } = vnode;
-        const mergedProps = extraProps
-            ? props
-                ? mergeProps(props, extraProps)
-                : extend({}, extraProps)
-            : props;
-        return {
-            __v_isVNode: true,
-            __v_skip: true,
-            type: vnode.type,
-            props: mergedProps,
-            key: mergedProps && normalizeKey(mergedProps),
-            ref: extraProps && extraProps.ref ? normalizeRef(extraProps) : vnode.ref,
-            scopeId: vnode.scopeId,
-            children: vnode.children,
-            target: vnode.target,
-            targetAnchor: vnode.targetAnchor,
-            staticCount: vnode.staticCount,
-            shapeFlag: vnode.shapeFlag,
-            // if the vnode is cloned with extra props, we can no longer assume its
-            // existing patch flag to be reliable and need to add the FULL_PROPS flag.
-            // note: perserve flag for fragments since they use the flag for children
-            // fast paths only.
-            patchFlag: extraProps && vnode.type !== Fragment
-                ? patchFlag === -1 // hoisted node
-                    ? 16 /* FULL_PROPS */
-                    : patchFlag | 16 /* FULL_PROPS */
-                : patchFlag,
-            dynamicProps: vnode.dynamicProps,
-            dynamicChildren: vnode.dynamicChildren,
-            appContext: vnode.appContext,
-            dirs: vnode.dirs,
-            transition: vnode.transition,
-            // These should technically only be non-null on mounted VNodes. However,
-            // they *should* be copied for kept-alive vnodes. So we just always copy
-            // them since them being non-null during a mount doesn't affect the logic as
-            // they will simply be overwritten.
-            component: vnode.component,
-            suspense: vnode.suspense,
-            el: vnode.el,
-            anchor: vnode.anchor
-        };
-    }
-    /**
-     * @private
-     */
-    function createTextVNode(text = ' ', flag = 0) {
-        return createVNode(Text, null, text, flag);
-    }
-    function normalizeVNode(child) {
-        if (child == null || typeof child === 'boolean') {
-            // empty placeholder
-            return createVNode(Comment);
-        }
-        else if (isArray(child)) {
-            // fragment
-            return createVNode(Fragment, null, child);
-        }
-        else if (typeof child === 'object') {
-            // already vnode, this should be the most common since compiled templates
-            // always produce all-vnode children arrays
-            return child.el === null ? child : cloneVNode(child);
-        }
-        else {
-            // strings and numbers
-            return createVNode(Text, null, String(child));
-        }
-    }
-    // optimized normalization for template-compiled render fns
-    function cloneIfMounted(child) {
-        return child.el === null ? child : cloneVNode(child);
-    }
-    function normalizeChildren(vnode, children) {
-        let type = 0;
-        const { shapeFlag } = vnode;
-        if (children == null) {
-            children = null;
-        }
-        else if (isArray(children)) {
-            type = 16 /* ARRAY_CHILDREN */;
-        }
-        else if (typeof children === 'object') {
-            // Normalize slot to plain children
-            if ((shapeFlag & 1 /* ELEMENT */ || shapeFlag & 64 /* TELEPORT */) &&
-                children.default) {
-                normalizeChildren(vnode, children.default());
-                return;
-            }
-            else {
-                type = 32 /* SLOTS_CHILDREN */;
-                const slotFlag = children._;
-                if (!slotFlag && !(InternalObjectKey in children)) {
-                    children._ctx = currentRenderingInstance;
-                }
-                else if (slotFlag === 3 /* FORWARDED */ && currentRenderingInstance) {
-                    // a child component receives forwarded slots from the parent.
-                    // its slot type is determined by its parent's slot type.
-                    if (currentRenderingInstance.vnode.patchFlag & 1024 /* DYNAMIC_SLOTS */) {
-                        children._ = 2 /* DYNAMIC */;
-                        vnode.patchFlag |= 1024 /* DYNAMIC_SLOTS */;
-                    }
-                    else {
-                        children._ = 1 /* STABLE */;
-                    }
-                }
-            }
-        }
-        else if (isFunction(children)) {
-            children = { default: children, _ctx: currentRenderingInstance };
-            type = 32 /* SLOTS_CHILDREN */;
-        }
-        else {
-            children = String(children);
-            // force teleport children to array so it can be moved around
-            if (shapeFlag & 64 /* TELEPORT */) {
-                type = 16 /* ARRAY_CHILDREN */;
-                children = [createTextVNode(children)];
-            }
-            else {
-                type = 8 /* TEXT_CHILDREN */;
-            }
-        }
-        vnode.children = children;
-        vnode.shapeFlag |= type;
-    }
-    function mergeProps(...args) {
-        const ret = extend({}, args[0]);
-        for (let i = 1; i < args.length; i++) {
-            const toMerge = args[i];
-            for (const key in toMerge) {
-                if (key === 'class') {
-                    if (ret.class !== toMerge.class) {
-                        ret.class = normalizeClass([ret.class, toMerge.class]);
-                    }
-                }
-                else if (key === 'style') {
-                    ret.style = normalizeStyle([ret.style, toMerge.style]);
-                }
-                else if (isOn(key)) {
-                    const existing = ret[key];
-                    const incoming = toMerge[key];
-                    if (existing !== incoming) {
-                        ret[key] = existing
-                            ? [].concat(existing, toMerge[key])
-                            : incoming;
-                    }
-                }
-                else {
-                    ret[key] = toMerge[key];
-                }
-            }
-        }
-        return ret;
-    }
-
-    function emit(instance, event, ...args) {
-        const props = instance.vnode.props || EMPTY_OBJ;
-        let handlerName = `on${capitalize(event)}`;
-        let handler = props[handlerName];
-        // for v-model update:xxx events, also trigger kebab-case equivalent
-        // for props passed via kebab-case
-        if (!handler && event.startsWith('update:')) {
-            handlerName = `on${capitalize(hyphenate(event))}`;
-            handler = props[handlerName];
-        }
-        if (!handler) {
-            handler = props[handlerName + `Once`];
-            if (!instance.emitted) {
-                (instance.emitted = {})[handlerName] = true;
-            }
-            else if (instance.emitted[handlerName]) {
-                return;
-            }
-        }
-        if (handler) {
-            callWithAsyncErrorHandling(handler, instance, 6 /* COMPONENT_EVENT_HANDLER */, args);
-        }
-    }
-    function normalizeEmitsOptions(comp) {
-        if (hasOwn(comp, '__emits')) {
-            return comp.__emits;
-        }
-        const raw = comp.emits;
-        let normalized = {};
-        // apply mixin/extends props
-        let hasExtends = false;
-        if (__VUE_OPTIONS_API__ && !isFunction(comp)) {
-            if (comp.extends) {
-                hasExtends = true;
-                extend(normalized, normalizeEmitsOptions(comp.extends));
-            }
-            if (comp.mixins) {
-                hasExtends = true;
-                comp.mixins.forEach(m => extend(normalized, normalizeEmitsOptions(m)));
-            }
-        }
-        if (!raw && !hasExtends) {
-            return (comp.__emits = undefined);
-        }
-        if (isArray(raw)) {
-            raw.forEach(key => (normalized[key] = null));
-        }
-        else {
-            extend(normalized, raw);
-        }
-        return (comp.__emits = normalized);
-    }
-    // Check if an incoming prop key is a declared emit event listener.
-    // e.g. With `emits: { click: null }`, props named `onClick` and `onclick` are
-    // both considered matched listeners.
-    function isEmitListener(comp, key) {
-        let emits;
-        if (!isOn(key) || !(emits = normalizeEmitsOptions(comp))) {
-            return false;
-        }
-        key = key.replace(/Once$/, '');
-        return (hasOwn(emits, key[2].toLowerCase() + key.slice(3)) ||
-            hasOwn(emits, key.slice(2)));
-    }
 
     function initProps(instance, rawProps, isStateful, // result of bitwise flag comparison
     isSSR = false) {
@@ -1825,8 +1693,14 @@
     function updateProps(instance, rawProps, rawPrevProps, optimized) {
         const { props, attrs, vnode: { patchFlag } } = instance;
         const rawCurrentProps = toRaw(props);
-        const [options] = normalizePropsOptions(instance.type);
-        if ((optimized || patchFlag > 0) && !(patchFlag & 16 /* FULL_PROPS */)) {
+        const [options] = instance.propsOptions;
+        if (
+        // always force full diff in dev
+        // - #1942 if hmr is enabled with sfc component
+        // - vite#872 non-sfc component used by sfc component
+        
+            (optimized || patchFlag > 0) &&
+            !(patchFlag & 16 /* FULL_PROPS */)) {
             if (patchFlag & 8 /* PROPS */) {
                 // Compiler-generated props & no keys change, just set the updated
                 // the props.
@@ -1843,7 +1717,7 @@
                         }
                         else {
                             const camelizedKey = camelize(key);
-                            props[camelizedKey] = resolvePropValue(options, rawCurrentProps, camelizedKey, value);
+                            props[camelizedKey] = resolvePropValue(options, rawCurrentProps, camelizedKey, value, instance);
                         }
                     }
                     else {
@@ -1871,7 +1745,7 @@
                             (rawPrevProps[key] !== undefined ||
                                 // for kebab-case
                                 rawPrevProps[kebabKey] !== undefined)) {
-                            props[key] = resolvePropValue(options, rawProps || EMPTY_OBJ, key, undefined);
+                            props[key] = resolvePropValue(options, rawProps || EMPTY_OBJ, key, undefined, instance);
                         }
                     }
                     else {
@@ -1893,7 +1767,7 @@
         trigger(instance, "set" /* SET */, '$attrs');
     }
     function setFullProps(instance, rawProps, props, attrs) {
-        const [options, needCastKeys] = normalizePropsOptions(instance.type);
+        const [options, needCastKeys] = instance.propsOptions;
         if (rawProps) {
             for (const key in rawProps) {
                 const value = rawProps[key];
@@ -1907,7 +1781,7 @@
                 if (options && hasOwn(options, (camelKey = camelize(key)))) {
                     props[camelKey] = value;
                 }
-                else if (!isEmitListener(instance.type, key)) {
+                else if (!isEmitListener(instance.emitsOptions, key)) {
                     // Any non-declared (either as a prop or an emitted event) props are put
                     // into a separate `attrs` object for spreading. Make sure to preserve
                     // original key casing
@@ -1919,21 +1793,25 @@
             const rawCurrentProps = toRaw(props);
             for (let i = 0; i < needCastKeys.length; i++) {
                 const key = needCastKeys[i];
-                props[key] = resolvePropValue(options, rawCurrentProps, key, rawCurrentProps[key]);
+                props[key] = resolvePropValue(options, rawCurrentProps, key, rawCurrentProps[key], instance);
             }
         }
     }
-    function resolvePropValue(options, props, key, value) {
+    function resolvePropValue(options, props, key, value, instance) {
         const opt = options[key];
         if (opt != null) {
             const hasDefault = hasOwn(opt, 'default');
             // default values
             if (hasDefault && value === undefined) {
                 const defaultValue = opt.default;
-                value =
-                    opt.type !== Function && isFunction(defaultValue)
-                        ? defaultValue()
-                        : defaultValue;
+                if (opt.type !== Function && isFunction(defaultValue)) {
+                    setCurrentInstance(instance);
+                    value = defaultValue(props);
+                    setCurrentInstance(null);
+                }
+                else {
+                    value = defaultValue;
+                }
             }
             // boolean casting
             if (opt[0 /* shouldCast */]) {
@@ -1948,8 +1826,8 @@
         }
         return value;
     }
-    function normalizePropsOptions(comp) {
-        if (comp.__props) {
+    function normalizePropsOptions(comp, appContext, asMixin = false) {
+        if (!appContext.deopt && comp.__props) {
             return comp.__props;
         }
         const raw = comp.props;
@@ -1959,17 +1837,19 @@
         let hasExtends = false;
         if (__VUE_OPTIONS_API__ && !isFunction(comp)) {
             const extendProps = (raw) => {
-                const [props, keys] = normalizePropsOptions(raw);
+                hasExtends = true;
+                const [props, keys] = normalizePropsOptions(raw, appContext, true);
                 extend(normalized, props);
                 if (keys)
                     needCastKeys.push(...keys);
             };
+            if (!asMixin && appContext.mixins.length) {
+                appContext.mixins.forEach(extendProps);
+            }
             if (comp.extends) {
-                hasExtends = true;
                 extendProps(comp.extends);
             }
             if (comp.mixins) {
-                hasExtends = true;
                 comp.mixins.forEach(extendProps);
             }
         }
@@ -2005,9 +1885,13 @@
                 }
             }
         }
-        const normalizedEntry = [normalized, needCastKeys];
-        comp.__props = normalizedEntry;
-        return normalizedEntry;
+        return (comp.__props = [normalized, needCastKeys]);
+    }
+    function validatePropName(key) {
+        if (key[0] !== '$') {
+            return true;
+        }
+        return false;
     }
     // use function string name to check type constructors
     // so that it works across vms / iframes.
@@ -2030,15 +1914,6 @@
             return isSameType(expectedTypes, type) ? 0 : -1;
         }
         return -1;
-    }
-    /**
-     * dev only
-     */
-    function validatePropName(key) {
-        if (key[0] !== '$') {
-            return true;
-        }
-        return false;
     }
 
     function injectHook(type, hook, target = currentInstance, prepend = false) {
@@ -2070,6 +1945,7 @@
             else {
                 hooks.push(wrappedHook);
             }
+            return wrappedHook;
         }
     }
     const createHook = (lifecycle) => (hook, target = currentInstance) => 
@@ -2086,6 +1962,180 @@
     const onErrorCaptured = (hook, target = currentInstance) => {
         injectHook("ec" /* ERROR_CAPTURED */, hook, target);
     };
+    // initial value for watchers to trigger on undefined initial values
+    const INITIAL_WATCHER_VALUE = {};
+    // implementation
+    function watch(source, cb, options) {
+        return doWatch(source, cb, options);
+    }
+    function doWatch(source, cb, { immediate, deep, flush, onTrack, onTrigger } = EMPTY_OBJ, instance = currentInstance) {
+        let getter;
+        let forceTrigger = false;
+        if (isRef(source)) {
+            getter = () => source.value;
+            forceTrigger = !!source._shallow;
+        }
+        else if (isReactive(source)) {
+            getter = () => source;
+            deep = true;
+        }
+        else if (isArray(source)) {
+            getter = () => source.map(s => {
+                if (isRef(s)) {
+                    return s.value;
+                }
+                else if (isReactive(s)) {
+                    return traverse(s);
+                }
+                else if (isFunction(s)) {
+                    return callWithErrorHandling(s, instance, 2 /* WATCH_GETTER */);
+                }
+                else ;
+            });
+        }
+        else if (isFunction(source)) {
+            if (cb) {
+                // getter with cb
+                getter = () => callWithErrorHandling(source, instance, 2 /* WATCH_GETTER */);
+            }
+            else {
+                // no cb -> simple effect
+                getter = () => {
+                    if (instance && instance.isUnmounted) {
+                        return;
+                    }
+                    if (cleanup) {
+                        cleanup();
+                    }
+                    return callWithErrorHandling(source, instance, 3 /* WATCH_CALLBACK */, [onInvalidate]);
+                };
+            }
+        }
+        else {
+            getter = NOOP;
+        }
+        if (cb && deep) {
+            const baseGetter = getter;
+            getter = () => traverse(baseGetter());
+        }
+        let cleanup;
+        const onInvalidate = (fn) => {
+            cleanup = runner.options.onStop = () => {
+                callWithErrorHandling(fn, instance, 4 /* WATCH_CLEANUP */);
+            };
+        };
+        let oldValue = isArray(source) ? [] : INITIAL_WATCHER_VALUE;
+        const job = () => {
+            if (!runner.active) {
+                return;
+            }
+            if (cb) {
+                // watch(source, cb)
+                const newValue = runner();
+                if (deep || forceTrigger || hasChanged(newValue, oldValue)) {
+                    // cleanup before running cb again
+                    if (cleanup) {
+                        cleanup();
+                    }
+                    callWithAsyncErrorHandling(cb, instance, 3 /* WATCH_CALLBACK */, [
+                        newValue,
+                        // pass undefined as the old value when it's changed for the first time
+                        oldValue === INITIAL_WATCHER_VALUE ? undefined : oldValue,
+                        onInvalidate
+                    ]);
+                    oldValue = newValue;
+                }
+            }
+            else {
+                // watchEffect
+                runner();
+            }
+        };
+        // important: mark the job as a watcher callback so that scheduler knows
+        // it is allowed to self-trigger (#1727)
+        job.allowRecurse = !!cb;
+        let scheduler;
+        if (flush === 'sync') {
+            scheduler = job;
+        }
+        else if (flush === 'post') {
+            scheduler = () => queuePostRenderEffect(job, instance && instance.suspense);
+        }
+        else {
+            // default: 'pre'
+            scheduler = () => {
+                if (!instance || instance.isMounted) {
+                    queuePreFlushCb(job);
+                }
+                else {
+                    // with 'pre' option, the first call must happen before
+                    // the component is mounted so it is called synchronously.
+                    job();
+                }
+            };
+        }
+        const runner = effect(getter, {
+            lazy: true,
+            onTrack,
+            onTrigger,
+            scheduler
+        });
+        recordInstanceBoundEffect(runner, instance);
+        // initial run
+        if (cb) {
+            if (immediate) {
+                job();
+            }
+            else {
+                oldValue = runner();
+            }
+        }
+        else if (flush === 'post') {
+            queuePostRenderEffect(runner, instance && instance.suspense);
+        }
+        else {
+            runner();
+        }
+        return () => {
+            stop(runner);
+            if (instance) {
+                remove(instance.effects, runner);
+            }
+        };
+    }
+    // this.$watch
+    function instanceWatch(source, cb, options) {
+        const publicThis = this.proxy;
+        const getter = isString(source)
+            ? () => publicThis[source]
+            : source.bind(publicThis);
+        return doWatch(getter, cb.bind(publicThis), options, this);
+    }
+    function traverse(value, seen = new Set()) {
+        if (!isObject(value) || seen.has(value)) {
+            return value;
+        }
+        seen.add(value);
+        if (isRef(value)) {
+            traverse(value.value, seen);
+        }
+        else if (isArray(value)) {
+            for (let i = 0; i < value.length; i++) {
+                traverse(value[i], seen);
+            }
+        }
+        else if (isSet(value) || isMap(value)) {
+            value.forEach((v) => {
+                traverse(v, seen);
+            });
+        }
+        else {
+            for (const key in value) {
+                traverse(value[key], seen);
+            }
+        }
+        return value;
+    }
 
     const isKeepAlive = (vnode) => vnode.type.__isKeepAlive;
     function onActivated(hook, target) {
@@ -2127,9 +2177,11 @@
         }
     }
     function injectToKeepAliveRoot(hook, type, target, keepAliveRoot) {
-        injectHook(type, hook, keepAliveRoot, true /* prepend */);
+        // injectHook wraps the original for error handling, so make sure to remove
+        // the wrapped version.
+        const injected = injectHook(type, hook, keepAliveRoot, true /* prepend */);
         onUnmounted(() => {
-            remove(keepAliveRoot[type], hook);
+            remove(keepAliveRoot[type], injected);
         }, target);
     }
 
@@ -2256,6 +2308,7 @@
             provides: Object.create(null)
         };
     }
+    let uid$1 = 0;
     function createAppAPI(render, hydrate) {
         return function createApp(rootComponent, rootProps = null) {
             if (rootProps != null && !isObject(rootProps)) {
@@ -2265,6 +2318,7 @@
             const installedPlugins = new Set();
             let isMounted = false;
             const app = (context.app = {
+                _uid: uid$1++,
                 _component: rootComponent,
                 _props: rootProps,
                 _container: null,
@@ -2292,6 +2346,11 @@
                     if (__VUE_OPTIONS_API__) {
                         if (!context.mixins.includes(mixin)) {
                             context.mixins.push(mixin);
+                            // global mixin with props/emits de-optimizes props/emits
+                            // normalization caching.
+                            if (mixin.props || mixin.emits) {
+                                context.deopt = true;
+                            }
                         }
                     }
                     return app;
@@ -2332,6 +2391,7 @@
                 unmount() {
                     if (isMounted) {
                         render(null, app._container);
+                        if ( __VUE_PROD_DEVTOOLS__) ;
                     }
                 },
                 provide(key, value) {
@@ -2361,26 +2421,34 @@
         }
     }
 
+    const isAsyncWrapper = (i) => !!i.type.__asyncLoader;
+
     const prodEffectOptions = {
-        scheduler: queueJob
+        scheduler: queueJob,
+        // #1801, #2043 component render effects should allow recursive updates
+        allowRecurse: true
     };
     const queuePostRenderEffect =  queueEffectWithSuspense
         ;
-    const setRef = (rawRef, oldRawRef, parentComponent, parentSuspense, vnode) => {
+    const setRef = (rawRef, oldRawRef, parentSuspense, vnode) => {
+        if (isArray(rawRef)) {
+            rawRef.forEach((r, i) => setRef(r, oldRawRef && (isArray(oldRawRef) ? oldRawRef[i] : oldRawRef), parentSuspense, vnode));
+            return;
+        }
         let value;
-        if (!vnode) {
+        if (!vnode || isAsyncWrapper(vnode)) {
             value = null;
         }
         else {
             if (vnode.shapeFlag & 4 /* STATEFUL_COMPONENT */) {
-                value = vnode.component.proxy;
+                value = vnode.component.exposed || vnode.component.proxy;
             }
             else {
                 value = vnode.el;
             }
         }
-        const [owner, ref] = rawRef;
-        const oldRef = oldRawRef && oldRawRef[1];
+        const { i: owner, r: ref } = rawRef;
+        const oldRef = oldRawRef && oldRawRef.r;
         const refs = owner.refs === EMPTY_OBJ ? (owner.refs = {}) : owner.refs;
         const setupState = owner.setupState;
         // unset old ref
@@ -2388,9 +2456,7 @@
             if (isString(oldRef)) {
                 refs[oldRef] = null;
                 if (hasOwn(setupState, oldRef)) {
-                    queuePostRenderEffect(() => {
-                        setupState[oldRef] = null;
-                    }, parentSuspense);
+                    setupState[oldRef] = null;
                 }
             }
             else if (isRef(oldRef)) {
@@ -2398,21 +2464,37 @@
             }
         }
         if (isString(ref)) {
-            refs[ref] = value;
-            if (hasOwn(setupState, ref)) {
-                queuePostRenderEffect(() => {
+            const doSet = () => {
+                refs[ref] = value;
+                if (hasOwn(setupState, ref)) {
                     setupState[ref] = value;
-                }, parentSuspense);
+                }
+            };
+            // #1789: for non-null values, set them after render
+            // null values means this is unmount and it should not overwrite another
+            // ref with the same key
+            if (value) {
+                doSet.id = -1;
+                queuePostRenderEffect(doSet, parentSuspense);
+            }
+            else {
+                doSet();
             }
         }
         else if (isRef(ref)) {
-            ref.value = value;
+            const doSet = () => {
+                ref.value = value;
+            };
+            if (value) {
+                doSet.id = -1;
+                queuePostRenderEffect(doSet, parentSuspense);
+            }
+            else {
+                doSet();
+            }
         }
         else if (isFunction(ref)) {
-            callWithErrorHandling(ref, parentComponent, 12 /* FUNCTION_REF */, [
-                value,
-                refs
-            ]);
+            callWithErrorHandling(ref, owner, 12 /* FUNCTION_REF */, [value, refs]);
         }
         else ;
     };
@@ -2487,7 +2569,7 @@
             }
             // set ref
             if (ref != null && parentComponent) {
-                setRef(ref, n1 && n1.ref, parentComponent, parentSuspense, n2);
+                setRef(ref, n1 && n1.ref, parentSuspense, n2);
             }
         };
         const processText = (n1, n2, container, anchor) => {
@@ -2512,6 +2594,24 @@
         };
         const mountStaticNode = (n2, container, anchor, isSVG) => {
             [n2.el, n2.anchor] = hostInsertStaticContent(n2.children, container, anchor, isSVG);
+        };
+        const moveStaticNode = ({ el, anchor }, container, nextSibling) => {
+            let next;
+            while (el && el !== anchor) {
+                next = hostNextSibling(el);
+                hostInsert(el, container, nextSibling);
+                el = next;
+            }
+            hostInsert(anchor, container, nextSibling);
+        };
+        const removeStaticNode = ({ el, anchor }) => {
+            let next;
+            while (el && el !== anchor) {
+                next = hostNextSibling(el);
+                hostRemove(el);
+                el = next;
+            }
+            hostRemove(anchor);
         };
         const processElement = (n1, n2, container, anchor, parentComponent, parentSuspense, isSVG, optimized) => {
             isSVG = isSVG || n2.type === 'svg';
@@ -2546,6 +2646,9 @@
                 else if (shapeFlag & 16 /* ARRAY_CHILDREN */) {
                     mountChildren(vnode.children, el, null, parentComponent, parentSuspense, isSVG && type !== 'foreignObject', optimized || !!vnode.dynamicChildren);
                 }
+                if (dirs) {
+                    invokeDirectiveHook(vnode, null, parentComponent, 'created');
+                }
                 // props
                 if (props) {
                     for (const key in props) {
@@ -2557,29 +2660,31 @@
                         invokeVNodeHook(vnodeHook, parentComponent, vnode);
                     }
                 }
-                if (dirs) {
-                    invokeDirectiveHook(vnode, null, parentComponent, 'beforeMount');
-                }
                 // scopeId
-                if (scopeId) {
-                    hostSetScopeId(el, scopeId);
-                }
-                const treeOwnerId = parentComponent && parentComponent.type.__scopeId;
-                // vnode's own scopeId and the current patched component's scopeId is
-                // different - this is a slot content node.
-                if (treeOwnerId && treeOwnerId !== scopeId) {
-                    hostSetScopeId(el, treeOwnerId + '-s');
-                }
-                if (transition && !transition.persisted) {
-                    transition.beforeEnter(el);
-                }
+                setScopeId(el, scopeId, vnode, parentComponent);
             }
-            hostInsert(el, container, anchor);
+            if ( __VUE_PROD_DEVTOOLS__) {
+                Object.defineProperty(el, '__vnode', {
+                    value: vnode,
+                    enumerable: false
+                });
+                Object.defineProperty(el, '__vueParentComponent', {
+                    value: parentComponent,
+                    enumerable: false
+                });
+            }
+            if (dirs) {
+                invokeDirectiveHook(vnode, null, parentComponent, 'beforeMount');
+            }
             // #1583 For inside suspense + suspense not resolved case, enter hook should call when suspense resolved
             // #1689 For inside suspense + suspense resolved case, just call it
-            const needCallTransitionHooks = (!parentSuspense || (parentSuspense && parentSuspense.isResolved)) &&
+            const needCallTransitionHooks = (!parentSuspense || (parentSuspense && !parentSuspense.pendingBranch)) &&
                 transition &&
                 !transition.persisted;
+            if (needCallTransitionHooks) {
+                transition.beforeEnter(el);
+            }
+            hostInsert(el, container, anchor);
             if ((vnodeHook = props && props.onVnodeMounted) ||
                 needCallTransitionHooks ||
                 dirs) {
@@ -2588,6 +2693,23 @@
                     needCallTransitionHooks && transition.enter(el);
                     dirs && invokeDirectiveHook(vnode, null, parentComponent, 'mounted');
                 }, parentSuspense);
+            }
+        };
+        const setScopeId = (el, scopeId, vnode, parentComponent) => {
+            if (scopeId) {
+                hostSetScopeId(el, scopeId);
+            }
+            if (parentComponent) {
+                const treeOwnerId = parentComponent.type.__scopeId;
+                // vnode's own scopeId and the current patched component's scopeId is
+                // different - this is a slot content node.
+                if (treeOwnerId && treeOwnerId !== scopeId) {
+                    hostSetScopeId(el, treeOwnerId + '-s');
+                }
+                let subTree = parentComponent.subTree;
+                if (vnode === subTree) {
+                    setScopeId(el, parentComponent.vnode.scopeId, parentComponent.vnode, parentComponent.parent);
+                }
             }
         };
         const mountChildren = (children, container, anchor, parentComponent, parentSuspense, isSVG, optimized, start = 0) => {
@@ -2708,6 +2830,7 @@
         const patchProps = (el, vnode, oldProps, newProps, parentComponent, parentSuspense, isSVG) => {
             if (oldProps !== newProps) {
                 for (const key in newProps) {
+                    // empty string is not valid prop
                     if (isReservedProp(key))
                         continue;
                     const next = newProps[key];
@@ -2748,6 +2871,15 @@
                     // a stable fragment (template root or <template v-for>) doesn't need to
                     // patch children order, but it may contain dynamicChildren.
                     patchBlockChildren(n1.dynamicChildren, dynamicChildren, container, parentComponent, parentSuspense, isSVG);
+                    if (
+                    // #2080 if the stable fragment has a key, it's a <template v-for> that may
+                    //  get moved around. Make sure all root level vnodes inherit el.
+                    // #2134 or if it's a component root, it may also get moved around
+                    // as the component is being moved.
+                    n2.key != null ||
+                        (parentComponent && n2 === parentComponent.subTree)) {
+                        traverseStaticChildren(n1, n2, true /* shallow */);
+                    }
                 }
                 else {
                     // keyed / unkeyed, or manual fragments.
@@ -2781,11 +2913,9 @@
             // setup() is async. This component relies on async logic to be resolved
             // before proceeding
             if ( instance.asyncDep) {
-                if (!parentSuspense) {
-                    return;
-                }
-                parentSuspense.registerDep(instance, setupRenderEffect);
+                parentSuspense && parentSuspense.registerDep(instance, setupRenderEffect);
                 // Give it a placeholder if this is not hydration
+                // TODO handle self-defined fallback
                 if (!initialVNode.el) {
                     const placeholder = (instance.subTree = createVNode(Comment));
                     processCommentNode(null, placeholder, container, anchor);
@@ -2826,8 +2956,7 @@
                 if (!instance.isMounted) {
                     let vnodeHook;
                     const { el, props } = initialVNode;
-                    const { bm, m, a, parent } = instance;
-                    const subTree = (instance.subTree = renderComponentRoot(instance));
+                    const { bm, m, parent } = instance;
                     // beforeMount hook
                     if (bm) {
                         invokeArrayFns(bm);
@@ -2836,6 +2965,7 @@
                     if ((vnodeHook = props && props.onVnodeBeforeMount)) {
                         invokeVNodeHook(vnodeHook, parent, initialVNode);
                     }
+                    const subTree = (instance.subTree = renderComponentRoot(instance));
                     if (el && hydrateNode) {
                         // vnode has adopted host node - perform hydration instead of mount.
                         hydrateNode(initialVNode.el, subTree, instance, parentSuspense);
@@ -2855,6 +2985,9 @@
                         }, parentSuspense);
                     }
                     // activated hook for keep-alive roots.
+                    // #1742 activated hook must be accessed after first render
+                    // since the hook may be injected by a child keep-alive
+                    const { a } = instance;
                     if (a &&
                         initialVNode.shapeFlag & 256 /* COMPONENT_SHOULD_KEEP_ALIVE */) {
                         queuePostRenderEffect(a, parentSuspense);
@@ -2869,15 +3002,12 @@
                     let originNext = next;
                     let vnodeHook;
                     if (next) {
+                        next.el = vnode.el;
                         updateComponentPreRender(instance, next, optimized);
                     }
                     else {
                         next = vnode;
                     }
-                    const nextTree = renderComponentRoot(instance);
-                    const prevTree = instance.subTree;
-                    instance.subTree = nextTree;
-                    next.el = vnode.el;
                     // beforeUpdate hook
                     if (bu) {
                         invokeArrayFns(bu);
@@ -2886,11 +3016,9 @@
                     if ((vnodeHook = next.props && next.props.onVnodeBeforeUpdate)) {
                         invokeVNodeHook(vnodeHook, parent, next, vnode);
                     }
-                    // reset refs
-                    // only needed if previous patch had refs
-                    if (instance.refs !== EMPTY_OBJ) {
-                        instance.refs = {};
-                    }
+                    const nextTree = renderComponentRoot(instance);
+                    const prevTree = instance.subTree;
+                    instance.subTree = nextTree;
                     patch(prevTree, nextTree, 
                     // parent may have changed if it's in a teleport
                     hostParentNode(prevTree.el), 
@@ -2924,6 +3052,9 @@
             instance.next = null;
             updateProps(instance, nextVNode.props, prevProps, optimized);
             updateSlots(instance, nextVNode.children);
+            // props update may have triggered pre-flush watchers.
+            // flush them before the render update.
+            flushPreFlushCbs(undefined, instance.update);
         };
         const patchChildren = (n1, n2, container, anchor, parentComponent, parentSuspense, isSVG, optimized = false) => {
             const c1 = n1 && n1.children;
@@ -2994,7 +3125,7 @@
             }
             if (oldLength > newLength) {
                 // remove old
-                unmountChildren(c1, parentComponent, parentSuspense, true, commonLength);
+                unmountChildren(c1, parentComponent, parentSuspense, true, false, commonLength);
             }
             else {
                 // mount new
@@ -3192,6 +3323,10 @@
                 hostInsert(vnode.anchor, container, anchor);
                 return;
             }
+            if (type === Static) {
+                moveStaticNode(vnode, container, anchor);
+                return;
+            }
             // single nodes
             const needTransition = moveType !== 2 /* REORDER */ &&
                 shapeFlag & 1 /* ELEMENT */ &&
@@ -3223,11 +3358,11 @@
                 hostInsert(el, container, anchor);
             }
         };
-        const unmount = (vnode, parentComponent, parentSuspense, doRemove = false) => {
+        const unmount = (vnode, parentComponent, parentSuspense, doRemove = false, optimized = false) => {
             const { type, props, ref, children, dynamicChildren, shapeFlag, patchFlag, dirs } = vnode;
             // unset ref
-            if (ref != null && parentComponent) {
-                setRef(ref, null, parentComponent, parentSuspense, null);
+            if (ref != null) {
+                setRef(ref, null, parentSuspense, null);
             }
             if (shapeFlag & 256 /* COMPONENT_SHOULD_KEEP_ALIVE */) {
                 parentComponent.ctx.deactivate(vnode);
@@ -3254,13 +3389,17 @@
                     (type !== Fragment ||
                         (patchFlag > 0 && patchFlag & 64 /* STABLE_FRAGMENT */))) {
                     // fast path for block nodes: only need to unmount dynamic children.
-                    unmountChildren(dynamicChildren, parentComponent, parentSuspense);
+                    unmountChildren(dynamicChildren, parentComponent, parentSuspense, false, true);
                 }
-                else if (shapeFlag & 16 /* ARRAY_CHILDREN */) {
+                else if ((type === Fragment &&
+                    (patchFlag & 128 /* KEYED_FRAGMENT */ ||
+                        patchFlag & 256 /* UNKEYED_FRAGMENT */)) ||
+                    (!optimized && shapeFlag & 16 /* ARRAY_CHILDREN */)) {
                     unmountChildren(children, parentComponent, parentSuspense);
                 }
-                // an unmounted teleport should always remove its children
-                if (shapeFlag & 64 /* TELEPORT */) {
+                // an unmounted teleport should always remove its children if not disabled
+                if (shapeFlag & 64 /* TELEPORT */ &&
+                    (doRemove || !isTeleportDisabled(vnode.props))) {
                     vnode.type.remove(vnode, internals);
                 }
                 if (doRemove) {
@@ -3279,6 +3418,10 @@
             const { type, el, anchor, transition } = vnode;
             if (type === Fragment) {
                 removeFragment(el, anchor);
+                return;
+            }
+            if (type === Static) {
+                removeStaticNode(vnode);
                 return;
             }
             const performRemove = () => {
@@ -3315,7 +3458,7 @@
             hostRemove(end);
         };
         const unmountComponent = (instance, parentSuspense, doRemove) => {
-            const { bum, effects, update, subTree, um, da, isDeactivated } = instance;
+            const { bum, effects, update, subTree, um } = instance;
             // beforeUnmount hook
             if (bum) {
                 invokeArrayFns(bum);
@@ -3335,12 +3478,6 @@
             if (um) {
                 queuePostRenderEffect(um, parentSuspense);
             }
-            // deactivated hook
-            if (da &&
-                !isDeactivated &&
-                instance.vnode.shapeFlag & 256 /* COMPONENT_SHOULD_KEEP_ALIVE */) {
-                queuePostRenderEffect(da, parentSuspense);
-            }
             queuePostRenderEffect(() => {
                 instance.isUnmounted = true;
             }, parentSuspense);
@@ -3349,10 +3486,11 @@
             // cause the suspense to resolve immediately if that was the last dep.
             if (
                 parentSuspense &&
-                !parentSuspense.isResolved &&
+                parentSuspense.pendingBranch &&
                 !parentSuspense.isUnmounted &&
                 instance.asyncDep &&
-                !instance.asyncResolved) {
+                !instance.asyncResolved &&
+                instance.suspenseId === parentSuspense.pendingId) {
                 parentSuspense.deps--;
                 if (parentSuspense.deps === 0) {
                     parentSuspense.resolve();
@@ -3360,9 +3498,9 @@
             }
             if ( __VUE_PROD_DEVTOOLS__) ;
         };
-        const unmountChildren = (children, parentComponent, parentSuspense, doRemove = false, start = 0) => {
+        const unmountChildren = (children, parentComponent, parentSuspense, doRemove = false, optimized = false, start = 0) => {
             for (let i = start; i < children.length; i++) {
-                unmount(children[i], parentComponent, parentSuspense, doRemove);
+                unmount(children[i], parentComponent, parentSuspense, doRemove, optimized);
             }
         };
         const getNextHostNode = vnode => {
@@ -3415,6 +3553,37 @@
             prevVNode
         ]);
     }
+    /**
+     * #1156
+     * When a component is HMR-enabled, we need to make sure that all static nodes
+     * inside a block also inherit the DOM element from the previous tree so that
+     * HMR updates (which are full updates) can retrieve the element for patching.
+     *
+     * #2080
+     * Inside keyed `template` fragment static children, if a fragment is moved,
+     * the children will always moved so that need inherit el form previous nodes
+     * to ensure correct moved position.
+     */
+    function traverseStaticChildren(n1, n2, shallow = false) {
+        const ch1 = n1.children;
+        const ch2 = n2.children;
+        if (isArray(ch1) && isArray(ch2)) {
+            for (let i = 0; i < ch1.length; i++) {
+                // this is only called in the optimized path so array children are
+                // guaranteed to be vnodes
+                const c1 = ch1[i];
+                let c2 = ch2[i];
+                if (c2.shapeFlag & 1 /* ELEMENT */ && !c2.dynamicChildren) {
+                    if (c2.patchFlag <= 0 || c2.patchFlag === 32 /* HYDRATE_EVENTS */) {
+                        c2 = ch2[i] = cloneIfMounted(ch2[i]);
+                        c2.el = c1.el;
+                    }
+                    if (!shallow)
+                        traverseStaticChildren(c1, c2);
+                }
+            }
+        }
+    }
     // https://en.wikipedia.org/wiki/Longest_increasing_subsequence
     function getSequence(arr) {
         const p = arr.slice();
@@ -3457,175 +3626,348 @@
         }
         return result;
     }
-    // initial value for watchers to trigger on undefined initial values
-    const INITIAL_WATCHER_VALUE = {};
-    // implementation
-    function watch(source, cb, options) {
-        return doWatch(source, cb, options);
+
+    const isTeleport = (type) => type.__isTeleport;
+    const isTeleportDisabled = (props) => props && (props.disabled || props.disabled === '');
+    const NULL_DYNAMIC_COMPONENT = Symbol();
+
+    const Fragment = Symbol( undefined);
+    const Text = Symbol( undefined);
+    const Comment = Symbol( undefined);
+    const Static = Symbol( undefined);
+    // Since v-if and v-for are the two possible ways node structure can dynamically
+    // change, once we consider v-if branches and each v-for fragment a block, we
+    // can divide a template into nested blocks, and within each block the node
+    // structure would be stable. This allows us to skip most children diffing
+    // and only worry about the dynamic nodes (indicated by patch flags).
+    const blockStack = [];
+    let currentBlock = null;
+    /**
+     * Open a block.
+     * This must be called before `createBlock`. It cannot be part of `createBlock`
+     * because the children of the block are evaluated before `createBlock` itself
+     * is called. The generated code typically looks like this:
+     *
+     * ```js
+     * function render() {
+     *   return (openBlock(),createBlock('div', null, [...]))
+     * }
+     * ```
+     * disableTracking is true when creating a v-for fragment block, since a v-for
+     * fragment always diffs its children.
+     *
+     * @private
+     */
+    function openBlock(disableTracking = false) {
+        blockStack.push((currentBlock = disableTracking ? null : []));
     }
-    function doWatch(source, cb, { immediate, deep, flush, onTrack, onTrigger } = EMPTY_OBJ, instance = currentInstance) {
-        let getter;
-        if (isRef(source)) {
-            getter = () => source.value;
+    function closeBlock() {
+        blockStack.pop();
+        currentBlock = blockStack[blockStack.length - 1] || null;
+    }
+    /**
+     * Create a block root vnode. Takes the same exact arguments as `createVNode`.
+     * A block root keeps track of dynamic nodes within the block in the
+     * `dynamicChildren` array.
+     *
+     * @private
+     */
+    function createBlock(type, props, children, patchFlag, dynamicProps) {
+        const vnode = createVNode(type, props, children, patchFlag, dynamicProps, true /* isBlock: prevent a block from tracking itself */);
+        // save current block children on the block vnode
+        vnode.dynamicChildren = currentBlock || EMPTY_ARR;
+        // close block
+        closeBlock();
+        // a block is always going to be patched, so track it as a child of its
+        // parent block
+        if ( currentBlock) {
+            currentBlock.push(vnode);
         }
-        else if (isReactive(source)) {
-            getter = () => source;
-            deep = true;
+        return vnode;
+    }
+    function isVNode(value) {
+        return value ? value.__v_isVNode === true : false;
+    }
+    function isSameVNodeType(n1, n2) {
+        return n1.type === n2.type && n1.key === n2.key;
+    }
+    const InternalObjectKey = `__vInternal`;
+    const normalizeKey = ({ key }) => key != null ? key : null;
+    const normalizeRef = ({ ref }) => {
+        return (ref != null
+            ? isString(ref) || isRef(ref) || isFunction(ref)
+                ? { i: currentRenderingInstance, r: ref }
+                : ref
+            : null);
+    };
+    const createVNode = ( _createVNode);
+    function _createVNode(type, props = null, children = null, patchFlag = 0, dynamicProps = null, isBlockNode = false) {
+        if (!type || type === NULL_DYNAMIC_COMPONENT) {
+            type = Comment;
         }
-        else if (isArray(source)) {
-            getter = () => source.map(s => {
-                if (isRef(s)) {
-                    return s.value;
-                }
-                else if (isReactive(s)) {
-                    return traverse(s);
-                }
-                else if (isFunction(s)) {
-                    return callWithErrorHandling(s, instance, 2 /* WATCH_GETTER */);
-                }
-                else ;
-            });
-        }
-        else if (isFunction(source)) {
-            if (cb) {
-                // getter with cb
-                getter = () => callWithErrorHandling(source, instance, 2 /* WATCH_GETTER */);
+        if (isVNode(type)) {
+            // createVNode receiving an existing vnode. This happens in cases like
+            // <component :is="vnode"/>
+            // #2078 make sure to merge refs during the clone instead of overwriting it
+            const cloned = cloneVNode(type, props, true /* mergeRef: true */);
+            if (children) {
+                normalizeChildren(cloned, children);
             }
-            else {
-                // no cb -> simple effect
-                getter = () => {
-                    if (instance && instance.isUnmounted) {
-                        return;
-                    }
-                    if (cleanup) {
-                        cleanup();
-                    }
-                    return callWithErrorHandling(source, instance, 3 /* WATCH_CALLBACK */, [onInvalidate]);
-                };
+            return cloned;
+        }
+        // class component normalization.
+        if (isClassComponent(type)) {
+            type = type.__vccOpts;
+        }
+        // class & style normalization.
+        if (props) {
+            // for reactive or proxy objects, we need to clone it to enable mutation.
+            if (isProxy(props) || InternalObjectKey in props) {
+                props = extend({}, props);
             }
+            let { class: klass, style } = props;
+            if (klass && !isString(klass)) {
+                props.class = normalizeClass(klass);
+            }
+            if (isObject(style)) {
+                // reactive state objects need to be cloned since they are likely to be
+                // mutated
+                if (isProxy(style) && !isArray(style)) {
+                    style = extend({}, style);
+                }
+                props.style = normalizeStyle(style);
+            }
+        }
+        // encode the vnode type information into a bitmap
+        const shapeFlag = isString(type)
+            ? 1 /* ELEMENT */
+            :  isSuspense(type)
+                ? 128 /* SUSPENSE */
+                : isTeleport(type)
+                    ? 64 /* TELEPORT */
+                    : isObject(type)
+                        ? 4 /* STATEFUL_COMPONENT */
+                        : isFunction(type)
+                            ? 2 /* FUNCTIONAL_COMPONENT */
+                            : 0;
+        const vnode = {
+            __v_isVNode: true,
+            ["__v_skip" /* SKIP */]: true,
+            type,
+            props,
+            key: props && normalizeKey(props),
+            ref: props && normalizeRef(props),
+            scopeId: currentScopeId,
+            children: null,
+            component: null,
+            suspense: null,
+            ssContent: null,
+            ssFallback: null,
+            dirs: null,
+            transition: null,
+            el: null,
+            anchor: null,
+            target: null,
+            targetAnchor: null,
+            staticCount: 0,
+            shapeFlag,
+            patchFlag,
+            dynamicProps,
+            dynamicChildren: null,
+            appContext: null
+        };
+        normalizeChildren(vnode, children);
+        // normalize suspense children
+        if ( shapeFlag & 128 /* SUSPENSE */) {
+            const { content, fallback } = normalizeSuspenseChildren(vnode);
+            vnode.ssContent = content;
+            vnode.ssFallback = fallback;
+        }
+        if (
+            // avoid a block node from tracking itself
+            !isBlockNode &&
+            // has current parent block
+            currentBlock &&
+            // presence of a patch flag indicates this node needs patching on updates.
+            // component nodes also should always be patched, because even if the
+            // component doesn't need to update, it needs to persist the instance on to
+            // the next vnode so that it can be properly unmounted later.
+            (patchFlag > 0 || shapeFlag & 6 /* COMPONENT */) &&
+            // the EVENTS flag is only for hydration and if it is the only flag, the
+            // vnode should not be considered dynamic due to handler caching.
+            patchFlag !== 32 /* HYDRATE_EVENTS */) {
+            currentBlock.push(vnode);
+        }
+        return vnode;
+    }
+    function cloneVNode(vnode, extraProps, mergeRef = false) {
+        // This is intentionally NOT using spread or extend to avoid the runtime
+        // key enumeration cost.
+        const { props, ref, patchFlag } = vnode;
+        const mergedProps = extraProps ? mergeProps(props || {}, extraProps) : props;
+        return {
+            __v_isVNode: true,
+            ["__v_skip" /* SKIP */]: true,
+            type: vnode.type,
+            props: mergedProps,
+            key: mergedProps && normalizeKey(mergedProps),
+            ref: extraProps && extraProps.ref
+                ? // #2078 in the case of <component :is="vnode" ref="extra"/>
+                    // if the vnode itself already has a ref, cloneVNode will need to merge
+                    // the refs so the single vnode can be set on multiple refs
+                    mergeRef && ref
+                        ? isArray(ref)
+                            ? ref.concat(normalizeRef(extraProps))
+                            : [ref, normalizeRef(extraProps)]
+                        : normalizeRef(extraProps)
+                : ref,
+            scopeId: vnode.scopeId,
+            children: vnode.children,
+            target: vnode.target,
+            targetAnchor: vnode.targetAnchor,
+            staticCount: vnode.staticCount,
+            shapeFlag: vnode.shapeFlag,
+            // if the vnode is cloned with extra props, we can no longer assume its
+            // existing patch flag to be reliable and need to add the FULL_PROPS flag.
+            // note: perserve flag for fragments since they use the flag for children
+            // fast paths only.
+            patchFlag: extraProps && vnode.type !== Fragment
+                ? patchFlag === -1 // hoisted node
+                    ? 16 /* FULL_PROPS */
+                    : patchFlag | 16 /* FULL_PROPS */
+                : patchFlag,
+            dynamicProps: vnode.dynamicProps,
+            dynamicChildren: vnode.dynamicChildren,
+            appContext: vnode.appContext,
+            dirs: vnode.dirs,
+            transition: vnode.transition,
+            // These should technically only be non-null on mounted VNodes. However,
+            // they *should* be copied for kept-alive vnodes. So we just always copy
+            // them since them being non-null during a mount doesn't affect the logic as
+            // they will simply be overwritten.
+            component: vnode.component,
+            suspense: vnode.suspense,
+            ssContent: vnode.ssContent && cloneVNode(vnode.ssContent),
+            ssFallback: vnode.ssFallback && cloneVNode(vnode.ssFallback),
+            el: vnode.el,
+            anchor: vnode.anchor
+        };
+    }
+    /**
+     * @private
+     */
+    function createTextVNode(text = ' ', flag = 0) {
+        return createVNode(Text, null, text, flag);
+    }
+    function normalizeVNode(child) {
+        if (child == null || typeof child === 'boolean') {
+            // empty placeholder
+            return createVNode(Comment);
+        }
+        else if (isArray(child)) {
+            // fragment
+            return createVNode(Fragment, null, child);
+        }
+        else if (typeof child === 'object') {
+            // already vnode, this should be the most common since compiled templates
+            // always produce all-vnode children arrays
+            return child.el === null ? child : cloneVNode(child);
         }
         else {
-            getter = NOOP;
+            // strings and numbers
+            return createVNode(Text, null, String(child));
         }
-        if (cb && deep) {
-            const baseGetter = getter;
-            getter = () => traverse(baseGetter());
+    }
+    // optimized normalization for template-compiled render fns
+    function cloneIfMounted(child) {
+        return child.el === null ? child : cloneVNode(child);
+    }
+    function normalizeChildren(vnode, children) {
+        let type = 0;
+        const { shapeFlag } = vnode;
+        if (children == null) {
+            children = null;
         }
-        let cleanup;
-        const onInvalidate = (fn) => {
-            cleanup = runner.options.onStop = () => {
-                callWithErrorHandling(fn, instance, 4 /* WATCH_CLEANUP */);
-            };
-        };
-        let oldValue = isArray(source) ? [] : INITIAL_WATCHER_VALUE;
-        const job = () => {
-            if (!runner.active) {
+        else if (isArray(children)) {
+            type = 16 /* ARRAY_CHILDREN */;
+        }
+        else if (typeof children === 'object') {
+            if (shapeFlag & 1 /* ELEMENT */ || shapeFlag & 64 /* TELEPORT */) {
+                // Normalize slot to plain children for plain element and Teleport
+                const slot = children.default;
+                if (slot) {
+                    // _c marker is added by withCtx() indicating this is a compiled slot
+                    slot._c && setCompiledSlotRendering(1);
+                    normalizeChildren(vnode, slot());
+                    slot._c && setCompiledSlotRendering(-1);
+                }
                 return;
             }
-            if (cb) {
-                // watch(source, cb)
-                const newValue = runner();
-                if (deep || hasChanged(newValue, oldValue)) {
-                    // cleanup before running cb again
-                    if (cleanup) {
-                        cleanup();
+            else {
+                type = 32 /* SLOTS_CHILDREN */;
+                const slotFlag = children._;
+                if (!slotFlag && !(InternalObjectKey in children)) {
+                    children._ctx = currentRenderingInstance;
+                }
+                else if (slotFlag === 3 /* FORWARDED */ && currentRenderingInstance) {
+                    // a child component receives forwarded slots from the parent.
+                    // its slot type is determined by its parent's slot type.
+                    if (currentRenderingInstance.vnode.patchFlag & 1024 /* DYNAMIC_SLOTS */) {
+                        children._ = 2 /* DYNAMIC */;
+                        vnode.patchFlag |= 1024 /* DYNAMIC_SLOTS */;
                     }
-                    callWithAsyncErrorHandling(cb, instance, 3 /* WATCH_CALLBACK */, [
-                        newValue,
-                        // pass undefined as the old value when it's changed for the first time
-                        oldValue === INITIAL_WATCHER_VALUE ? undefined : oldValue,
-                        onInvalidate
-                    ]);
-                    oldValue = newValue;
+                    else {
+                        children._ = 1 /* STABLE */;
+                    }
                 }
+            }
+        }
+        else if (isFunction(children)) {
+            children = { default: children, _ctx: currentRenderingInstance };
+            type = 32 /* SLOTS_CHILDREN */;
+        }
+        else {
+            children = String(children);
+            // force teleport children to array so it can be moved around
+            if (shapeFlag & 64 /* TELEPORT */) {
+                type = 16 /* ARRAY_CHILDREN */;
+                children = [createTextVNode(children)];
             }
             else {
-                // watchEffect
-                runner();
-            }
-        };
-        let scheduler;
-        if (flush === 'sync') {
-            scheduler = job;
-        }
-        else if (flush === 'pre') {
-            // ensure it's queued before component updates (which have positive ids)
-            job.id = -1;
-            scheduler = () => {
-                if (!instance || instance.isMounted) {
-                    queueJob(job);
-                }
-                else {
-                    // with 'pre' option, the first call must happen before
-                    // the component is mounted so it is called synchronously.
-                    job();
-                }
-            };
-        }
-        else {
-            scheduler = () => queuePostRenderEffect(job, instance && instance.suspense);
-        }
-        const runner = effect(getter, {
-            lazy: true,
-            onTrack,
-            onTrigger,
-            scheduler
-        });
-        recordInstanceBoundEffect(runner);
-        // initial run
-        if (cb) {
-            if (immediate) {
-                job();
-            }
-            else {
-                oldValue = runner();
+                type = 8 /* TEXT_CHILDREN */;
             }
         }
-        else {
-            runner();
-        }
-        return () => {
-            stop(runner);
-            if (instance) {
-                remove(instance.effects, runner);
-            }
-        };
+        vnode.children = children;
+        vnode.shapeFlag |= type;
     }
-    // this.$watch
-    function instanceWatch(source, cb, options) {
-        const publicThis = this.proxy;
-        const getter = isString(source)
-            ? () => publicThis[source]
-            : source.bind(publicThis);
-        return doWatch(getter, cb.bind(publicThis), options, this);
-    }
-    function traverse(value, seen = new Set()) {
-        if (!isObject(value) || seen.has(value)) {
-            return value;
-        }
-        seen.add(value);
-        if (isArray(value)) {
-            for (let i = 0; i < value.length; i++) {
-                traverse(value[i], seen);
+    function mergeProps(...args) {
+        const ret = extend({}, args[0]);
+        for (let i = 1; i < args.length; i++) {
+            const toMerge = args[i];
+            for (const key in toMerge) {
+                if (key === 'class') {
+                    if (ret.class !== toMerge.class) {
+                        ret.class = normalizeClass([ret.class, toMerge.class]);
+                    }
+                }
+                else if (key === 'style') {
+                    ret.style = normalizeStyle([ret.style, toMerge.style]);
+                }
+                else if (isOn(key)) {
+                    const existing = ret[key];
+                    const incoming = toMerge[key];
+                    if (existing !== incoming) {
+                        ret[key] = existing
+                            ? [].concat(existing, toMerge[key])
+                            : incoming;
+                    }
+                }
+                else if (key !== '') {
+                    ret[key] = toMerge[key];
+                }
             }
         }
-        else if (value instanceof Map) {
-            value.forEach((v, key) => {
-                // to register mutation dep for existing keys
-                traverse(value.get(key), seen);
-            });
-        }
-        else if (value instanceof Set) {
-            value.forEach(v => {
-                traverse(v, seen);
-            });
-        }
-        else {
-            for (const key in value) {
-                traverse(value[key], seen);
-            }
-        }
-        return value;
+        return ret;
     }
 
     function provide(key, value) {
@@ -3645,30 +3987,42 @@
             provides[key] = value;
         }
     }
-    function inject(key, defaultValue) {
+    function inject(key, defaultValue, treatDefaultAsFactory = false) {
         // fallback to `currentRenderingInstance` so that this can be called in
         // a functional component
         const instance = currentInstance || currentRenderingInstance;
         if (instance) {
-            const provides = instance.provides;
-            if (key in provides) {
+            // #2400
+            // to support `app.use` plugins,
+            // fallback to appContext's `provides` if the intance is at root
+            const provides = instance.parent == null
+                ? instance.vnode.appContext && instance.vnode.appContext.provides
+                : instance.parent.provides;
+            if (provides && key in provides) {
                 // TS doesn't allow symbol as index type
                 return provides[key];
             }
             else if (arguments.length > 1) {
-                return defaultValue;
+                return treatDefaultAsFactory && isFunction(defaultValue)
+                    ? defaultValue()
+                    : defaultValue;
             }
             else ;
         }
     }
-    function applyOptions(instance, options, deferredData = [], deferredWatch = [], asMixin = false) {
+    let isInBeforeCreate = false;
+    function applyOptions(instance, options, deferredData = [], deferredWatch = [], deferredProvide = [], asMixin = false) {
         const { 
         // composition
         mixins, extends: extendsOptions, 
         // state
         data: dataOptions, computed: computedOptions, methods, watch: watchOptions, provide: provideOptions, inject: injectOptions, 
+        // assets
+        components, directives, 
         // lifecycle
-        beforeMount, mounted, beforeUpdate, updated, activated, deactivated, beforeUnmount, unmounted, render, renderTracked, renderTriggered, errorCaptured } = options;
+        beforeMount, mounted, beforeUpdate, updated, activated, deactivated, beforeDestroy, beforeUnmount, destroyed, unmounted, render, renderTracked, renderTriggered, errorCaptured, 
+        // public API
+        expose } = options;
         const publicThis = instance.proxy;
         const ctx = instance.ctx;
         const globalMixins = instance.appContext.mixins;
@@ -3677,17 +4031,19 @@
         }
         // applyOptions is called non-as-mixin once per instance
         if (!asMixin) {
-            callSyncHook('beforeCreate', options, publicThis, globalMixins);
+            isInBeforeCreate = true;
+            callSyncHook('beforeCreate', "bc" /* BEFORE_CREATE */, options, instance, globalMixins);
+            isInBeforeCreate = false;
             // global mixins are applied first
-            applyMixins(instance, globalMixins, deferredData, deferredWatch);
+            applyMixins(instance, globalMixins, deferredData, deferredWatch, deferredProvide);
         }
         // extending a base component...
         if (extendsOptions) {
-            applyOptions(instance, extendsOptions, deferredData, deferredWatch, true);
+            applyOptions(instance, extendsOptions, deferredData, deferredWatch, deferredProvide, true);
         }
         // local mixins
         if (mixins) {
-            applyMixins(instance, mixins, deferredData, deferredWatch);
+            applyMixins(instance, mixins, deferredData, deferredWatch, deferredProvide);
         }
         // options initialization order (to be consistent with Vue 2):
         // - props (already done outside of this function)
@@ -3707,7 +4063,7 @@
                 for (const key in injectOptions) {
                     const opt = injectOptions[key];
                     if (isObject(opt)) {
-                        ctx[key] = inject(opt.from, opt.default);
+                        ctx[key] = inject(opt.from || key, opt.default, true /* treat default function as factory */);
                     }
                     else {
                         ctx[key] = inject(opt);
@@ -3723,18 +4079,16 @@
                 }
             }
         }
-        if (dataOptions) {
-            if (asMixin) {
-                deferredData.push(dataOptions);
-            }
-            else {
-                resolveData(instance, dataOptions, publicThis);
-            }
-        }
         if (!asMixin) {
             if (deferredData.length) {
                 deferredData.forEach(dataFn => resolveData(instance, dataFn, publicThis));
             }
+            if (dataOptions) {
+                resolveData(instance, dataOptions, publicThis);
+            }
+        }
+        else if (dataOptions) {
+            deferredData.push(dataOptions);
         }
         if (computedOptions) {
             for (const key in computedOptions) {
@@ -3770,16 +4124,34 @@
             });
         }
         if (provideOptions) {
-            const provides = isFunction(provideOptions)
-                ? provideOptions.call(publicThis)
-                : provideOptions;
-            for (const key in provides) {
-                provide(key, provides[key]);
+            deferredProvide.push(provideOptions);
+        }
+        if (!asMixin && deferredProvide.length) {
+            deferredProvide.forEach(provideOptions => {
+                const provides = isFunction(provideOptions)
+                    ? provideOptions.call(publicThis)
+                    : provideOptions;
+                Reflect.ownKeys(provides).forEach(key => {
+                    provide(key, provides[key]);
+                });
+            });
+        }
+        // asset options.
+        // To reduce memory usage, only components with mixins or extends will have
+        // resolved asset registry attached to instance.
+        if (asMixin) {
+            if (components) {
+                extend(instance.components ||
+                    (instance.components = extend({}, instance.type.components)), components);
+            }
+            if (directives) {
+                extend(instance.directives ||
+                    (instance.directives = extend({}, instance.type.directives)), directives);
             }
         }
         // lifecycle options
         if (!asMixin) {
-            callSyncHook('created', options, publicThis, globalMixins);
+            callSyncHook('created', "c" /* CREATED */, options, instance, globalMixins);
         }
         if (beforeMount) {
             onBeforeMount(beforeMount.bind(publicThis));
@@ -3814,33 +4186,58 @@
         if (unmounted) {
             onUnmounted(unmounted.bind(publicThis));
         }
-    }
-    function callSyncHook(name, options, ctx, globalMixins) {
-        callHookFromMixins(name, globalMixins, ctx);
-        const baseHook = options.extends && options.extends[name];
-        if (baseHook) {
-            baseHook.call(ctx);
-        }
-        const mixins = options.mixins;
-        if (mixins) {
-            callHookFromMixins(name, mixins, ctx);
-        }
-        const selfHook = options[name];
-        if (selfHook) {
-            selfHook.call(ctx);
-        }
-    }
-    function callHookFromMixins(name, mixins, ctx) {
-        for (let i = 0; i < mixins.length; i++) {
-            const fn = mixins[i][name];
-            if (fn) {
-                fn.call(ctx);
+        if (isArray(expose)) {
+            if (!asMixin) {
+                if (expose.length) {
+                    const exposed = instance.exposed || (instance.exposed = proxyRefs({}));
+                    expose.forEach(key => {
+                        exposed[key] = toRef(publicThis, key);
+                    });
+                }
+                else if (!instance.exposed) {
+                    instance.exposed = EMPTY_OBJ;
+                }
             }
         }
     }
-    function applyMixins(instance, mixins, deferredData, deferredWatch) {
+    function callSyncHook(name, type, options, instance, globalMixins) {
+        callHookFromMixins(name, type, globalMixins, instance);
+        const { extends: base, mixins } = options;
+        if (base) {
+            callHookFromExtends(name, type, base, instance);
+        }
+        if (mixins) {
+            callHookFromMixins(name, type, mixins, instance);
+        }
+        const selfHook = options[name];
+        if (selfHook) {
+            callWithAsyncErrorHandling(selfHook.bind(instance.proxy), instance, type);
+        }
+    }
+    function callHookFromExtends(name, type, base, instance) {
+        if (base.extends) {
+            callHookFromExtends(name, type, base.extends, instance);
+        }
+        const baseHook = base[name];
+        if (baseHook) {
+            callWithAsyncErrorHandling(baseHook.bind(instance.proxy), instance, type);
+        }
+    }
+    function callHookFromMixins(name, type, mixins, instance) {
         for (let i = 0; i < mixins.length; i++) {
-            applyOptions(instance, mixins[i], deferredData, deferredWatch, true);
+            const chainedMixins = mixins[i].mixins;
+            if (chainedMixins) {
+                callHookFromMixins(name, type, chainedMixins, instance);
+            }
+            const fn = mixins[i][name];
+            if (fn) {
+                callWithAsyncErrorHandling(fn.bind(instance.proxy), instance, type);
+            }
+        }
+    }
+    function applyMixins(instance, mixins, deferredData, deferredWatch, deferredProvide) {
+        for (let i = 0; i < mixins.length; i++) {
+            applyOptions(instance, mixins[i], deferredData, deferredWatch, deferredProvide, true);
         }
     }
     function resolveData(instance, dataFn, publicThis) {
@@ -3855,7 +4252,9 @@
         }
     }
     function createWatcher(raw, ctx, publicThis, key) {
-        const getter = () => publicThis[key];
+        const getter = key.includes('.')
+            ? createPathGetter(publicThis, key)
+            : () => publicThis[key];
         if (isString(raw)) {
             const handler = ctx[raw];
             if (isFunction(handler)) {
@@ -3870,10 +4269,25 @@
                 raw.forEach(r => createWatcher(r, ctx, publicThis, key));
             }
             else {
-                watch(getter, raw.handler.bind(publicThis), raw);
+                const handler = isFunction(raw.handler)
+                    ? raw.handler.bind(publicThis)
+                    : ctx[raw.handler];
+                if (isFunction(handler)) {
+                    watch(getter, handler, raw);
+                }
             }
         }
         else ;
+    }
+    function createPathGetter(ctx, path) {
+        const segments = path.split('.');
+        return () => {
+            let cur = ctx;
+            for (let i = 0; i < segments.length && cur; i++) {
+                cur = cur[segments[i]];
+            }
+            return cur;
+        };
     }
     function resolveMergedOptions(instance) {
         const raw = instance.type;
@@ -3885,23 +4299,31 @@
             return raw;
         const options = {};
         globalMixins.forEach(m => mergeOptions(options, m, instance));
-        extendsOptions && mergeOptions(options, extendsOptions, instance);
-        mixins && mixins.forEach(m => mergeOptions(options, m, instance));
         mergeOptions(options, raw, instance);
         return (raw.__merged = options);
     }
     function mergeOptions(to, from, instance) {
         const strats = instance.appContext.config.optionMergeStrategies;
+        const { mixins, extends: extendsOptions } = from;
+        extendsOptions && mergeOptions(to, extendsOptions, instance);
+        mixins &&
+            mixins.forEach((m) => mergeOptions(to, m, instance));
         for (const key in from) {
             if (strats && hasOwn(strats, key)) {
                 to[key] = strats[key](to[key], from[key], instance.proxy, key);
             }
-            else if (!hasOwn(to, key)) {
+            else {
                 to[key] = from[key];
             }
         }
     }
 
+    /**
+     * #2437 In Vue 3, functional components do not have a public instance proxy but
+     * they exist in the internal parent chain. For code that relies on traversing
+     * public $parent chains, skip functional ones and go to the parent instead.
+     */
+    const getPublicInstance = (i) => i && (i.proxy ? i.proxy : getPublicInstance(i.parent));
     const publicPropertiesMap = extend(Object.create(null), {
         $: i => i,
         $el: i => i.vnode.el,
@@ -3910,12 +4332,12 @@
         $attrs: i => ( i.attrs),
         $slots: i => ( i.slots),
         $refs: i => ( i.refs),
-        $parent: i => i.parent && i.parent.proxy,
+        $parent: i => getPublicInstance(i.parent),
         $root: i => i.root && i.root.proxy,
         $emit: i => i.emit,
         $options: i => (__VUE_OPTIONS_API__ ? resolveMergedOptions(i) : i.type),
         $forceUpdate: i => () => queueJob(i.update),
-        $nextTick: () => nextTick,
+        $nextTick: i => nextTick.bind(i.proxy),
         $watch: i => (__VUE_OPTIONS_API__ ? instanceWatch.bind(i) : NOOP)
     });
     const PublicInstanceProxyHandlers = {
@@ -3958,7 +4380,7 @@
                 else if (
                 // only cache other properties when instance has declared (thus stable)
                 // props
-                (normalizedProps = normalizePropsOptions(type)[0]) &&
+                (normalizedProps = instance.propsOptions[0]) &&
                     hasOwn(normalizedProps, key)) {
                     accessCache[key] = 2 /* PROPS */;
                     return props[key];
@@ -3967,7 +4389,7 @@
                     accessCache[key] = 3 /* CONTEXT */;
                     return ctx[key];
                 }
-                else {
+                else if (!__VUE_OPTIONS_API__ || !isInBeforeCreate) {
                     accessCache[key] = 4 /* OTHER */;
                 }
             }
@@ -4020,13 +4442,12 @@
             }
             return true;
         },
-        has({ _: { data, setupState, accessCache, ctx, type, appContext } }, key) {
+        has({ _: { data, setupState, accessCache, ctx, appContext, propsOptions } }, key) {
             let normalizedProps;
             return (accessCache[key] !== undefined ||
                 (data !== EMPTY_OBJ && hasOwn(data, key)) ||
                 (setupState !== EMPTY_OBJ && hasOwn(setupState, key)) ||
-                ((normalizedProps = normalizePropsOptions(type)[0]) &&
-                    hasOwn(normalizedProps, key)) ||
+                ((normalizedProps = propsOptions[0]) && hasOwn(normalizedProps, key)) ||
                 hasOwn(ctx, key) ||
                 hasOwn(publicPropertiesMap, key) ||
                 hasOwn(appContext.config.globalProperties, key));
@@ -4047,13 +4468,13 @@
     });
 
     const emptyAppContext = createAppContext();
-    let uid$1 = 0;
+    let uid$1$1 = 0;
     function createComponentInstance(vnode, parent, suspense) {
         const type = vnode.type;
         // inherit parent app context - or - if root, adopt from root vnode
         const appContext = (parent ? parent.appContext : vnode.appContext) || emptyAppContext;
         const instance = {
-            uid: uid$1++,
+            uid: uid$1$1++,
             vnode,
             type,
             parent,
@@ -4064,11 +4485,21 @@
             update: null,
             render: null,
             proxy: null,
+            exposed: null,
             withProxy: null,
             effects: null,
             provides: parent ? parent.provides : Object.create(appContext.provides),
             accessCache: null,
             renderCache: [],
+            // local resovled assets
+            components: null,
+            directives: null,
+            // resolved props and emits options
+            propsOptions: normalizePropsOptions(type, appContext),
+            emitsOptions: normalizeEmitsOptions(type, appContext),
+            // emit
+            emit: null,
+            emitted: null,
             // state
             ctx: EMPTY_OBJ,
             data: EMPTY_OBJ,
@@ -4080,6 +4511,7 @@
             setupContext: null,
             // suspense related
             suspense,
+            suspenseId: suspense ? suspense.pendingId : 0,
             asyncDep: null,
             asyncResolved: false,
             // lifecycle hooks
@@ -4099,9 +4531,7 @@
             a: null,
             rtg: null,
             rtc: null,
-            ec: null,
-            emit: null,
-            emitted: null
+            ec: null
         };
         {
             instance.ctx = { _: instance };
@@ -4131,7 +4561,7 @@
     function setupStatefulComponent(instance, isSSR) {
         const Component = instance.type;
         // 0. create render proxy property access cache
-        instance.accessCache = {};
+        instance.accessCache = Object.create(null);
         // 1. create public instance / render proxy
         // also mark it raw so it's never observed
         instance.proxy = new Proxy(instance.ctx, PublicInstanceProxyHandlers);
@@ -4169,11 +4599,16 @@
     function handleSetupResult(instance, setupResult, isSSR) {
         if (isFunction(setupResult)) {
             // setup returned an inline render function
-            instance.render = setupResult;
+            {
+                instance.render = setupResult;
+            }
         }
         else if (isObject(setupResult)) {
             // setup returned bindings.
             // assuming a render function compiled from template is present.
+            if ( __VUE_PROD_DEVTOOLS__) {
+                instance.devtoolsRawSetupState = setupResult;
+            }
             instance.setupState = proxyRefs(setupResult);
         }
         else ;
@@ -4194,24 +4629,30 @@
         // support for 2.x options
         if (__VUE_OPTIONS_API__) {
             currentInstance = instance;
+            pauseTracking();
             applyOptions(instance, Component);
+            resetTracking();
             currentInstance = null;
         }
     }
     function createSetupContext(instance) {
+        const expose = exposed => {
+            instance.exposed = proxyRefs(exposed);
+        };
         {
             return {
                 attrs: instance.attrs,
                 slots: instance.slots,
-                emit: instance.emit
+                emit: instance.emit,
+                expose
             };
         }
     }
     // record effects created during a component's setup() so that they can be
     // stopped when the component unmounts
-    function recordInstanceBoundEffect(effect) {
-        if (currentInstance) {
-            (currentInstance.effects || (currentInstance.effects = [])).push(effect);
+    function recordInstanceBoundEffect(effect, instance = currentInstance) {
+        if (instance) {
+            (instance.effects || (instance.effects = [])).push(effect);
         }
     }
     const classifyRE = /(?:^|[-_])(\w)/g;
@@ -4222,7 +4663,7 @@
             ? Component.displayName || Component.name
             : Component.name;
         if (!name && Component.__file) {
-            const match = Component.__file.match(/([^/\\]+)\.vue$/);
+            const match = Component.__file.match(/([^/\\]+)\.\w+$/);
             if (match) {
                 name = match[1];
             }
@@ -4237,9 +4678,13 @@
                 }
             };
             name =
-                inferFromRegistry(instance.parent.type.components) || inferFromRegistry(instance.appContext.components);
+                inferFromRegistry(instance.components ||
+                    instance.parent.type.components) || inferFromRegistry(instance.appContext.components);
         }
         return name ? classify(name) : isRoot ? `App` : `Anonymous`;
+    }
+    function isClassComponent(value) {
+        return isFunction(value) && '__vccOpts' in value;
     }
 
     function computed$1(getterOrOptions) {
@@ -4249,7 +4694,7 @@
     }
 
     // Core API ------------------------------------------------------------------
-    const version = "3.0.0-rc.5";
+    const version = "3.0.4";
 
     const svgNS = 'http://www.w3.org/2000/svg';
     const doc = (typeof document !== 'undefined' ? document : null);
@@ -4355,18 +4800,23 @@
     }
     const importantRE = /\s*!important$/;
     function setStyle(style, name, val) {
-        if (name.startsWith('--')) {
-            // custom property definition
-            style.setProperty(name, val);
+        if (isArray(val)) {
+            val.forEach(v => setStyle(style, name, v));
         }
         else {
-            const prefixed = autoPrefix(style, name);
-            if (importantRE.test(val)) {
-                // !important
-                style.setProperty(hyphenate(prefixed), val.replace(importantRE, ''), 'important');
+            if (name.startsWith('--')) {
+                // custom property definition
+                style.setProperty(name, val);
             }
             else {
-                style[prefixed] = val;
+                const prefixed = autoPrefix(style, name);
+                if (importantRE.test(val)) {
+                    // !important
+                    style.setProperty(hyphenate(prefixed), val.replace(importantRE, ''), 'important');
+                }
+                else {
+                    style[prefixed] = val;
+                }
             }
         }
     }
@@ -4432,25 +4882,37 @@
             // store value as _value as well since
             // non-string values will be stringified.
             el._value = value;
-            el.value = value == null ? '' : value;
+            const newValue = value == null ? '' : value;
+            if (el.value !== newValue) {
+                el.value = newValue;
+            }
             return;
         }
-        if (value === '' && typeof el[key] === 'boolean') {
-            // e.g. <select multiple> compiles to { multiple: '' }
-            el[key] = true;
-        }
-        else if (value == null && typeof el[key] === 'string') {
-            // e.g. <div :id="null">
-            el[key] = '';
-            el.removeAttribute(key);
-        }
-        else {
-            // some properties perform value validation and throw
-            try {
-                el[key] = value;
+        if (value === '' || value == null) {
+            const type = typeof el[key];
+            if (value === '' && type === 'boolean') {
+                // e.g. <select multiple> compiles to { multiple: '' }
+                el[key] = true;
+                return;
             }
-            catch (e) {
+            else if (value == null && type === 'string') {
+                // e.g. <div :id="null">
+                el[key] = '';
+                el.removeAttribute(key);
+                return;
             }
+            else if (type === 'number') {
+                // e.g. <img :width="null">
+                el[key] = 0;
+                el.removeAttribute(key);
+                return;
+            }
+        }
+        // some properties perform value validation and throw
+        try {
+            el[key] = value;
+        }
+        catch (e) {
         }
     }
 
@@ -4482,20 +4944,24 @@
         el.removeEventListener(event, handler, options);
     }
     function patchEvent(el, rawName, prevValue, nextValue, instance = null) {
-        const invoker = prevValue && prevValue.invoker;
-        if (nextValue && invoker) {
-            prevValue.invoker = null;
-            invoker.value = nextValue;
-            nextValue.invoker = invoker;
+        // vei = vue event invokers
+        const invokers = el._vei || (el._vei = {});
+        const existingInvoker = invokers[rawName];
+        if (nextValue && existingInvoker) {
+            // patch
+            existingInvoker.value = nextValue;
         }
         else {
             const [name, options] = parseName(rawName);
             if (nextValue) {
-                addEventListener(el, name, createInvoker(nextValue, instance), options);
+                // add
+                const invoker = (invokers[rawName] = createInvoker(nextValue, instance));
+                addEventListener(el, name, invoker, options);
             }
-            else if (invoker) {
+            else if (existingInvoker) {
                 // remove
-                removeEventListener(el, name, invoker, options);
+                removeEventListener(el, name, existingInvoker, options);
+                invokers[rawName] = undefined;
             }
         }
     }
@@ -4526,7 +4992,6 @@
             }
         };
         invoker.value = initialValue;
-        initialValue.invoker = invoker;
         invoker.attached = getNow();
         return invoker;
     }
@@ -4603,6 +5068,11 @@
         if (key === 'spellcheck' || key === 'draggable') {
             return false;
         }
+        // #1787 form as an attribute must be a string, while it accepts an Element as
+        // a prop
+        if (key === 'form' && typeof value === 'string') {
+            return false;
+        }
         // #1526 <input list> must be set as attribute
         if (key === 'list' && el.tagName === 'INPUT') {
             return false;
@@ -4661,9 +5131,9 @@
       return (openBlock(), createBlock("button", {
         class: "btn badge",
         style: {"margin-top":"0.5rem"},
-        onClick: _cache[1] || (_cache[1] = $event => (_ctx.count += 1)),
-        "data-badge": _ctx.count
-      }, " count: " + toDisplayString(_ctx.count), 9 /* TEXT, PROPS */, ["data-badge"]))
+        onClick: _cache[1] || (_cache[1] = $event => ($data.count += 1)),
+        "data-badge": $data.count
+      }, " count: " + toDisplayString($data.count), 9 /* TEXT, PROPS */, ["data-badge"]))
     }
 
     script.render = render;

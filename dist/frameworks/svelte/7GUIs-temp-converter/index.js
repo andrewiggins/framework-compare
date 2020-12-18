@@ -37,6 +37,10 @@
     return a != a ? b == b : a !== b || a && typeof a === 'object' || typeof a === 'function';
   }
 
+  function is_empty(obj) {
+    return Object.keys(obj).length === 0;
+  }
+
   function insert(target, node, anchor) {
     target.insertBefore(node, anchor || null);
   }
@@ -108,6 +112,7 @@
         update(component.$$);
       }
 
+      set_current_component(null);
       dirty_components.length = 0;
 
       while (binding_callbacks.length) {
@@ -230,14 +235,15 @@
       context: new Map(parent_component ? parent_component.$$.context : []),
       // everything else
       callbacks: blank_object(),
-      dirty: dirty
+      dirty: dirty,
+      skip_bound: false
     };
     var ready = false;
     $$.ctx = instance ? instance(component, prop_values, function (i, ret) {
       var value = (arguments.length <= 2 ? 0 : arguments.length - 2) ? arguments.length <= 2 ? undefined : arguments[2] : ret;
 
       if ($$.ctx && not_equal($$.ctx[i], $$.ctx[i] = value)) {
-        if ($$.bound[i]) $$.bound[i](value);
+        if (!$$.skip_bound && $$.bound[i]) $$.bound[i](value);
         if (ready) make_dirty(component, i);
       }
 
@@ -267,6 +273,10 @@
 
     set_current_component(parent_component);
   }
+  /**
+   * Base class for Svelte components. Used when dev=false.
+   */
+
 
   var SvelteComponent = /*#__PURE__*/function () {
     function SvelteComponent() {}
@@ -287,7 +297,12 @@
       };
     };
 
-    _proto3.$set = function $set() {// overridden by instance, if it has props
+    _proto3.$set = function $set($$props) {
+      if (this.$$set && !is_empty($$props)) {
+        this.$$.skip_bound = true;
+        this.$$set($$props);
+        this.$$.skip_bound = false;
+      }
     };
 
     return SvelteComponent;
@@ -298,6 +313,7 @@
     var t0;
     var input1;
     var t1;
+    var mounted;
     var dispose;
     return {
       c: function c() {
@@ -314,17 +330,20 @@
         ctx[1];
         attr(input1, "type", "number");
       },
-      m: function m(target, anchor, remount) {
+      m: function m(target, anchor) {
         insert(target, input0, anchor);
         insert(target, t0, anchor);
         insert(target, input1, anchor);
         insert(target, t1, anchor);
-        if (remount) run_all(dispose);
-        dispose = [listen(input0, "input",
-        /*input_handler*/
-        ctx[4]), listen(input1, "input",
-        /*input_handler_1*/
-        ctx[5])];
+
+        if (!mounted) {
+          dispose = [listen(input0, "input",
+          /*input_handler*/
+          ctx[4]), listen(input1, "input",
+          /*input_handler_1*/
+          ctx[5])];
+          mounted = true;
+        }
       },
       p: function p(ctx, _ref) {
         var dirty = _ref[0];
@@ -352,6 +371,7 @@
         if (detaching) detach(t0);
         if (detaching) detach(input1);
         if (detaching) detach(t1);
+        mounted = false;
         run_all(dispose);
       }
     };
