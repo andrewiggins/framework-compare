@@ -15,7 +15,7 @@ import formatter from "postcss-reporter/lib/formatter.js";
 import cssnano from "cssnano";
 import autoprefixer from "autoprefixer";
 import scssParser from "postcss-scss";
-import sass from "postcss-node-sass";
+import sass from "@csstools/postcss-sass";
 import { pool } from "@kristoferbaxter/async";
 import rimraf from "rimraf";
 
