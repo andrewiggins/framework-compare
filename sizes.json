@@ -63,10 +63,10 @@
       "brotli": 3857
     },
     "7GUIs-CRUD": {
-      "raw": 23762,
-      "minified": 14058,
-      "gzip": 5278,
-      "brotli": 4803
+      "raw": 22217,
+      "minified": 14131,
+      "gzip": 5302,
+      "brotli": 4828
     }
   },
   "preact-hooks": {
