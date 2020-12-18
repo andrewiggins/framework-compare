@@ -26,6 +26,7 @@
  * @typedef Config
  * @property {number} durationMs
  * @property {boolean} areNewRequestsPaused
+ * @property {'auto' | 'interactive'} mode
  * @property {() => string} newId
  * @property {Timer | null} timer
  * @property {Map<string, Request>} requests
@@ -38,27 +39,53 @@
 export function createMockFetchConfig() {
 	let id = 0;
 
+	/** @type {'auto' | 'interactive'} */
+	let currentMode = "auto";
+
 	return {
 		durationMs: 3 * 1000,
 		areNewRequestsPaused: false,
+
+		get mode() {
+			return currentMode;
+		},
+		set mode(newMode) {
+			if (newMode !== currentMode) {
+				if (newMode !== "auto" && newMode !== "interactive") {
+					throw new Error(`Unsupported mockFetch mode: ${newMode}.`);
+				}
+
+				currentMode = newMode;
+			}
+		},
 
 		newId: () => `${++id}`,
 
 		// TODO: Build request editing module
 		//
-		// Normal mode:
+		// Normal mode (done):
 		//
-		// Only keep one timeout for when the next request will need to resolved. When
-		// it expires, loop through all requests and resolve all that have completed.
-		// When a new request arrives, check if it will expire before the current
-		// timeout. If so, replace the current timeout with a new one for the new
-		// request.
+		// Only keep one timeout for when the next request will need to resolved.
+		// When it expires, loop through all requests and resolve all that have
+		// completed. When a new request arrives, check if it will expire before the
+		// current timeout. If so, replace the current timeout with a new one for
+		// the new request.
 		//
 		// Interactive mode:
 		//
 		// If the UI control is displayed, instead of relying to timers to resolve
-		// requests, we will run a animation loop to animate the UI control and expire
-		// requests in progress.
+		// requests, we will run a animation loop to animate the UI control and
+		// expire requests in progress.
+		//
+		// To handle the two modes, perhaps the config should have a
+		// `scheduleUpdate` function that either sets the timers or schedules the
+		// next animation loop.
+		//
+		// Consider placing the UI in a web-component that individual apps can
+		// render inside the app? Or perhaps the app pages can pass a flag to
+		// include it in the template. Perhaps createMockFetch and the web-component
+		// should take the config as an optional parameter that defaults to a global
+		// default config.
 
 		timer: null,
 
@@ -99,7 +126,9 @@ export function createMockFetchConfig() {
 			resolveRequests(this);
 		},
 
-		log(...msg) {}
+		log(...msg) {
+			// By default, log nothing?
+		}
 	};
 }
 
@@ -146,15 +175,8 @@ export function createMockFetch(config) {
 		config.requests.set(request.id, request);
 
 		if (!config.areNewRequestsPaused) {
-			const now = Date.now();
-			const expiresAt = now + request.duration;
-			request.expiresAt = expiresAt;
-
-			// If there is no timer or this request finishes faster than the current
-			// timer, setup a new timer
-			if (config.timer == null || request.expiresAt < config.timer.expiresAt) {
-				setTimer(config, request, now);
-			}
+			request.expiresAt = Date.now() + request.duration;
+			scheduleUpdate(config);
 		}
 
 		return promise;
@@ -165,20 +187,54 @@ export function createMockFetch(config) {
 
 /**
  * @param {Config} config
- * @param {Request} request
- * @param {number} now
  */
-function setTimer(config, request, now) {
+function scheduleUpdate(config) {
+	if (config.requests.size == 0) {
+		return;
+	}
+
+	if (config.mode == "interactive") {
+		throw new Error("Interactive mode is not implemented");
+	} else {
+		setTimer(config);
+	}
+}
+
+/**
+ * @param {Config} config
+ */
+function setTimer(config) {
+	/** @type {Request} Request with the next expiration */
+	let nextRequest = null;
+	for (let request of config.requests.values()) {
+		if (nextRequest == null || request.expiresAt < nextRequest.expiresAt) {
+			nextRequest = request;
+		}
+	}
+
+	if (nextRequest == null) {
+		// If there is no request to schedule, then bail out early
+		return;
+	}
+
 	if (config.timer) {
+		if (config.timer.expiresAt <= nextRequest.expiresAt) {
+			// If there is an existing timer and it expires before or at the same time
+			// as the next request to expire, than there is no need to update the
+			// timer
+			return;
+		}
+
 		window.clearTimeout(config.timer.timeoutId);
 		config.timer = null;
 	}
 
-	const timeoutId = window.setTimeout(
-		() => resolveRequests(config),
-		request.expiresAt - now
-	);
-	config.timer = { timeoutId, expiresAt: request.expiresAt };
+	const timeout = nextRequest.expiresAt - Date.now();
+	const timeoutId = window.setTimeout(() => {
+		config.timer = null;
+		resolveRequests(config);
+	}, timeout);
+	config.timer = { timeoutId, expiresAt: nextRequest.expiresAt };
 }
 
 /**
@@ -188,8 +244,6 @@ function resolveRequests(config) {
 	const now = Date.now();
 	const toRemove = [];
 
-	/** @type {Request} Request with the next expiration */
-	let nextRequest = null;
 	for (let [id, request] of config.requests.entries()) {
 		if (request.expiresAt == null) {
 			continue;
@@ -198,11 +252,6 @@ function resolveRequests(config) {
 			// then go ahead and resolve it
 			request.resolve();
 			toRemove.push(id);
-		} else if (
-			nextRequest == null ||
-			request.expiresAt < nextRequest.expiresAt
-		) {
-			nextRequest = request;
 		}
 	}
 
@@ -210,9 +259,5 @@ function resolveRequests(config) {
 		config.requests.delete(id);
 	}
 
-	if (nextRequest) {
-		setTimer(config, nextRequest, now);
-	} else {
-		config.timer = null;
-	}
+	scheduleUpdate(config);
 }
