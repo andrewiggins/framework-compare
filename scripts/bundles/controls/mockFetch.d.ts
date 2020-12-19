@@ -22,6 +22,8 @@ interface Request {
 	reject: () => void;
 }
 
+type MockFetchEventType = "update";
+
 interface Config {
 	durationMs: number;
 	areNewRequestsPaused: boolean;
@@ -31,7 +33,10 @@ interface Config {
 	newId(): string;
 	pause(id: RequestId): void;
 	resume(id: RequestId): void;
+	on(type: MockFetchEventType, handler: () => void): void;
+	off(type: MockFetchEventType, handler: () => void): void;
 	log(...msg: any[]): void;
+	_emit(type: MockFetchEventType): void;
 }
 
 export function createMockFetchConfig(): Config;
