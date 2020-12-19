@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "classcat": "^4.1.0",
+    "mitt": "^2.1.0",
     "preact": "^10.4.4",
     "preact-router": "^3.2.1",
     "prismjs": "^1.23.0",

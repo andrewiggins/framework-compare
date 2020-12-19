@@ -1,9 +1,13 @@
+import mitt from "mitt";
+
 /** @returns {import('./mockFetch').Config} */
 export function createMockFetchConfig() {
 	let id = 0;
 
 	/** @type {'auto' | 'interactive'} */
 	let currentMode = "auto";
+
+	const events = mitt();
 
 	return {
 		durationMs: 3 * 1000,
@@ -19,6 +23,7 @@ export function createMockFetchConfig() {
 				}
 
 				currentMode = newMode;
+				scheduleUpdate(this);
 			}
 		},
 
@@ -68,6 +73,9 @@ export function createMockFetchConfig() {
 
 			request.elapsedTime = request.duration - (request.expiresAt - now);
 			request.expiresAt = null;
+
+			// Reset the timer if necessary
+			resolveRequests(this);
 		},
 
 		resume(id) {
@@ -89,7 +97,19 @@ export function createMockFetchConfig() {
 			resolveRequests(this);
 		},
 
-		log(...msg) {
+		on(type, handler) {
+			events.on(type, handler);
+		},
+
+		off(type, handler) {
+			events.off(type, handler);
+		},
+
+		_emit(type) {
+			events.emit(type);
+		},
+
+		log() {
 			// By default, log nothing?
 		}
 	};
@@ -142,6 +162,7 @@ export function createMockFetch(config) {
 			scheduleUpdate(config);
 		}
 
+		config._emit("update");
 		return promise;
 	}
 
@@ -170,26 +191,29 @@ function setTimer(config) {
 	/** @type {import('./mockFetch').Request} Request with the next expiration */
 	let nextRequest = null;
 	for (let request of config.requests.values()) {
-		if (nextRequest == null || request.expiresAt < nextRequest.expiresAt) {
+		if (
+			request.expiresAt != null &&
+			(nextRequest == null || request.expiresAt < nextRequest.expiresAt)
+		) {
 			nextRequest = request;
 		}
 	}
 
-	if (nextRequest == null) {
-		// If there is no request to schedule, then bail out early
-		return;
-	}
-
-	if (config.timer) {
-		if (config.timer.expiresAt <= nextRequest.expiresAt) {
-			// If there is an existing timer and it expires before or at the same time
-			// as the next request to expire, than there is no need to update the
-			// timer
-			return;
-		}
-
+	if (
+		config.timer &&
+		(nextRequest == null || nextRequest.expiresAt !== config.timer.expiresAt)
+	) {
+		// If there is an existing timer, and no next request or the timer expires a
+		// different time than the next request, clear the exiting timer.
 		window.clearTimeout(config.timer.timeoutId);
 		config.timer = null;
+	}
+
+	if (
+		nextRequest == null ||
+		(config.timer && nextRequest.expiresAt === config.timer.expiresAt)
+	) {
+		return;
 	}
 
 	const timeout = nextRequest.expiresAt - Date.now();
@@ -223,4 +247,5 @@ function resolveRequests(config) {
 	}
 
 	scheduleUpdate(config);
+	config._emit("update");
 }
