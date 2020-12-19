@@ -615,6 +615,4 @@ describe("mockFetch library", () => {
 			});
 		});
 	});
-
-	describe("interactive mode", () => {});
 });
