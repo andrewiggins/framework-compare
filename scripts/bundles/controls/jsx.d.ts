@@ -1,15 +1,23 @@
+type Children = undefined | string | JSX.Element | Array<Children>;
+
 interface JSXAttributes {
-	children: HTMLElement[];
+	children?: Children;
+
+	// Attributes that this JSX allows
+	class?: string;
+	for?: string;
 }
 
+type JSXHTMLElement<T> = Partial<Omit<HTMLElementTagNameMap[T], "children">>;
+
 type HTMLElementsMap = {
-	[K in keyof HTMLElementTagNameMap]: HTMLElementTagNameMap[K] & JSXAttributes;
+	[K in keyof HTMLElementTagNameMap]: JSXHTMLElement<K> & JSXAttributes;
 };
 
 declare namespace JSX {
 	interface Element extends HTMLElement {}
 	interface ElementChildrenAttribute {
-		children: Array<HTMLElement | string>;
+		children?: Children;
 	}
 	interface IntrinsicElements extends HTMLElementsMap {}
 }
