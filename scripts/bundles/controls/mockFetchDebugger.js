@@ -48,7 +48,7 @@ function getInitialRootTransform() {
 	return getRootTransform(x, y);
 }
 
-class MockFetchControl extends HTMLElement {
+class MockFetchDebugger extends HTMLElement {
 	constructor() {
 		super();
 		this.attachShadow({ mode: "open" });
@@ -353,5 +353,5 @@ class MockFetchControl extends HTMLElement {
 }
 
 export function installFetchDebugger() {
-	window.customElements.define("mock-fetch-debugger", MockFetchControl);
+	window.customElements.define("mock-fetch-debugger", MockFetchDebugger);
 }
