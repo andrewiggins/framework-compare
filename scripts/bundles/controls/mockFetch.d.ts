@@ -39,6 +39,12 @@ interface Config {
 	_emit(type: MockFetchEventType): void;
 }
 
+declare class MockFetchDebugger extends HTMLElement {
+	config: Config;
+	show: boolean;
+	dialog: boolean;
+}
+
 export function createMockFetchConfig(): Config;
 export function createMockFetch(
 	config: Config

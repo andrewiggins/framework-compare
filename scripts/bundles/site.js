@@ -1,3 +1,5 @@
+/// <reference path="global.d.ts" />
+
 import { setupTabs } from "./controls/tabs";
 import { setupToggle } from "./controls/toggle";
 import { setupOffCanvas } from "./controls/offcanvas";
@@ -21,3 +23,4 @@ fetchDebugger.config = window.mockFetchConfig;
 fetchDebugger.show = true;
 fetchDebugger.dialog = true;
 document.body.appendChild(fetchDebugger);
+window.fetchDebugger = fetchDebugger;
