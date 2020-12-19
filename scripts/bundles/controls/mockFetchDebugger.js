@@ -1,3 +1,7 @@
+/// <reference path="jsx.d.ts" />
+
+import cc from "classcat";
+
 const hasOwn = Object.prototype.hasOwnProperty;
 
 /** @jsx h */
@@ -61,7 +65,7 @@ class MockFetchDebugger extends HTMLElement {
 		style.innerHTML = `
 			#root {
 				display: none;
-				padding: 1rem 0.5rem;
+				padding: 1.1rem 0.5rem;
 				border: 1px solid black;
 				border-radius: 8px;
 				background-color: white;
@@ -142,7 +146,13 @@ class MockFetchDebugger extends HTMLElement {
 		this.shadowRoot.appendChild(style);
 
 		const body = (
-			<div id="root">
+			<div
+				id="root"
+				class={cc({
+					show: this.hasAttribute("show"),
+					dialog: this.hasAttribute("dialog")
+				})}
+			>
 				<button
 					class="drag-handle"
 					aria-label="Move fetch debugger"
@@ -248,8 +258,8 @@ class MockFetchDebugger extends HTMLElement {
 			if (root.style.transform == "") {
 				root.style.transform = getInitialRootTransform();
 			} else if ((match = root.style.transform.match(translateRe))) {
-				let translateX = match[1];
-				let translateY = match[2];
+				let translateX = parseInt(match[1], 10);
+				let translateY = parseInt(match[2], 10);
 
 				if (
 					translateX + 24 > window.innerWidth ||
@@ -326,21 +336,25 @@ class MockFetchDebugger extends HTMLElement {
 
 	/** @param {InputEvent} event */
 	onLatencyInput(event) {
+		// @ts-expect-error
 		this.config.durationMs = event.target.valueAsNumber;
 		this.update();
 	}
 
 	/** @param {Event} event */
 	onPauseNew(event) {
+		// @ts-expect-error
 		this.config.areNewRequestsPaused = event.target.checked;
 	}
 
 	update() {
-		if (!this.isConnected || this.show == false) {
+		if (!this.isConnected || this.show == false || !this.config) {
 			// Should I check for display: none?
 			return;
 		}
 
+		/** @type {HTMLInputElement} */
+		// @ts-expect-error
 		const latency = this.shadowRoot.getElementById("latency");
 		latency.valueAsNumber = this.config.durationMs;
 
