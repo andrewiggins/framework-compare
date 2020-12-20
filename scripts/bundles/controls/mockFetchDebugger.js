@@ -448,6 +448,7 @@ class MockFetchDebugger extends HTMLElement {
 		/** @type {import("./mockFetch").Request[]} */
 		const finished = [];
 		const now = Date.now();
+		let isRunning = false; // Track if any requests are running
 
 		// Update requests already in list
 		const inflightList = this.shadowRoot.getElementById("inflight");
@@ -476,6 +477,7 @@ class MockFetchDebugger extends HTMLElement {
 				}
 
 				if (!isPaused) {
+					isRunning = true;
 					const timeLeft = request.expiresAt - now;
 					if (timeLeft < 16) {
 						// If this request will expire within 16 ms of now (or has already
@@ -500,6 +502,10 @@ class MockFetchDebugger extends HTMLElement {
 			);
 
 			if (!existingItem) {
+				if (!isPaused) {
+					isRunning = true;
+				}
+
 				inflightList.appendChild(
 					<li class="request" data-req-id={request.id}>
 						<button
@@ -541,10 +547,15 @@ class MockFetchDebugger extends HTMLElement {
 			completedList.appendChild(newItem);
 		}
 
-		requestAnimationFrame(() => {
-			finishedItems.forEach(li => (li.style.opacity = "0"));
-			this.update();
-		});
+		if (finishedItems.length) {
+			requestAnimationFrame(() =>
+				finishedItems.forEach(li => (li.style.opacity = "0"))
+			);
+		}
+
+		if (isRunning) {
+			requestAnimationFrame(() => this.update());
+		}
 	}
 }
 
