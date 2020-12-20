@@ -85,5 +85,43 @@ describe("MockFetchDebugger", () => {
 				true
 			);
 		});
+
+		// TODO:
+		// - test to ensure new requests are added to inflight list but aren't
+		//   completed after duration
+	});
+
+	describe("basic request tracking", () => {
+		// TODO:
+		// Add tests for show=true:
+		// - New requests are added
+		// - Request completes after duration
+		// - Completed requests are moved to completed list
+		//
+		// Add tests for after setting show=false:
+		// - New requests are completed after duration
+		// - Completed requests are completed
+		//
+		// Tests for show=true then show = false:
+		// - new requests are added to list when show=true
+		// - show = false
+		// - requests still complete
+		//
+		// Tests for show=false then show=true
+		// - once show = true, requests should show in list
+		// - requests should move to completed list after duration
+	});
+
+	describe("pause & resume", () => {
+		// TODO:
+		// - Ensure pressing pause pauses a request
+		// - Ensure resuming a paused request completes
+	});
+
+	describe("0 latency", () => {
+		// TODO:
+		// - Basic test to ensure new requests are sent directly to completed
+		// - new-paused = true: Basic test to ensure new requests are inflight until
+		//   clicked and show up in completed
 	});
 });
