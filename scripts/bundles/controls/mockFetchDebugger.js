@@ -367,6 +367,9 @@ class MockFetchDebugger extends HTMLElement {
 		initialEvent.preventDefault();
 		const root = this.shadowRoot.getElementById("root");
 		root.querySelector(".drag-handle").classList.add("moving");
+		const prevCursor = document.body.style.cursor;
+		document.body.style.cursor = "move";
+
 		let prevClientX = initialEvent.clientX;
 		let prevClientY = initialEvent.clientY;
 		let prevTranslateX = 0;
@@ -406,6 +409,7 @@ class MockFetchDebugger extends HTMLElement {
 		};
 
 		const onMoveEnd = () => {
+			document.body.style.cursor = prevCursor;
 			root.querySelector(".drag-handle").classList.remove("moving");
 			document.removeEventListener("pointermove", onMove);
 			document.removeEventListener("pointerup", onMoveEnd);
