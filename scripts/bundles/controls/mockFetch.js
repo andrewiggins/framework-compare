@@ -4,7 +4,7 @@ import mitt from "mitt";
 export function createMockFetchConfig() {
 	let id = 0;
 
-	/** @type {'auto' | 'interactive'} */
+	/** @type {'auto' | 'manual'} */
 	let currentMode = "auto";
 
 	const events = mitt();
@@ -18,7 +18,7 @@ export function createMockFetchConfig() {
 		},
 		set mode(newMode) {
 			if (newMode !== currentMode) {
-				if (newMode !== "auto" && newMode !== "interactive") {
+				if (newMode !== "auto" && newMode !== "manual") {
 					throw new Error(`Unsupported mockFetch mode: ${newMode}.`);
 				}
 
@@ -28,32 +28,6 @@ export function createMockFetchConfig() {
 		},
 
 		newId: () => `${++id}`,
-
-		// TODO: Build request editing module
-		//
-		// Normal mode (done):
-		//
-		// Only keep one timeout for when the next request will need to resolved.
-		// When it expires, loop through all requests and resolve all that have
-		// completed. When a new request arrives, check if it will expire before the
-		// current timeout. If so, replace the current timeout with a new one for
-		// the new request.
-		//
-		// Interactive mode:
-		//
-		// If the UI control is displayed, instead of relying to timers to resolve
-		// requests, we will run a animation loop to animate the UI control and
-		// expire requests in progress.
-		//
-		// To handle the two modes, perhaps the config should have a
-		// `scheduleUpdate` function that either sets the timers or schedules the
-		// next animation loop.
-		//
-		// Consider placing the UI in a web-component that individual apps can
-		// render inside the app? Or perhaps the app pages can pass a flag to
-		// include it in the template. Perhaps createMockFetch and the web-component
-		// should take the config as an optional parameter that defaults to a global
-		// default config.
 
 		timer: null,
 
@@ -75,7 +49,7 @@ export function createMockFetchConfig() {
 			request.expiresAt = null;
 
 			// Reset the timer if necessary
-			resolveRequests(this);
+			resolveRequests(this, now);
 		},
 
 		resume(id) {
@@ -94,7 +68,7 @@ export function createMockFetchConfig() {
 
 			// Ensure timer is properly set with the request with the next expiration
 			// which could be the request we just updated
-			resolveRequests(this);
+			resolveRequests(this, now);
 		},
 
 		on(type, handler) {
@@ -173,13 +147,7 @@ export function createMockFetch(config) {
  * @param {import('./mockFetch').Config} config
  */
 function scheduleUpdate(config) {
-	if (config.requests.size == 0) {
-		return;
-	}
-
-	if (config.mode == "interactive") {
-		throw new Error("Interactive mode is not implemented");
-	} else {
+	if (config.requests.size > 0 && config.mode == "auto") {
 		setTimer(config);
 	}
 }
@@ -219,16 +187,18 @@ function setTimer(config) {
 	const timeout = nextRequest.expiresAt - Date.now();
 	const timeoutId = window.setTimeout(() => {
 		config.timer = null;
-		resolveRequests(config);
+		resolveRequests(config, Date.now());
 	}, timeout);
 	config.timer = { timeoutId, expiresAt: nextRequest.expiresAt };
 }
 
 /**
+ * `now` is a paramter to assist in debugging so that time doesn't continue when
+ * debugging. If it did, requests could "expire" while stepping through code
  * @param {import('./mockFetch').Config} config
+ * @param {number} now
  */
-function resolveRequests(config) {
-	const now = Date.now();
+function resolveRequests(config, now) {
 	const toRemove = [];
 
 	for (let [id, request] of config.requests.entries()) {
