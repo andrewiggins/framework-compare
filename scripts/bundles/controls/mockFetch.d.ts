@@ -27,7 +27,7 @@ type MockFetchEventType = "update";
 interface Config {
 	durationMs: number;
 	areNewRequestsPaused: boolean;
-	mode: "auto" | "interactive";
+	mode: "auto" | "manual";
 	timer: Timer | null;
 	requests: Map<string, Request>;
 	newId(): string;
