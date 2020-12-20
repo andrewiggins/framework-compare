@@ -49,7 +49,13 @@ export function createMockFetchConfig() {
 			request.expiresAt = null;
 
 			// Reset the timer if necessary
-			resolveRequests(this, now);
+			if (this.mode == "auto") {
+				// Ensure timer is properly set with the request with the next expiration
+				// which could be the request we just updated
+				resolveRequests(this, now);
+			}
+
+			this._emit("update");
 		},
 
 		resume(id) {
@@ -66,9 +72,13 @@ export function createMockFetchConfig() {
 			const remainingTime = request.duration - request.elapsedTime;
 			request.expiresAt = now + remainingTime;
 
-			// Ensure timer is properly set with the request with the next expiration
-			// which could be the request we just updated
-			resolveRequests(this, now);
+			if (this.mode == "auto") {
+				// Ensure timer is properly set with the request with the next expiration
+				// which could be the request we just updated
+				resolveRequests(this, now);
+			}
+
+			this._emit("update");
 		},
 
 		on(type, handler) {
@@ -188,6 +198,7 @@ function setTimer(config) {
 	const timeoutId = window.setTimeout(() => {
 		config.timer = null;
 		resolveRequests(config, Date.now());
+		config._emit("update");
 	}, timeout);
 	config.timer = { timeoutId, expiresAt: nextRequest.expiresAt };
 }
@@ -217,5 +228,4 @@ function resolveRequests(config, now) {
 	}
 
 	scheduleUpdate(config);
-	config._emit("update");
 }
