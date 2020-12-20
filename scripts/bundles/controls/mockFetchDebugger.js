@@ -215,7 +215,7 @@ class MockFetchDebugger extends HTMLElement {
 					class="drag-handle"
 					type="button"
 					aria-label="Move fetch debugger"
-					onmousedown={this.onInitializeMove.bind(this)}
+					onpointerdown={this.onInitializeMove.bind(this)}
 				>
 					<span class="drag-handle-icon" aria-hidden="true">
 						||
@@ -362,7 +362,7 @@ class MockFetchDebugger extends HTMLElement {
 		}
 	}
 
-	/** @param {MouseEvent} initialEvent */
+	/** @param {PointerEvent} initialEvent */
 	onInitializeMove(initialEvent) {
 		initialEvent.preventDefault();
 		const root = this.shadowRoot.getElementById("root");
@@ -378,7 +378,7 @@ class MockFetchDebugger extends HTMLElement {
 			prevTranslateY = parseInt(match[2], 10);
 		}
 
-		/** @param {MouseEvent} moveEvent */
+		/** @param {PointerEvent} moveEvent */
 		const onMove = moveEvent => {
 			moveEvent.preventDefault();
 
@@ -407,12 +407,12 @@ class MockFetchDebugger extends HTMLElement {
 
 		const onMoveEnd = () => {
 			root.querySelector(".drag-handle").classList.remove("moving");
-			document.removeEventListener("mousemove", onMove);
-			document.removeEventListener("mouseup", onMoveEnd);
+			document.removeEventListener("pointermove", onMove);
+			document.removeEventListener("pointerup", onMoveEnd);
 		};
 
-		document.addEventListener("mousemove", onMove);
-		document.addEventListener("mouseup", onMoveEnd);
+		document.addEventListener("pointermove", onMove);
+		document.addEventListener("pointerup", onMoveEnd);
 	}
 
 	onToggleRequest(request) {
