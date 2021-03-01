@@ -11,7 +11,7 @@
     "classcat": "^4.1.0",
     "preact": "^10.4.4",
     "preact-router": "^3.2.1",
-    "prismjs": "^1.22.0",
+    "prismjs": "^1.23.0",
     "spectre.css": "^0.5.9"
   },
   "devDependencies": {
