@@ -1,13 +1,12 @@
 import path from "path";
 import { writeFile, readFile } from "fs/promises";
-import { execFile } from "child_process";
-import { promisify } from "util";
+import { spawnSync } from "child_process";
 
 import { rollup } from "rollup";
 import nodeResolve from "@rollup/plugin-node-resolve";
 import commonjs from "@rollup/plugin-commonjs";
 import sucrase from "@rollup/plugin-sucrase";
-import { terser } from "rollup-plugin-terser";
+import terser from "@rollup/plugin-terser";
 import { h } from "preact";
 import { render } from "preact-render-to-string";
 import postcss from "postcss";
@@ -16,8 +15,7 @@ import cssnano from "cssnano";
 import autoprefixer from "autoprefixer";
 import scssParser from "postcss-scss";
 import sass from "@csstools/postcss-sass";
-import { pool } from "@kristoferbaxter/async";
-import rimraf from "rimraf";
+import { rimraf } from "rimraf";
 
 import { buildFrameworkData } from "./data.js";
 import { p, outputPath, ensureDir, listFiles, listDirs } from "./util.js";
@@ -26,12 +24,7 @@ import { buildIntroPage } from "./routes/intro.js";
 import { buildSummaryView } from "./routes/summary.js";
 import { buildAppViews } from "./routes/appViews.js";
 
-const execFileAsync = promisify(execFile);
 const reporter = formatter();
-const rimrafAsync = glob =>
-	new Promise((resolve, reject) => {
-		rimraf(glob, error => (error ? reject(error) : resolve()));
-	});
 
 /**
  * @typedef {import('./components/build')} Components
@@ -106,11 +99,10 @@ async function runPostCss(plugins, css, options) {
 	const messages = result.warnings();
 	if (messages.length) {
 		console.warn(
-			reporter(
-				Object.assign({}, result, {
-					messages
-				})
-			)
+			reporter({
+				...result,
+				messages
+			})
 		);
 	}
 
@@ -211,21 +203,6 @@ async function buildSiteAssets() {
 }
 
 /**
- * @param {string} workspaceName
- */
-async function buildWorkspace(workspaceName) {
-	console.log(`Building ${workspaceName}...`);
-
-	const cmd = process.platform == "win32" ? "yarn.cmd" : "yarn";
-	const args = ["workspace", workspaceName, "run", "build"];
-	const { stdout, stderr } = await execFileAsync(cmd, args);
-
-	console.log(`Output from ${workspaceName}:`);
-	console.log(stdout);
-	console.log(stderr);
-}
-
-/**
  * @param {string[]} requests Frameworks to build
  */
 async function build(requests) {
@@ -241,27 +218,50 @@ async function build(requests) {
 	);
 
 	// find all matching frameworks (matching package names)
-	/** @type {string[]} */
+	/** @type {string[] | undefined} */
 	let workspaceNames;
 	if (requests == null || requests.length == 0) {
-		workspaceNames = allPkgs.map(pkg => pkg.name);
-		await rimrafAsync(outputPath());
+		await rimraf(outputPath());
 	} else {
 		workspaceNames = allPkgs
 			.filter(pkg => requests.find(r => pkg.name.startsWith(r)) != null)
 			.map(pkg => pkg.name);
 	}
 
-	if (workspaceNames == null || workspaceNames.length == 0) {
+	console.log("Building frameworks...");
+
+	const cmd = process.platform == "win32" ? "npm.cmd" : "npm";
+	if (workspaceNames == null) {
+		const { stdout, stderr } = spawnSync(cmd, ["run", "build", "-ws"], {
+			encoding: "utf8"
+		});
+
+		console.log(stdout);
+		console.log(stderr);
+
+		if (stderr.includes("ERR")) {
+			throw new Error("Building frameworks failed");
+		}
+	} else if (workspaceNames.length == 0) {
 		throw new Error(
 			`No frameworks were found matching "${requests.join(" ")}"`
 		);
+	} else {
+		const wsOpts = workspaceNames.map(ws => `-w=${ws}`);
+		const { stdout, stderr } = spawnSync(cmd, ["run", "build", ...wsOpts], {
+			encoding: "utf8"
+		});
+
+		console.log(stdout);
+		console.log(stderr);
+
+		if (stderr.includes("ERR")) {
+			throw new Error("Building frameworks failed");
+		}
 	}
 
-	// in async pool, run `yarn` for each workspace
-	await pool(workspaceNames, buildWorkspace);
-
 	// call buildSiteAssets
+	console.log("Building site assets...");
 	await buildSiteAssets();
 
 	console.timeEnd(label);

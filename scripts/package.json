@@ -5,7 +5,7 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "build": "node ./build.js"
+    "build": "echo Okay"
   },
   "dependencies": {
     "classcat": "^4.1.0",
@@ -15,22 +15,22 @@
     "spectre.css": "^0.5.9"
   },
   "devDependencies": {
-    "@csstools/postcss-sass": "^4.0.0",
-    "@rollup/plugin-commonjs": "17.0.0",
-    "@rollup/plugin-sucrase": "3.1.0",
-    "autoprefixer": "^9.8.6",
+    "@csstools/postcss-sass": "^5.0.0",
+    "@rollup/plugin-commonjs": "25.0.4",
+    "@rollup/plugin-sucrase": "5.0.0",
+    "@rollup/plugin-terser": "^0.4.3",
+    "autoprefixer": "^10.0.0",
     "brotli-size": "^4.0.0",
-    "cssnano": "^4.1.10",
-    "gzip-size": "^6.0.0",
-    "nodemon": "^2.0.6",
-    "postcss": "^7.0.35",
-    "postcss-reporter": "^7.0.2",
-    "postcss-scss": "^3.0.4",
+    "cssnano": "^6.0.0",
+    "gzip-size": "^7.0.0",
+    "nodemon": "^3.0.0",
+    "postcss": "^8.0.0",
+    "postcss-reporter": "^7.0.5",
+    "postcss-scss": "^4.0.0",
     "preact-render-to-string": "^5.1.12",
-    "pretty-bytes": "^5.4.1",
-    "rollup": "^2.35.1",
-    "rollup-plugin-terser": "^7.0.2",
-    "sirv-cli": "1.0.10"
+    "pretty-bytes": "^6.1.0",
+    "rollup": "^3.28.0",
+    "sirv-cli": "2.0.0"
   },
   "browserslist": [
     "last 4 Chrome versions",

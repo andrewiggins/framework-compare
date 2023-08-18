@@ -1,101 +1,101 @@
 {
   "lit-html": {
     "hello-world": {
-      "raw": 51712,
-      "minified": 13770,
-      "gzip": 3659,
+      "raw": 52041,
+      "minified": 13743,
+      "gzip": 3660,
       "brotli": 3207
     },
     "7GUIs-counter": {
-      "raw": 52027,
-      "minified": 13921,
-      "gzip": 3753,
-      "brotli": 3283
+      "raw": 52356,
+      "minified": 13896,
+      "gzip": 3754,
+      "brotli": 3282
     },
     "7GUIs-temp-converter": {
-      "raw": 52338,
-      "minified": 14039,
+      "raw": 52667,
+      "minified": 14012,
       "gzip": 3788,
-      "brotli": 3321
+      "brotli": 3315
     },
     "7GUIs-flight-booker": {
-      "raw": 56976,
-      "minified": 15981,
-      "gzip": 4484,
-      "brotli": 3923
+      "raw": 57305,
+      "minified": 15940,
+      "gzip": 4498,
+      "brotli": 3936
     },
     "7GUIs-timer": {
-      "raw": 52641,
-      "minified": 14256,
-      "gzip": 3934,
-      "brotli": 3441
+      "raw": 52970,
+      "minified": 14235,
+      "gzip": 3937,
+      "brotli": 3444
     }
   },
   "preact": {
     "hello-world": {
-      "raw": 9154,
+      "raw": 9148,
       "minified": 9093,
       "gzip": 3710,
       "brotli": 3392
     },
     "7GUIs-counter": {
-      "raw": 10024,
+      "raw": 10011,
       "minified": 9473,
       "gzip": 3865,
       "brotli": 3532
     },
     "7GUIs-temp-converter": {
-      "raw": 10474,
+      "raw": 10459,
       "minified": 9709,
       "gzip": 3928,
       "brotli": 3598
     },
     "7GUIs-flight-booker": {
-      "raw": 14728,
-      "minified": 11941,
-      "gzip": 4704,
-      "brotli": 4290
+      "raw": 14684,
+      "minified": 11917,
+      "gzip": 4716,
+      "brotli": 4298
     },
     "7GUIs-timer": {
-      "raw": 11667,
+      "raw": 11648,
       "minified": 10507,
       "gzip": 4212,
       "brotli": 3857
     },
     "7GUIs-CRUD": {
-      "raw": 23762,
-      "minified": 14058,
-      "gzip": 5278,
+      "raw": 23670,
+      "minified": 14074,
+      "gzip": 5285,
       "brotli": 4803
     }
   },
   "preact-hooks": {
     "hello-world": {
-      "raw": 9154,
+      "raw": 9148,
       "minified": 9093,
       "gzip": 3710,
       "brotli": 3392
     },
     "7GUIs-counter": {
-      "raw": 11073,
+      "raw": 11061,
       "minified": 10719,
       "gzip": 4337,
       "brotli": 3968
     },
     "7GUIs-temp-converter": {
-      "raw": 11492,
+      "raw": 11479,
       "minified": 10907,
       "gzip": 4389,
       "brotli": 4010
     },
     "7GUIs-flight-booker": {
-      "raw": 15605,
-      "minified": 12905,
-      "gzip": 5139,
-      "brotli": 4662
+      "raw": 15569,
+      "minified": 12884,
+      "gzip": 5149,
+      "brotli": 4673
     },
     "7GUIs-timer": {
-      "raw": 12634,
+      "raw": 12642,
       "minified": 11580,
       "gzip": 4662,
       "brotli": 4259
@@ -103,130 +103,130 @@
   },
   "react": {
     "hello-world": {
-      "raw": 137330,
-      "minified": 130367,
-      "gzip": 41929,
-      "brotli": 36944
+      "raw": 137384,
+      "minified": 130801,
+      "gzip": 42032,
+      "brotli": 36996
     },
     "7GUIs-counter": {
-      "raw": 138770,
-      "minified": 130802,
-      "gzip": 42102,
-      "brotli": 37092
+      "raw": 138806,
+      "minified": 131240,
+      "gzip": 42209,
+      "brotli": 37179
     },
     "7GUIs-temp-converter": {
-      "raw": 139261,
-      "minified": 131061,
-      "gzip": 42181,
-      "brotli": 37114
+      "raw": 139295,
+      "minified": 131499,
+      "gzip": 42285,
+      "brotli": 37221
     },
     "7GUIs-flight-booker": {
-      "raw": 144065,
-      "minified": 133468,
-      "gzip": 42965,
-      "brotli": 37760
+      "raw": 144060,
+      "minified": 133891,
+      "gzip": 43070,
+      "brotli": 37848
     },
     "7GUIs-timer": {
-      "raw": 140633,
-      "minified": 131963,
-      "gzip": 42448,
-      "brotli": 37334
+      "raw": 140663,
+      "minified": 132401,
+      "gzip": 42554,
+      "brotli": 37437
     }
   },
   "react-hooks": {
     "hello-world": {
-      "raw": 137330,
-      "minified": 130367,
-      "gzip": 41929,
-      "brotli": 36944
+      "raw": 137384,
+      "minified": 130801,
+      "gzip": 42032,
+      "brotli": 36996
     },
     "7GUIs-counter": {
-      "raw": 137694,
-      "minified": 130541,
-      "gzip": 42017,
-      "brotli": 37088
+      "raw": 137749,
+      "minified": 130975,
+      "gzip": 42117,
+      "brotli": 37087
     },
     "7GUIs-temp-converter": {
-      "raw": 138184,
-      "minified": 130769,
-      "gzip": 42079,
-      "brotli": 37069
+      "raw": 138239,
+      "minified": 131203,
+      "gzip": 42178,
+      "brotli": 37135
     },
     "7GUIs-flight-booker": {
-      "raw": 142761,
-      "minified": 133029,
-      "gzip": 42846,
-      "brotli": 37668
+      "raw": 142776,
+      "minified": 133446,
+      "gzip": 42959,
+      "brotli": 37789
     },
     "7GUIs-timer": {
-      "raw": 139187,
-      "minified": 131246,
-      "gzip": 42276,
-      "brotli": 37201
+      "raw": 139260,
+      "minified": 131680,
+      "gzip": 42379,
+      "brotli": 37287
     }
   },
   "svelte": {
     "hello-world": {
-      "raw": 8431,
-      "minified": 3036,
-      "gzip": 1422,
-      "brotli": 1277
+      "raw": 11762,
+      "minified": 3673,
+      "gzip": 1707,
+      "brotli": 1536
     },
     "7GUIs-counter": {
-      "raw": 10263,
-      "minified": 3655,
-      "gzip": 1708,
-      "brotli": 1525
+      "raw": 13547,
+      "minified": 4327,
+      "gzip": 2000,
+      "brotli": 1794
     },
     "7GUIs-temp-converter": {
-      "raw": 10691,
-      "minified": 3795,
-      "gzip": 1727,
-      "brotli": 1544
+      "raw": 13922,
+      "minified": 4464,
+      "gzip": 2024,
+      "brotli": 1826
     },
     "7GUIs-flight-booker": {
-      "raw": 26493,
-      "minified": 8767,
-      "gzip": 3448,
-      "brotli": 3062
+      "raw": 28907,
+      "minified": 9381,
+      "gzip": 3736,
+      "brotli": 3330
     },
     "7GUIs-timer": {
-      "raw": 13236,
-      "minified": 4605,
-      "gzip": 2122,
-      "brotli": 1903
+      "raw": 16589,
+      "minified": 5237,
+      "gzip": 2401,
+      "brotli": 2151
     }
   },
   "vue": {
     "hello-world": {
-      "raw": 208452,
-      "minified": 42671,
-      "gzip": 16848,
-      "brotli": 15357
+      "raw": 161234,
+      "minified": 49823,
+      "gzip": 19558,
+      "brotli": 17864
     },
     "7GUIs-counter": {
-      "raw": 209796,
-      "minified": 43110,
-      "gzip": 17074,
-      "brotli": 15571
+      "raw": 162388,
+      "minified": 50317,
+      "gzip": 19820,
+      "brotli": 18091
     },
     "7GUIs-temp-converter": {
-      "raw": 213835,
-      "minified": 44374,
-      "gzip": 17476,
-      "brotli": 15964
+      "raw": 165367,
+      "minified": 51547,
+      "gzip": 20233,
+      "brotli": 18449
     },
     "7GUIs-flight-booker": {
-      "raw": 217914,
-      "minified": 46585,
-      "gzip": 18267,
-      "brotli": 16643
+      "raw": 170295,
+      "minified": 53900,
+      "gzip": 21062,
+      "brotli": 19222
     },
     "7GUIs-timer": {
-      "raw": 215456,
-      "minified": 45080,
-      "gzip": 17807,
-      "brotli": 16241
+      "raw": 166808,
+      "minified": 52300,
+      "gzip": 20594,
+      "brotli": 18805
     }
   }
 }

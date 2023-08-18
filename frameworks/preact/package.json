@@ -14,6 +14,6 @@
     "@babel/core": "^7.12.10",
     "@babel/preset-env": "^7.12.11",
     "@babel/preset-react": "^7.12.10",
-    "@rollup/plugin-babel": "^5.2.2"
+    "@rollup/plugin-babel": "^6.0.0"
   }
 }

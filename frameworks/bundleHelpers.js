@@ -1,8 +1,8 @@
 const path = require("path");
 const { readdirSync, existsSync } = require("fs");
 const nodeResolve = require("@rollup/plugin-node-resolve").default;
-const { terser } = require("rollup-plugin-terser");
-const visualizer = require("rollup-plugin-visualizer");
+const terser = require("@rollup/plugin-terser");
+const visualizer = require("rollup-plugin-visualizer").default;
 
 const frameworkOutput = (...args) =>
 	path.join(__dirname, "../dist/frameworks", ...args);

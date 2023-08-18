@@ -23,12 +23,12 @@ function runNode(path, args, cwd = p()) {
 	});
 }
 
-function runYarn(scriptName, cwd = p()) {
-	// Largely inspired by npm-run-all source: https://git.io/fjKNS
+function runNpm(scriptName, cwd = p()) {
+	// Largely inspired by npm-run-all source: https://github.com/mysticatea/npm-run-all/blob/b2260f54537e71483cc412071df3e3bae7ea3b80/lib/run-task.js#L157
 	const npmPath = process.env.npm_execpath;
 	const npmPathIsJs =
 		typeof npmPath === "string" && /\.m?js/.test(extname(npmPath));
-	const execPath = npmPathIsJs ? process.execPath : npmPath || "yarn";
+	const execPath = npmPathIsJs ? process.execPath : npmPath || "npm";
 	const spawnArgs = ["run"];
 
 	if (npmPathIsJs) {
@@ -59,7 +59,7 @@ function watchScripts() {
 }
 
 function watchFramework(framework) {
-	runYarn("watch", p(`frameworks/${framework}`));
+	runNpm("watch", p(`frameworks/${framework}`));
 }
 
 function startDevServer() {

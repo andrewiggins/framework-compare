@@ -1,5 +1,5 @@
 import { readFile } from "fs/promises";
-import getGzipSize from "gzip-size";
+import { gzipSize } from "gzip-size";
 import brotliSize from "brotli-size";
 import Prism from "prismjs";
 import loadLanguages from "prismjs/components/index.js";
@@ -13,6 +13,7 @@ import {
 
 loadLanguages(["jsx"]);
 
+// @ts-expect-error brotli-size isn't true ESM
 const getBrotliSize = brotliSize.default;
 const getLang = ext => (ext === "vue" ? "html" : ext);
 
@@ -106,7 +107,7 @@ async function getBundleFiles(frameworkId, appId) {
 
 		if (bundleFile.endsWith(".min.js")) {
 			bundles[name].sizes.minified = contents.length;
-			bundles[name].sizes.gzip = await getGzipSize(contents);
+			bundles[name].sizes.gzip = await gzipSize(contents);
 			bundles[name].sizes.brotli = await getBrotliSize(contents);
 		} else {
 			bundles[name].sizes.raw = contents.length;
