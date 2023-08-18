@@ -36,7 +36,7 @@ function h(tag, attributes, ...children) {
 	return element;
 }
 
-const translateRe = /translate3d\((-?[0-9]+)px, (-?[0-9]+)px, 0px\)/;
+const translateRe = /translate3d\((-?[0-9.]+)px, (-?[0-9.]+)px, 0px\)/;
 
 /**
  * @param {number} x
