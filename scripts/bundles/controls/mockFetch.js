@@ -1,3 +1,6 @@
+import { MockFetchController } from "./mockFetchController";
+console.log(new MockFetchController());
+
 import mitt from "mitt";
 
 /** @returns {import('./mockFetch').Config} */
