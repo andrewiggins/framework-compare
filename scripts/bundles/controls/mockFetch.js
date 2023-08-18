@@ -101,6 +101,7 @@ export function createMockFetchConfig() {
 
 /**
  * @param {import('./mockFetch').Config} config
+ * @returns {(url: string, options?: RequestInit) => Promise<void>}
  */
 export function createMockFetch(config) {
 	/**
@@ -111,7 +112,9 @@ export function createMockFetch(config) {
 	function mockFetch(url, options = { method: "GET" }) {
 		const name = `${options.method} ${url}`;
 
-		let resolver, rejecter;
+		let resolver = () => {};
+		let rejecter = () => {};
+		/** @type {Promise<void>} */
 		const promise = new Promise((resolve, reject) => {
 			resolver = () => {
 				config.log(`Resolving ${name}`);
@@ -166,20 +169,20 @@ function scheduleUpdate(config) {
  * @param {import('./mockFetch').Config} config
  */
 function setTimer(config) {
-	/** @type {import('./mockFetch').Request} Request with the next expiration */
-	let nextRequest = null;
+	/** @type {number | null} The expiration time of the request that will expire soonest */
+	let nextExpiration = null;
 	for (let request of config.requests.values()) {
 		if (
 			request.expiresAt != null &&
-			(nextRequest == null || request.expiresAt < nextRequest.expiresAt)
+			(nextExpiration == null || request.expiresAt < nextExpiration)
 		) {
-			nextRequest = request;
+			nextExpiration = request.expiresAt;
 		}
 	}
 
 	if (
 		config.timer &&
-		(nextRequest == null || nextRequest.expiresAt !== config.timer.expiresAt)
+		(nextExpiration == null || nextExpiration !== config.timer.expiresAt)
 	) {
 		// If there is an existing timer, and no next request or the timer expires a
 		// different time than the next request, clear the exiting timer.
@@ -188,19 +191,19 @@ function setTimer(config) {
 	}
 
 	if (
-		nextRequest == null ||
-		(config.timer && nextRequest.expiresAt === config.timer.expiresAt)
+		nextExpiration == null ||
+		(config.timer && nextExpiration === config.timer.expiresAt)
 	) {
 		return;
 	}
 
-	const timeout = nextRequest.expiresAt - Date.now();
+	const timeout = nextExpiration - Date.now();
 	const timeoutId = window.setTimeout(() => {
 		config.timer = null;
 		resolveRequests(config, Date.now());
 		config._emit("update");
 	}, timeout);
-	config.timer = { timeoutId, expiresAt: nextRequest.expiresAt };
+	config.timer = { timeoutId, expiresAt: nextExpiration };
 }
 
 /**

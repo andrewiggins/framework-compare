@@ -12,7 +12,7 @@ interface Request {
 	/** Total time this request should wait */
 	duration: number;
 	/** Tracks how much time of duration has elapsed when a request is paused/resumed */
-	elapsedTime: number | null;
+	elapsedTime: number;
 	/** Display name of request */
 	name: string;
 	url: string;
