@@ -7,7 +7,7 @@ const aboutSection = {
 	name: "About",
 	pages: [
 		{ name: "Introduction", url: "index.html" },
-		{ name: "Summary", url: "dist/summary.html" }
+		{ name: "Summary", url: "summary.html" }
 	]
 };
 

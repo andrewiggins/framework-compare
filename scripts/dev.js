@@ -1,7 +1,7 @@
 import { extname } from "path";
 import { readdir } from "fs/promises";
 import { spawn } from "child_process";
-import { p } from "./util.js";
+import { outputPath, p } from "./util.js";
 
 // https://github.com/mysticatea/npm-run-all/issues/105
 // https://git.io/fjKbw
@@ -63,7 +63,7 @@ function watchFramework(framework) {
 }
 
 function startDevServer() {
-	runNode(p("node_modules/sirv-cli/bin.js"), [p(), "--dev"]);
+	runNode(p("node_modules/sirv-cli/bin.js"), [outputPath(), "--dev"]);
 }
 
 async function main() {

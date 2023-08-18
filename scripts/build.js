@@ -145,7 +145,7 @@ async function buildJSBundles() {
 	const config = {
 		input: filePaths,
 		output: {
-			dir: p("dist"),
+			dir: outputPath(),
 			format: "iife"
 		},
 		plugins: [
@@ -260,7 +260,6 @@ async function build(requests) {
 		}
 	}
 
-	// call buildSiteAssets
 	console.log("Building site assets...");
 	await buildSiteAssets();
 

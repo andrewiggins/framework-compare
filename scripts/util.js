@@ -23,7 +23,7 @@ export const toTitleCase = str => {
 
 export const p = (...args) => path.join(__dirname, "..", ...args);
 export const outputPath = (...args) => p("dist", ...args);
-export const toUrl = s => path.relative(p(), s).replace(/\\/gi, "/");
+export const toUrl = s => path.relative(outputPath(), s).replace(/\\/gi, "/");
 
 export const frameworkOutput = (...args) => outputPath("frameworks", ...args);
 export const srcPath = (framework, app, ...args) =>
