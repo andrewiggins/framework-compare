@@ -147,17 +147,15 @@ class MockFetchDebugger extends HTMLElement {
 			}
 
 			#inflight .request {
-				position: relative;
+				display: grid;
 				margin: 0.15rem 0;
 			}
 
 			#inflight .request-btn {
 				display: flex;
-				position: absolute;
-				top: 0;
-				left: 0;
-				width: 100%;
-				height: 100%;
+				grid-row: 1;
+				grid-column: 1;
+				padding: 0 4px;
 				text-align: left;
 				cursor: pointer;
 			}
@@ -175,7 +173,8 @@ class MockFetchDebugger extends HTMLElement {
 				-moz-appearance: none;
 				appearance: none;
 				border: none;
-				width: calc(100% - 1em);
+				grid-row: 1;
+				grid-column: 1;
 			}
 
 			#inflight progress::-webkit-progress-bar {
@@ -512,6 +511,7 @@ class MockFetchDebugger extends HTMLElement {
 
 				inflightList.appendChild(
 					<li class="request" data-req-id={request.id}>
+						<progress value={0} max={100}></progress>
 						<button
 							class="request-btn"
 							data-paused={isPaused.toString()}
@@ -527,7 +527,6 @@ class MockFetchDebugger extends HTMLElement {
 							<span class="request-label">{request.url}</span>
 							<span class="status">{isPaused ? "▶" : "⏸"}</span>
 						</button>
-						<progress value={0} max={100}></progress>
 					</li>
 				);
 			}
