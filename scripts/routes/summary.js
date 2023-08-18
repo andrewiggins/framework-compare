@@ -1,7 +1,6 @@
 import { writeFile } from "fs/promises";
-import { relative } from "path";
 import { h } from "preact";
-import { p, outputPath, toUrl } from "../util.js";
+import { outputPath, toUrl } from "../util.js";
 
 /**
  * @param {import('../build').Renderer} renderPage

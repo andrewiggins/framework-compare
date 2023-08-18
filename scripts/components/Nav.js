@@ -11,7 +11,8 @@ const aboutSection = {
 	]
 };
 
-const urlRegex = /\/frameworks\/([A-Za-z0-9_\-]+)\/([A-Za-z0-9_\-]+)\/?/i;
+const urlRegex =
+	/(?:^|\/?)frameworks\/([A-Za-z0-9_\-]+)\/([A-Za-z0-9_\-]+)\/?/i;
 
 /**
  * @param {string} url

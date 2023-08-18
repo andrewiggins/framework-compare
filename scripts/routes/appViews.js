@@ -1,7 +1,7 @@
 import path from "path";
 import { writeFile } from "fs/promises";
 import { h } from "preact";
-import { p, ensureDir, getDisplayName } from "../util.js";
+import { ensureDir, getDisplayName, outputPath } from "../util.js";
 
 /**
  * @param {import('../build').Renderer} renderPage
@@ -28,7 +28,7 @@ export async function buildAppViews(renderPage, AppPage, frameworkData) {
 				scripts: [app.jsUrl]
 			});
 
-			const htmlPath = p(app.htmlUrl);
+			const htmlPath = outputPath(app.htmlUrl);
 			await ensureDir(path.dirname(htmlPath));
 			await writeFile(htmlPath, appHtml, "utf8");
 		})
