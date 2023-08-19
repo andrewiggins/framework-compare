@@ -104,6 +104,8 @@ export function createMockFetchConfig() {
  * @returns {(url: string, options?: RequestInit) => Promise<void>}
  */
 export function createMockFetch(config) {
+	// Actual fetch signature:
+	// declare function fetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response>;
 	/**
 	 * @param {string} url Mock URL
 	 * @param {RequestInit} [options] Mock request options
