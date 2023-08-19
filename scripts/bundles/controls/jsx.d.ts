@@ -6,6 +6,7 @@ interface JSXAttributes {
 	// Attributes that this JSX allows
 	class?: string;
 	for?: string;
+	id?: string;
 }
 
 type JSXHTMLElement<T> = Partial<Omit<HTMLElementTagNameMap[T], "children">>;
@@ -19,5 +20,8 @@ declare namespace JSX {
 	interface ElementChildrenAttribute {
 		children?: Children;
 	}
-	interface IntrinsicElements extends HTMLElementsMap {}
+	interface IntrinsicElements extends HTMLElementsMap {
+		// Custom elements
+		"draggable-dialog": JSXAttributes;
+	}
 }

@@ -52,37 +52,29 @@ function getInitialRootTransform() {
 	return getRootTransform(x, y);
 }
 
-class MockFetchDebugger extends HTMLElement {
+class DraggableDialog extends HTMLElement {
 	constructor() {
 		super();
 		this.attachShadow({ mode: "open" });
 
-		/** @type {import('./mockFetch').Config} */
-		this._config = null;
-		this._show = false;
-
 		const style = document.createElement("style");
 		style.innerHTML = `
-			#root {
-				display: none;
-				padding: 1.1rem 0.5rem;
-				border: 1px solid black;
-				border-radius: 8px;
-				background-color: white;
-			}
-
-			#root.show {
+			:host {
 				display: block;
-			}
-
-			#root.dialog {
 				position: fixed;
 				top: 0;
 				left: 0;
-				z-index: 1;
+				z-index: 9999;
+
+				border: 1px solid black;
+				border-radius: 8px;
+				background-color: white;
+
 				/* https://getcssscan.com/css-box-shadow-examples */
 				box-shadow: rgba(0, 0, 0, 0.1) 0px 10px 15px -3px, rgba(0, 0, 0, 0.05) 0px 4px 6px -2px;
 			}
+
+			:host([hidden]) { display: none; }
 
 			button {
 				display: inline-block;
@@ -94,20 +86,12 @@ class MockFetchDebugger extends HTMLElement {
 			}
 
 			.drag-handle {
-				display: none;
-				position: absolute;
-				top: 0;
-				left: 0;
-				right: 0;
+				display: block;
 				width: 100%;
 				height: 1.1rem;
 				text-align: center;
 				cursor: move;
 				border-radius: 8px 8px 0 0;
-			}
-
-			.dialog .drag-handle {
-				display: block;
 			}
 
 			.drag-handle:hover,
@@ -118,6 +102,134 @@ class MockFetchDebugger extends HTMLElement {
 			.drag-handle-icon {
 				display: inline-block;
 				transform: rotate(90deg);
+			}
+
+		`;
+		this.shadowRoot.appendChild(style);
+
+		const body = (
+			<button
+				class="drag-handle"
+				type="button"
+				aria-label="Move dialog"
+				onpointerdown={this.onInitializeMove.bind(this)}
+			>
+				<span class="drag-handle-icon" aria-hidden="true">
+					||
+				</span>
+			</button>
+		);
+
+		this.shadowRoot.appendChild(body);
+		this.shadowRoot.appendChild(document.createElement("slot"));
+	}
+
+	connectedCallback() {
+		let match;
+
+		const host = /** @type {HTMLElement} */ (this.shadowRoot.host);
+		if (host.style.transform == "") {
+			host.style.transform = getInitialRootTransform();
+		} else if ((match = host.style.transform.match(translateRe))) {
+			let translateX = parseInt(match[1], 10);
+			let translateY = parseInt(match[2], 10);
+
+			if (
+				translateX + 24 > window.innerWidth ||
+				translateY + 24 > window.innerHeight
+			) {
+				// If dialog is positioned off screen due to a screen resize, toggling
+				// the dialog should reset it's position
+				host.style.transform = getInitialRootTransform();
+			}
+		}
+	}
+
+	/** @param {PointerEvent} initialEvent */
+	onInitializeMove(initialEvent) {
+		initialEvent.preventDefault();
+
+		const host = /** @type {HTMLElement} */ (this.shadowRoot.host);
+		const dragHandle = this.shadowRoot.querySelector(".drag-handle");
+		dragHandle.classList.add("moving");
+
+		const prevCursor = document.body.style.cursor;
+		document.body.style.cursor = "move";
+
+		let prevClientX = initialEvent.clientX;
+		let prevClientY = initialEvent.clientY;
+		let prevTranslateX = 0;
+		let prevTranslateY = 0;
+
+		let match = host.style.transform.match(translateRe);
+		if (match) {
+			prevTranslateX = parseInt(match[1], 10);
+			prevTranslateY = parseInt(match[2], 10);
+		}
+
+		/** @param {PointerEvent} moveEvent */
+		const onMove = moveEvent => {
+			moveEvent.preventDefault();
+
+			let moveX = moveEvent.clientX - prevClientX;
+			let moveY = moveEvent.clientY - prevClientY;
+
+			let newTranslateX = prevTranslateX + moveX;
+			let newTranslateY = prevTranslateY + moveY;
+
+			if (
+				// Outside bottom/right edge
+				moveEvent.clientX + 24 < window.innerWidth &&
+				newTranslateY + 24 < window.innerHeight &&
+				// Outside top/left edge
+				moveEvent.clientX - 24 > 0 &&
+				newTranslateY > 0
+			) {
+				host.style.transform = getRootTransform(newTranslateX, newTranslateY);
+			}
+
+			prevClientX = moveEvent.clientX;
+			prevClientY = moveEvent.clientY;
+			prevTranslateX = newTranslateX;
+			prevTranslateY = newTranslateY;
+		};
+
+		const onMoveEnd = () => {
+			document.body.style.cursor = prevCursor;
+			this.shadowRoot.querySelector(".drag-handle").classList.remove("moving");
+			document.removeEventListener("pointermove", onMove);
+			document.removeEventListener("pointerup", onMoveEnd);
+		};
+
+		document.addEventListener("pointermove", onMove);
+		document.addEventListener("pointerup", onMoveEnd);
+	}
+}
+
+class MockFetchDebugger extends HTMLElement {
+	constructor() {
+		super();
+		this.attachShadow({ mode: "open" });
+
+		/** @type {import('./mockFetch').Config} */
+		this._config = null;
+
+		const style = document.createElement("style");
+		style.innerHTML = `
+			:host { display: block; }}
+			:host([hidden]) { display: none; }
+
+			#root {
+				padding: 0.125rem 0.5rem 1.1rem 0.5rem
+			}
+
+			button {
+				display: inline-block;
+				border: 0;
+				padding: 0;
+				background: none;
+				font-size: inherit;
+				font-family: -apple-system,system-ui,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica Neue,sans-serif;
 			}
 
 			label {
@@ -203,53 +315,39 @@ class MockFetchDebugger extends HTMLElement {
 		this.shadowRoot.appendChild(style);
 
 		const body = (
-			<div
-				id="root"
-				class={cc({
-					show: this.hasAttribute("show"),
-					dialog: this.hasAttribute("dialog")
-				})}
-			>
-				<button
-					class="drag-handle"
-					type="button"
-					aria-label="Move fetch debugger"
-					onpointerdown={this.onInitializeMove.bind(this)}
-				>
-					<span class="drag-handle-icon" aria-hidden="true">
-						||
-					</span>
-				</button>
-				<label for="latency">
-					Latency: <span id="latency-label"></span>
-				</label>
-				<div>
-					<input
-						id="latency"
-						type="range"
-						min="0"
-						max="10000"
-						step="500"
-						valueAsNumber={0}
-						oninput={() => this.updateLatency()}
-					/>
+			<draggable-dialog>
+				<div id="root">
+					<label for="latency">
+						Latency: <span id="latency-label"></span>
+					</label>
+					<div>
+						<input
+							id="latency"
+							type="range"
+							min="0"
+							max="10000"
+							step="500"
+							valueAsNumber={0}
+							oninput={() => this.updateLatency()}
+						/>
+					</div>
+					<label>
+						<input
+							id="pause-new"
+							type="checkbox"
+							oninput={event => {
+								// @ts-ignore
+								this.config.areNewRequestsPaused = event.target.checked;
+							}}
+						/>{" "}
+						Pause new requests
+					</label>
+					<h2>Inflight</h2>
+					<ul id="inflight"></ul>
+					<h2>Recently done</h2>
+					<ul id="completed"></ul>
 				</div>
-				<label>
-					<input
-						id="pause-new"
-						type="checkbox"
-						oninput={event => {
-							// @ts-ignore
-							this.config.areNewRequestsPaused = event.target.checked;
-						}}
-					/>{" "}
-					Pause new requests
-				</label>
-				<h2>Inflight</h2>
-				<ul id="inflight"></ul>
-				<h2>Recently done</h2>
-				<ul id="completed"></ul>
-			</div>
+			</draggable-dialog>
 		);
 
 		this.shadowRoot.appendChild(body);
@@ -286,136 +384,12 @@ class MockFetchDebugger extends HTMLElement {
 		}
 	}
 
-	get show() {
-		return this.hasAttribute("show");
-	}
-	set show(newShow) {
-		if (newShow) {
-			this.setAttribute("show", "");
-		} else {
-			this.removeAttribute("show");
-		}
-	}
-
-	get dialog() {
-		return this.hasAttribute("dialog");
-	}
-	set dialog(newDialog) {
-		if (newDialog) {
-			this.setAttribute("dialog", "");
-		} else {
-			this.removeAttribute("dialog");
-		}
-	}
-
 	connectedCallback() {
 		this.update();
 	}
 
 	disconnectedCallback() {
 		this.update();
-	}
-
-	static get observedAttributes() {
-		return ["show", "dialog"];
-	}
-
-	attributeChangedCallback(name, oldValue, newValue) {
-		const root = this.shadowRoot.getElementById("root");
-
-		if (name == "show") {
-			if (newValue == null) {
-				root.classList.remove("show");
-			} else {
-				root.classList.add("show");
-			}
-		}
-
-		if (name == "dialog") {
-			let match;
-			if (root.style.transform == "") {
-				root.style.transform = getInitialRootTransform();
-			} else if ((match = root.style.transform.match(translateRe))) {
-				let translateX = parseInt(match[1], 10);
-				let translateY = parseInt(match[2], 10);
-
-				if (
-					translateX + 24 > window.innerWidth ||
-					translateY + 24 > window.innerHeight
-				) {
-					// If dialog is positioned off screen due to a screen resize, toggling
-					// the dialog should reset it's position
-					root.style.transform = getInitialRootTransform();
-				}
-			}
-
-			if (newValue == null) {
-				root.classList.remove("dialog");
-			} else {
-				root.classList.add("dialog");
-			}
-		}
-
-		if (name == "show") {
-			this.update();
-		}
-	}
-
-	/** @param {PointerEvent} initialEvent */
-	onInitializeMove(initialEvent) {
-		initialEvent.preventDefault();
-		const root = this.shadowRoot.getElementById("root");
-		root.querySelector(".drag-handle").classList.add("moving");
-		const prevCursor = document.body.style.cursor;
-		document.body.style.cursor = "move";
-
-		let prevClientX = initialEvent.clientX;
-		let prevClientY = initialEvent.clientY;
-		let prevTranslateX = 0;
-		let prevTranslateY = 0;
-
-		let match = root.style.transform.match(translateRe);
-		if (match) {
-			prevTranslateX = parseInt(match[1], 10);
-			prevTranslateY = parseInt(match[2], 10);
-		}
-
-		/** @param {PointerEvent} moveEvent */
-		const onMove = moveEvent => {
-			moveEvent.preventDefault();
-
-			let moveX = moveEvent.clientX - prevClientX;
-			let moveY = moveEvent.clientY - prevClientY;
-
-			let newTranslateX = prevTranslateX + moveX;
-			let newTranslateY = prevTranslateY + moveY;
-
-			if (
-				// Outside bottom/right edge
-				moveEvent.clientX + 24 < window.innerWidth &&
-				newTranslateY + 24 < window.innerHeight &&
-				// Outside top/left edge
-				moveEvent.clientX - 24 > 0 &&
-				newTranslateY > 0
-			) {
-				root.style.transform = getRootTransform(newTranslateX, newTranslateY);
-			}
-
-			prevClientX = moveEvent.clientX;
-			prevClientY = moveEvent.clientY;
-			prevTranslateX = newTranslateX;
-			prevTranslateY = newTranslateY;
-		};
-
-		const onMoveEnd = () => {
-			document.body.style.cursor = prevCursor;
-			root.querySelector(".drag-handle").classList.remove("moving");
-			document.removeEventListener("pointermove", onMove);
-			document.removeEventListener("pointerup", onMoveEnd);
-		};
-
-		document.addEventListener("pointermove", onMove);
-		document.addEventListener("pointerup", onMoveEnd);
 	}
 
 	onToggleRequest(request) {
@@ -438,8 +412,7 @@ class MockFetchDebugger extends HTMLElement {
 	}
 
 	update() {
-		if (!this.isConnected || this.show == false || !this.config) {
-			// Should I check for display: none?
+		if (!this.isConnected || !this.config) {
 			return;
 		}
 
@@ -563,5 +536,6 @@ class MockFetchDebugger extends HTMLElement {
 }
 
 export function installFetchDebugger() {
+	window.customElements.define("draggable-dialog", DraggableDialog);
 	window.customElements.define("mock-fetch-debugger", MockFetchDebugger);
 }
