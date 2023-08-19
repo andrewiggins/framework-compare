@@ -128,7 +128,6 @@ class DraggableDialog extends HTMLElement {
 	#onInitializeMove(initialEvent) {
 		initialEvent.preventDefault();
 
-		const host = /** @type {HTMLElement} */ (this.shadowRoot.host);
 		const dragHandle = this.shadowRoot.querySelector(".drag-handle");
 		dragHandle.classList.add("moving");
 
@@ -349,30 +348,28 @@ class MockFetchDebugger extends HTMLElement {
 		return this._config;
 	}
 	set config(newConfig) {
-		if (newConfig !== this._config) {
-			if (this._config) {
-				// Reset old config to 'auto'
-				this._config.mode = "auto";
-			}
-
-			newConfig.mode = "manual";
-			newConfig.on("update", () => this.update());
-
-			// @ts-ignore
-			this.shadowRoot.getElementById("latency").valueAsNumber =
-				newConfig.durationMs;
-
-			// @ts-ignore
-			this.shadowRoot.getElementById("pause-new").checked =
-				newConfig.areNewRequestsPaused;
-
-			this._config = newConfig;
-
-			requestAnimationFrame(() => {
-				this.update();
-				this.updateLatency();
-			});
+		if (this._config) {
+			// Reset old config to 'auto'
+			this._config.mode = "auto";
 		}
+
+		newConfig.mode = "manual";
+		newConfig.on("update", () => this.update());
+
+		// @ts-ignore
+		this.shadowRoot.getElementById("latency").valueAsNumber =
+			newConfig.durationMs;
+
+		// @ts-ignore
+		this.shadowRoot.getElementById("pause-new").checked =
+			newConfig.areNewRequestsPaused;
+
+		this._config = newConfig;
+
+		requestAnimationFrame(() => {
+			this.update();
+			this.updateLatency();
+		});
 	}
 
 	connectedCallback() {

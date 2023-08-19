@@ -7,6 +7,9 @@ import { installPolyfill } from "./controls/details-polyfill";
 import { createMockFetch, createMockFetchConfig } from "./controls/mockFetch";
 import { installFetchDebugger } from "./controls/mockFetchDebugger";
 
+window.createMockFetchConfig = createMockFetchConfig;
+window.createMockFetch = createMockFetch;
+
 window.mockFetchConfig = createMockFetchConfig();
 window.mockFetchConfig.log = (...msgs) => console.log(...msgs);
 

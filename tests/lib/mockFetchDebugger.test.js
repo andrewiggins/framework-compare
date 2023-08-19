@@ -1,3 +1,4 @@
+/// <reference path="../../scripts/bundles/global.d.ts" />
 import path from "path";
 import { pathToFileURL } from "url";
 
@@ -13,27 +14,86 @@ import { pathToFileURL } from "url";
  * @template {Node} T
  */
 
-describe("MockFetchDebugger", () => {
-	/** @returns {Promise<ElementHandle<MockFetchDebugger>>} */
-	async function getDebuggerEl() {
-		const el = await page.$("mock-fetch-debugger");
-		if (!el) {
-			throw new Error(`Could not find mock-fetch-debugger element.`);
-		}
+/**
+ * @param {string} selector
+ * @param {import('puppeteer').Page | ElementHandle<Element>} [parent]
+ * @returns {Promise<ElementHandle<Element>>}
+ */
+async function getElement(selector, parent = page) {
+	const el = await parent.$(selector);
+	if (!el) {
+		throw new Error(`Could not find element with selector "${selector}"`);
+	}
 
-		return /** @type {ElementHandle<MockFetchDebugger>} */ (el);
+	return el;
+}
+
+/**
+ * @param {string} selector
+ * @returns {Promise<ElementHandle<Element>[]>}
+ */
+async function getElements(selector) {
+	return page.$$(selector);
+}
+
+describe("MockFetchDebugger", () => {
+	const defaultDuration = 500;
+
+	const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+	async function getDebuggerEl() {
+		return /** @type {ElementHandle<MockFetchDebugger>}*/ (
+			await getElement("mock-fetch-debugger")
+		);
 	}
 
 	/** @returns {Promise<MockFetchConfig>} */
 	function getConfig() {
-		// @ts-expect-error Need to update Window interface to include mockFetchConfig
 		return page.evaluate(() => window.mockFetchConfig);
+	}
+
+	async function getInflightList() {
+		return getElements("pierce/.request");
+	}
+
+	async function getCompletedList() {
+		return getElements("pierce/#completed li");
+	}
+
+	async function newRequest(url) {
+		await page.evaluate(url => {
+			window.mockFetch(url);
+		}, url);
+	}
+
+	async function toggleRequest(index) {
+		const requestEl = (await getInflightList())[index];
+		const toggleEl = await getElement(".request-btn", requestEl);
+		await toggleEl.click();
 	}
 
 	beforeEach(async () => {
 		const htmlPath = path.join(__dirname, "mockFetchDebuggerTest.html");
 		const htmlUrl = pathToFileURL(htmlPath).toString();
 		await page.goto(htmlUrl);
+
+		// Create new mock fetch debugger for each test
+		await page.evaluate(dur => {
+			document.querySelectorAll("mock-fetch-debugger").forEach(el => {
+				el.remove();
+			});
+
+			window.mockFetchConfig = window.createMockFetchConfig();
+			window.mockFetchConfig.durationMs = dur;
+			window.mockFetchConfig.log = (...msgs) => console.log(...msgs);
+
+			window.mockFetch = window.createMockFetch(window.mockFetchConfig);
+
+			const fetchDebugger = document.createElement("mock-fetch-debugger");
+			fetchDebugger.config = window.mockFetchConfig;
+			document.body.appendChild(fetchDebugger);
+			window.fetchDebugger = fetchDebugger;
+		}, defaultDuration);
 	});
 
 	it("initializes mock fetch debugger", async () => {
@@ -41,17 +101,14 @@ describe("MockFetchDebugger", () => {
 		expect(debuggerEl).toBeTruthy();
 
 		const config = await getConfig();
-		expect(config.durationMs).toBe(3000);
+		expect(config.durationMs).toBe(defaultDuration);
 	});
 
 	describe("latency control", () => {
 		async function getLatencyRange() {
-			const element = await page.$("pierce/#latency");
-			if (!element) {
-				throw new Error(`Could not find latency range element.`);
-			}
-
-			return /** @type {ElementHandle<HTMLInputElement>} */ (element);
+			return /** @type {ElementHandle<HTMLInputElement>} */ (
+				await getElement("pierce/#latency")
+			);
 		}
 
 		async function getLatency() {
@@ -65,22 +122,34 @@ describe("MockFetchDebugger", () => {
 		}
 
 		it("adjust latency range", async () => {
-			await expect(getLatency()).resolves.toBe(3000);
-			await expect(getLatencyLabel()).resolves.toBe("3.0 seconds");
-			await expect(getConfig()).resolves.toHaveProperty("durationMs", 3000);
+			await delay(100); // Give a beat for the label to sync with the value
+
+			await expect(getConfig()).resolves.toHaveProperty(
+				"durationMs",
+				defaultDuration
+			);
+			await expect(getLatency()).resolves.toBe(defaultDuration);
+			await expect(getLatencyLabel()).resolves.toBe("0.5 seconds");
 
 			await (await getLatencyRange()).click();
 
+			await expect(getConfig()).resolves.toHaveProperty("durationMs", 5000);
 			await expect(getLatency()).resolves.toBe(5000);
 			await expect(getLatencyLabel()).resolves.toBe("5.0 seconds");
-			await expect(getConfig()).resolves.toHaveProperty("durationMs", 5000);
 		});
 	});
 
 	describe("pause new requests", () => {
-		const pauseNewSel = "pierce/#pause-new";
-		// @ts-ignore
-		const getChecked = () => page.$eval(pauseNewSel, el => el.checked);
+		async function getPauseNew() {
+			return /** @type {ElementHandle<HTMLInputElement>} */ (
+				await getElement("pierce/#pause-new")
+			);
+		}
+
+		async function getChecked() {
+			const el = await getPauseNew();
+			return el.evaluate(el => el.checked);
+		}
 
 		it("toggles config.areNewRequestsPaused", async () => {
 			await expect(getChecked()).resolves.toBe(false);
@@ -89,7 +158,7 @@ describe("MockFetchDebugger", () => {
 				false
 			);
 
-			await page.click(pauseNewSel);
+			await (await getPauseNew()).click();
 
 			await expect(getChecked()).resolves.toBe(true);
 			await expect(getConfig()).resolves.toHaveProperty(
@@ -98,30 +167,29 @@ describe("MockFetchDebugger", () => {
 			);
 		});
 
-		// TODO:
-		// - test to ensure new requests are added to inflight list but aren't
-		//   completed after duration
+		it("pauses new requests when enabled", async () => {
+			await (await getPauseNew()).click();
+			await newRequest("/req1");
+
+			let inflightList = await getInflightList();
+			let firstReq = await inflightList[0].evaluate(el => el.textContent);
+			expect(inflightList).toHaveLength(1);
+			expect(firstReq).toBe("/req1▶");
+
+			await delay(defaultDuration + 100);
+
+			inflightList = await getInflightList();
+			firstReq = await inflightList[0].evaluate(el => el.textContent);
+			expect(inflightList).toHaveLength(1);
+			expect(firstReq).toBe("/req1▶");
+		});
 	});
 
 	describe("basic request tracking", () => {
 		// TODO:
-		// Add tests for show=true:
 		// - New requests are added
 		// - Request completes after duration
 		// - Completed requests are moved to completed list
-		//
-		// Add tests for after setting show=false:
-		// - New requests are completed after duration
-		// - Completed requests are completed
-		//
-		// Tests for show=true then show = false:
-		// - new requests are added to list when show=true
-		// - show = false
-		// - requests still complete
-		//
-		// Tests for show=false then show=true
-		// - once show = true, requests should show in list
-		// - requests should move to completed list after duration
 	});
 
 	describe("pause & resume", () => {
