@@ -1,10 +1,8 @@
 /// <reference path="jsx.d.ts" />
 
-import cc from "classcat";
+/** @jsx h */
 
 const hasOwn = Object.prototype.hasOwnProperty;
-
-/** @jsx h */
 
 /**
  * @param {string} tag
@@ -34,22 +32,6 @@ function h(tag, attributes, ...children) {
 	}
 
 	return element;
-}
-
-const translateRe = /translate3d\((-?[0-9.]+)px, (-?[0-9.]+)px, 0px\)/;
-
-/**
- * @param {number} x
- * @param {number} y
- */
-function getRootTransform(x, y) {
-	return `translate3d(${x}px, ${y}px, 0)`;
-}
-
-function getInitialRootTransform() {
-	const x = window.innerWidth - 200 - 24;
-	const y = 24;
-	return getRootTransform(x, y);
 }
 
 class DraggableDialog extends HTMLElement {
@@ -112,7 +94,7 @@ class DraggableDialog extends HTMLElement {
 				class="drag-handle"
 				type="button"
 				aria-label="Move dialog"
-				onpointerdown={this.onInitializeMove.bind(this)}
+				onpointerdown={this.#onInitializeMove.bind(this)}
 			>
 				<span class="drag-handle-icon" aria-hidden="true">
 					||
@@ -125,28 +107,25 @@ class DraggableDialog extends HTMLElement {
 	}
 
 	connectedCallback() {
-		let match;
+		const defaultX = window.innerWidth - 200 - 24;
+		const defaultY = 24;
+		let { x: translateX, y: translateY } = this.#getTransform();
 
 		const host = /** @type {HTMLElement} */ (this.shadowRoot.host);
-		if (host.style.transform == "") {
-			host.style.transform = getInitialRootTransform();
-		} else if ((match = host.style.transform.match(translateRe))) {
-			let translateX = parseInt(match[1], 10);
-			let translateY = parseInt(match[2], 10);
-
-			if (
-				translateX + 24 > window.innerWidth ||
-				translateY + 24 > window.innerHeight
-			) {
-				// If dialog is positioned off screen due to a screen resize, toggling
-				// the dialog should reset it's position
-				host.style.transform = getInitialRootTransform();
-			}
+		// If the transform value isn't set or if the dialog is positioned off
+		// screen due to a screen resize, reconnecting the dialog should reset it's
+		// position
+		if (
+			host.style.transform == "" ||
+			translateX + 24 > window.innerWidth ||
+			translateY + 24 > window.innerHeight
+		) {
+			this.#setTransform(defaultX, defaultY);
 		}
 	}
 
 	/** @param {PointerEvent} initialEvent */
-	onInitializeMove(initialEvent) {
+	#onInitializeMove(initialEvent) {
 		initialEvent.preventDefault();
 
 		const host = /** @type {HTMLElement} */ (this.shadowRoot.host);
@@ -158,14 +137,7 @@ class DraggableDialog extends HTMLElement {
 
 		let prevClientX = initialEvent.clientX;
 		let prevClientY = initialEvent.clientY;
-		let prevTranslateX = 0;
-		let prevTranslateY = 0;
-
-		let match = host.style.transform.match(translateRe);
-		if (match) {
-			prevTranslateX = parseInt(match[1], 10);
-			prevTranslateY = parseInt(match[2], 10);
-		}
+		let { x: prevTranslateX, y: prevTranslateY } = this.#getTransform();
 
 		/** @param {PointerEvent} moveEvent */
 		const onMove = moveEvent => {
@@ -185,7 +157,7 @@ class DraggableDialog extends HTMLElement {
 				moveEvent.clientX - 24 > 0 &&
 				newTranslateY > 0
 			) {
-				host.style.transform = getRootTransform(newTranslateX, newTranslateY);
+				this.#setTransform(newTranslateX, newTranslateY);
 			}
 
 			prevClientX = moveEvent.clientX;
@@ -204,6 +176,29 @@ class DraggableDialog extends HTMLElement {
 		document.addEventListener("pointermove", onMove);
 		document.addEventListener("pointerup", onMoveEnd);
 	}
+
+	#getTransform() {
+		const host = /** @type {HTMLElement} */ (this);
+		const transform = host.style.transform;
+
+		const match = transform.match(
+			/translate3d\((-?[0-9.]+)px, (-?[0-9.]+)px, 0px\)/
+		);
+		if (match) {
+			return {
+				x: parseInt(match[1], 10),
+				y: parseInt(match[2], 10)
+			};
+		} else {
+			return { x: 0, y: 0 };
+		}
+	}
+
+	/** @param {number} x @param {number} y */
+	#setTransform(x, y) {
+		const host = /** @type {HTMLElement} */ (this);
+		host.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+	}
 }
 
 class MockFetchDebugger extends HTMLElement {
@@ -216,12 +211,12 @@ class MockFetchDebugger extends HTMLElement {
 
 		const style = document.createElement("style");
 		style.innerHTML = `
-			:host { display: block; }}
-			:host([hidden]) { display: none; }
-
-			#root {
+			:host {
+				display: block;
 				padding: 0.125rem 0.5rem 1.1rem 0.5rem
 			}
+
+			:host([hidden]) { display: none; }
 
 			button {
 				display: inline-block;
@@ -314,43 +309,39 @@ class MockFetchDebugger extends HTMLElement {
 		`;
 		this.shadowRoot.appendChild(style);
 
-		const body = (
-			<draggable-dialog>
-				<div id="root">
-					<label for="latency">
-						Latency: <span id="latency-label"></span>
-					</label>
-					<div>
-						<input
-							id="latency"
-							type="range"
-							min="0"
-							max="10000"
-							step="500"
-							valueAsNumber={0}
-							oninput={() => this.updateLatency()}
-						/>
-					</div>
-					<label>
-						<input
-							id="pause-new"
-							type="checkbox"
-							oninput={event => {
-								// @ts-ignore
-								this.config.areNewRequestsPaused = event.target.checked;
-							}}
-						/>{" "}
-						Pause new requests
-					</label>
-					<h2>Inflight</h2>
-					<ul id="inflight"></ul>
-					<h2>Recently done</h2>
-					<ul id="completed"></ul>
-				</div>
-			</draggable-dialog>
-		);
+		const body = [
+			<label for="latency">
+				Latency: <span id="latency-label"></span>
+			</label>,
+			<div>
+				<input
+					id="latency"
+					type="range"
+					min="0"
+					max="10000"
+					step="500"
+					valueAsNumber={0}
+					oninput={() => this.updateLatency()}
+				/>
+			</div>,
+			<label>
+				<input
+					id="pause-new"
+					type="checkbox"
+					oninput={event => {
+						// @ts-ignore
+						this.config.areNewRequestsPaused = event.target.checked;
+					}}
+				/>{" "}
+				Pause new requests
+			</label>,
+			<h2>Inflight</h2>,
+			<ul id="inflight"></ul>,
+			<h2>Recently done</h2>,
+			<ul id="completed"></ul>
+		];
 
-		this.shadowRoot.appendChild(body);
+		body.forEach(child => this.shadowRoot.appendChild(child));
 		this.update();
 	}
 

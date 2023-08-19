@@ -20,7 +20,8 @@ setupOffCanvas();
 
 const fetchDebugger = document.createElement("mock-fetch-debugger");
 fetchDebugger.config = window.mockFetchConfig;
-fetchDebugger.show = true;
-fetchDebugger.dialog = true;
-document.body.appendChild(fetchDebugger);
 window.fetchDebugger = fetchDebugger;
+
+const draggableDialog = document.createElement("draggable-dialog");
+draggableDialog.appendChild(fetchDebugger);
+document.body.appendChild(draggableDialog);
