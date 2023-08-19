@@ -106,7 +106,7 @@ export class MockFetchController extends EventTarget {
 		this.dispatchEvent(new MockRequestEvent("new-request", request));
 
 		if (this.areNewRequestsPaused) {
-			// TODO: Should we fire a pause event?
+			this.dispatchEvent(new MockRequestEvent("request-pause", request));
 		} else {
 			this.#scheduleUpdate();
 		}

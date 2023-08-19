@@ -567,9 +567,9 @@ describe("mockFetch library", () => {
 			jest.advanceTimersByTime(controller.latency + 1);
 			expect(logs).toEqual([
 				"New GET /req1",
-				"New GET /req2"
-				// "Pause GET /req1",
-				// "Pause GET /req2"
+				"Pause GET /req1",
+				"New GET /req2",
+				"Pause GET /req2"
 			]);
 
 			// turn off
@@ -612,7 +612,7 @@ describe("mockFetch library", () => {
 			expect(logs).toEqual([
 				"New GET /req1",
 				"New GET /req2",
-				// "Pause GET /req2",
+				"Pause GET /req2",
 				"Resolve GET /req1"
 			]);
 			expect(await req1).toBe(1);
