@@ -1,5 +1,6 @@
-class MockRequest {
-	static #id = 0;
+// Exported primarily for typing and testing
+export class MockRequest {
+	static id = 0; // Public for testing
 
 	/** @type {() => void} */
 	#resolver;
@@ -17,7 +18,7 @@ class MockRequest {
 		mockOptions = { latency: 3000, paused: false }
 	) {
 		/** @type {string} */
-		this.id = `${MockRequest.#id++}`;
+		this.id = `${++MockRequest.id}`;
 		/** @type {string} Display name of the request */
 		this.name = `${requestInit.method} ${url}`;
 		/** @type {string} The URL of the request */
@@ -36,8 +37,6 @@ class MockRequest {
 		/** @type {Promise<void>} */
 		this.promise = new Promise((resolve, reject) => {
 			this.#resolver = () => {
-				// TODO: Support logging?
-				// config.log(`Resolving ${name}`);
 				resolve();
 			};
 
@@ -67,7 +66,8 @@ class MockRequest {
 /**
  * @template {MockRequestEventType} Type
  */
-class MockRequestEvent extends Event {
+// Exported primarily for typing
+export class MockRequestEvent extends Event {
 	/**
 	 * @param {Type} type
 	 * @param {MockRequest} request
@@ -105,7 +105,9 @@ export class MockFetchController extends EventTarget {
 		this.requests.set(request.id, request);
 		this.dispatchEvent(new MockRequestEvent("new-request", request));
 
-		if (!this.areNewRequestsPaused) {
+		if (this.areNewRequestsPaused) {
+			// TODO: Should we fire a pause event?
+		} else {
 			this.#scheduleUpdate();
 		}
 
