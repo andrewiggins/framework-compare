@@ -72,19 +72,25 @@ describe("MockFetchDebugger", () => {
 		await toggleEl.click();
 	}
 
-	beforeEach(async () => {
-		const htmlPath = path.join(__dirname, "mockFetchDebuggerTest.html");
-		const htmlUrl = pathToFileURL(htmlPath).toString();
-		await page.goto(htmlUrl);
+	async function getPauseNew() {
+		return /** @type {ElementHandle<HTMLInputElement>} */ (
+			await getElement("pierce/#pause-new")
+		);
+	}
 
-		// Create new mock fetch debugger for each test
-		await page.evaluate(dur => {
+	async function getPausedNewChecked() {
+		const el = await getPauseNew();
+		return el.evaluate(el => el.checked);
+	}
+
+	/** @type {(config: Partial<MockFetchConfig>) => Promise<void>} */
+	async function setupNewDebugger(customConfig) {
+		await page.evaluate(config => {
 			document.querySelectorAll("mock-fetch-debugger").forEach(el => {
 				el.remove();
 			});
 
-			window.mockFetchConfig = window.createMockFetchConfig();
-			window.mockFetchConfig.durationMs = dur;
+			window.mockFetchConfig = { ...window.createMockFetchConfig(), ...config };
 			window.mockFetchConfig.log = (...msgs) => console.log(...msgs);
 
 			window.mockFetch = window.createMockFetch(window.mockFetchConfig);
@@ -93,7 +99,16 @@ describe("MockFetchDebugger", () => {
 			fetchDebugger.config = window.mockFetchConfig;
 			document.body.appendChild(fetchDebugger);
 			window.fetchDebugger = fetchDebugger;
-		}, defaultDuration);
+		}, customConfig);
+	}
+
+	beforeEach(async () => {
+		const htmlPath = path.join(__dirname, "mockFetchDebuggerTest.html");
+		const htmlUrl = pathToFileURL(htmlPath).toString();
+		await page.goto(htmlUrl);
+
+		// Create new mock fetch debugger for each test
+		await setupNewDebugger({ durationMs: defaultDuration });
 	});
 
 	it("initializes mock fetch debugger", async () => {
@@ -197,53 +212,76 @@ describe("MockFetchDebugger", () => {
 		});
 	});
 
-	describe("pause new requests", () => {
-		async function getPauseNew() {
-			return /** @type {ElementHandle<HTMLInputElement>} */ (
-				await getElement("pierce/#pause-new")
-			);
-		}
+	it("pauses new requests when enabled", async () => {
+		await expect(getPausedNewChecked()).resolves.toBe(false);
+		await expect(getConfig()).resolves.toHaveProperty(
+			"areNewRequestsPaused",
+			false
+		);
 
-		async function getChecked() {
-			const el = await getPauseNew();
-			return el.evaluate(el => el.checked);
-		}
+		await (await getPauseNew()).click();
 
-		it("pauses new requests when enabled", async () => {
-			await expect(getChecked()).resolves.toBe(false);
-			await expect(getConfig()).resolves.toHaveProperty(
-				"areNewRequestsPaused",
-				false
-			);
+		await expect(getPausedNewChecked()).resolves.toBe(true);
+		await expect(getConfig()).resolves.toHaveProperty(
+			"areNewRequestsPaused",
+			true
+		);
 
-			await (await getPauseNew()).click();
+		await newRequest("/req1");
 
-			await expect(getChecked()).resolves.toBe(true);
-			await expect(getConfig()).resolves.toHaveProperty(
-				"areNewRequestsPaused",
-				true
-			);
+		let inflightList = await getInflightList();
+		let firstReq = await inflightList[0].evaluate(el => el.textContent);
+		expect(inflightList).toHaveLength(1);
+		expect(firstReq).toBe("/req1▶");
 
-			await newRequest("/req1");
+		await delay(defaultDuration + 100);
 
-			let inflightList = await getInflightList();
-			let firstReq = await inflightList[0].evaluate(el => el.textContent);
-			expect(inflightList).toHaveLength(1);
-			expect(firstReq).toBe("/req1▶");
-
-			await delay(defaultDuration + 100);
-
-			inflightList = await getInflightList();
-			firstReq = await inflightList[0].evaluate(el => el.textContent);
-			expect(inflightList).toHaveLength(1);
-			expect(firstReq).toBe("/req1▶");
-		});
+		inflightList = await getInflightList();
+		firstReq = await inflightList[0].evaluate(el => el.textContent);
+		expect(inflightList).toHaveLength(1);
+		expect(firstReq).toBe("/req1▶");
 	});
 
 	describe("0 latency", () => {
-		// TODO:
-		// - Basic test to ensure new requests are sent directly to completed
-		// - new-paused = true: Basic test to ensure new requests are inflight until
-		//   clicked and show up in completed
+		beforeEach(async () => {
+			await setupNewDebugger({ durationMs: 0 });
+			await expect(getConfig()).resolves.toHaveProperty("durationMs", 0);
+		});
+
+		it("requests are immediately completed", async () => {
+			await newRequest("/req1");
+
+			const inflightList = await getInflightList();
+			expect(inflightList).toHaveLength(0);
+
+			const completedList = await getCompletedList();
+			expect(completedList).toHaveLength(1);
+
+			const firstReq = await completedList[0].evaluate(el => el.textContent);
+			expect(firstReq).toBe("/req1");
+		});
+
+		it("requested are paused until clicked when areNewRequestPaused is enabled", async () => {
+			await (await getPauseNew()).click();
+
+			await newRequest("/req1");
+
+			const inflightList = await getInflightList();
+			expect(inflightList).toHaveLength(1);
+
+			const firstReq = await inflightList[0].evaluate(el => el.textContent);
+			expect(firstReq).toBe("/req1▶");
+
+			await toggleRequest(0);
+			await delay(10);
+
+			const completedList = await getCompletedList();
+			expect(completedList).toHaveLength(1);
+
+			const firstCompleted = await completedList[0].evaluate(
+				el => el.textContent
+			);
+			expect(firstCompleted).toBe("/req1");
+		});
 	});
 });

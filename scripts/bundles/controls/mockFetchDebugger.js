@@ -200,6 +200,10 @@ class DraggableDialog extends HTMLElement {
 	}
 }
 
+function afterNextFrame(cb) {
+	requestAnimationFrame(() => requestAnimationFrame(cb));
+}
+
 class MockFetchDebugger extends HTMLElement {
 	constructor() {
 		super();
@@ -275,6 +279,9 @@ class MockFetchDebugger extends HTMLElement {
 			}
 
 			#inflight progress {
+				display: block;
+				height: 100%;
+				width: 100%;
 				-webkit-appearance: none;
 				-moz-appearance: none;
 				appearance: none;
@@ -512,7 +519,9 @@ class MockFetchDebugger extends HTMLElement {
 		}
 
 		if (finishedItems.length) {
-			requestAnimationFrame(() =>
+			// Firefox requires at least one frame of 100% opacity before it will
+			// trigger the transition to 0 opacity
+			afterNextFrame(() =>
 				finishedItems.forEach(li => (li.style.opacity = "0"))
 			);
 		}
