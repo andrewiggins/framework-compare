@@ -1,4 +1,11 @@
 // Exported primarily for typing and testing
+//
+// TODO: Consider making this extend from Request to accommodate full fetch API.
+// And make more internal properties private? But controller needs to access
+// some of them... May need to add more methods to Request to make this work
+// (e.g. resolve, reject, pause, resume).
+//
+// Name probably doesn't belong here? But it's useful for debugging...
 export class MockRequest {
 	static id = 0; // Public for testing
 
@@ -95,6 +102,8 @@ export class MockFetchController extends EventTarget {
 		this.requests = new Map();
 	}
 
+	// Actual fetch signature:
+	// declare function fetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response>;
 	/** @type {(url: string, requestInit?: RequestInit) => Promise<void>} */
 	fetch = (url, requestInit) => {
 		const request = new MockRequest(url, requestInit, {
