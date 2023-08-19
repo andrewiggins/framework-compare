@@ -104,6 +104,28 @@ describe("MockFetchDebugger", () => {
 		expect(config.durationMs).toBe(defaultDuration);
 	});
 
+	it("new requests complete as expected", async () => {
+		await newRequest("/req1");
+		await newRequest("/req2");
+
+		let inflightList = await getInflightList();
+		expect(inflightList).toHaveLength(2);
+
+		await delay(defaultDuration + 10);
+
+		inflightList = await getInflightList();
+		expect(inflightList).toHaveLength(0);
+
+		const completedList = await getCompletedList();
+		expect(completedList).toHaveLength(2);
+
+		const firstReq = await completedList[0].evaluate(el => el.textContent);
+		expect(firstReq).toBe("/req1");
+
+		const secondReq = await completedList[1].evaluate(el => el.textContent);
+		expect(secondReq).toBe("/req2");
+	});
+
 	describe("latency control", () => {
 		async function getLatencyRange() {
 			return /** @type {ElementHandle<HTMLInputElement>} */ (
@@ -151,7 +173,7 @@ describe("MockFetchDebugger", () => {
 			return el.evaluate(el => el.checked);
 		}
 
-		it("toggles config.areNewRequestsPaused", async () => {
+		it("pauses new requests when enabled", async () => {
 			await expect(getChecked()).resolves.toBe(false);
 			await expect(getConfig()).resolves.toHaveProperty(
 				"areNewRequestsPaused",
@@ -165,10 +187,7 @@ describe("MockFetchDebugger", () => {
 				"areNewRequestsPaused",
 				true
 			);
-		});
 
-		it("pauses new requests when enabled", async () => {
-			await (await getPauseNew()).click();
 			await newRequest("/req1");
 
 			let inflightList = await getInflightList();
@@ -183,13 +202,6 @@ describe("MockFetchDebugger", () => {
 			expect(inflightList).toHaveLength(1);
 			expect(firstReq).toBe("/req1▶");
 		});
-	});
-
-	describe("basic request tracking", () => {
-		// TODO:
-		// - New requests are added
-		// - Request completes after duration
-		// - Completed requests are moved to completed list
 	});
 
 	describe("pause & resume", () => {
