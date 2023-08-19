@@ -126,6 +126,42 @@ describe("MockFetchDebugger", () => {
 		expect(secondReq).toBe("/req2");
 	});
 
+	it("pauses and resumes requests as expected", async () => {
+		await newRequest("/req1");
+		await newRequest("/req2");
+
+		await toggleRequest(0);
+
+		let inflightList = await getInflightList();
+		let completedList = await getCompletedList();
+		expect(inflightList).toHaveLength(2);
+		expect(completedList).toHaveLength(0);
+
+		await delay(defaultDuration + 10);
+
+		inflightList = await getInflightList();
+		completedList = await getCompletedList();
+		expect(inflightList).toHaveLength(1);
+		expect(completedList).toHaveLength(1);
+
+		await toggleRequest(0);
+		await delay(defaultDuration + 10);
+
+		inflightList = await getInflightList();
+		completedList = await getCompletedList();
+		expect(inflightList).toHaveLength(0);
+		expect(completedList).toHaveLength(2);
+
+		const firstCompleted = await completedList[0].evaluate(
+			el => el.textContent
+		);
+		const secondCompleted = await completedList[1].evaluate(
+			el => el.textContent
+		);
+		expect(firstCompleted).toBe("/req2");
+		expect(secondCompleted).toBe("/req1");
+	});
+
 	describe("latency control", () => {
 		async function getLatencyRange() {
 			return /** @type {ElementHandle<HTMLInputElement>} */ (
@@ -202,12 +238,6 @@ describe("MockFetchDebugger", () => {
 			expect(inflightList).toHaveLength(1);
 			expect(firstReq).toBe("/req1▶");
 		});
-	});
-
-	describe("pause & resume", () => {
-		// TODO:
-		// - Ensure pressing pause pauses a request
-		// - Ensure resuming a paused request completes
 	});
 
 	describe("0 latency", () => {
