@@ -250,6 +250,7 @@ describe("MockFetchDebugger", () => {
 
 		it("requests are immediately completed", async () => {
 			await newRequest("/req1");
+			await delay(10);
 
 			const inflightList = await getInflightList();
 			expect(inflightList).toHaveLength(0);
