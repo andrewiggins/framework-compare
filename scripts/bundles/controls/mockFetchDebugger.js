@@ -200,6 +200,7 @@ class DraggableDialog extends HTMLElement {
 	}
 }
 
+const fadeOutDuration = 7000;
 function afterNextFrame(cb) {
 	requestAnimationFrame(() => requestAnimationFrame(cb));
 }
@@ -309,7 +310,7 @@ class MockFetchDebugger extends HTMLElement {
 			}
 
 			#completed li {
-				transition: opacity 3s ease-in 7s;
+				transition: opacity 3s ease-in ${fadeOutDuration}ms;
 				opacity: 1;
 			}
 		`;
@@ -524,6 +525,12 @@ class MockFetchDebugger extends HTMLElement {
 			afterNextFrame(() =>
 				finishedItems.forEach(li => (li.style.opacity = "0"))
 			);
+			// If the debugger is hidden during the transition, the transition will
+			// cancel and the elements will never be removed from the DOM. So we'll go
+			// ahead and remove them ourselves after the transition is complete.
+			setTimeout(() => {
+				finishedItems.forEach(li => li.remove());
+			}, fadeOutDuration + 100);
 		}
 
 		if (isRunning) {
