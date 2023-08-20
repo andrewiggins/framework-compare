@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 	<head>
 		<meta charset="UTF-8" />
@@ -8,15 +8,6 @@
 		<link href="../../dist/site-bundle.min.css" rel="stylesheet" />
 	</head>
 	<body>
-		<div><button id="new-request">Trigger new request</button></div>
 		<script src="../../dist/site.js" type="text/javascript"></script>
-		<script type="module">
-			let requestCounter = 0;
-
-			const newRequestBtn = document.getElementById("new-request");
-			newRequestBtn.addEventListener("click", () => {
-				window.mockFetch(`/test/${requestCounter++}`);
-			});
-		</script>
 	</body>
 </html>
