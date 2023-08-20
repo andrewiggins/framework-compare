@@ -1,64 +1,33 @@
-/**
- * @typedef Timer
- * @property {number} expiresAt
- * @property {number} timeoutId
- */
+import mitt from "mitt";
 
-/**
- * @typedef {string} RequestId
- *
- * @typedef Request
- * @property {RequestId} id
- * @property {number | null} expiresAt When this request should resolve. If
- * null, request is paused and not scheduled to complete
- * @property {number} duration Total time this request should wait
- * @property {number | null} elapsedTime Tracks how much time of duration has
- * elapsed when a request is paused/resumed
- * @property {string} name Display name of request
- * @property {string} url
- * @property {RequestInit} options
- * @property {Promise<void>} promise
- * @property {() => void} resolve
- * @property {() => void} reject
- */
-
-/**
- * @typedef Config
- * @property {number} durationMs
- * @property {boolean} areNewRequestsPaused
- * @property {() => string} newId
- * @property {Timer | null} timer
- * @property {Map<string, Request>} requests
- * @property {(id: RequestId) => void} pause
- * @property {(id: RequestId) => void} resume
- * @property {(...msg: any[]) => void} log
- */
-
-/** @returns {Config} */
+/** @returns {import('./mockFetch').Config} */
 export function createMockFetchConfig() {
 	let id = 0;
+
+	/** @type {'auto' | 'manual'} */
+	let currentMode = "auto";
+
+	const events = mitt();
 
 	return {
 		durationMs: 3 * 1000,
 		areNewRequestsPaused: false,
 
-		newId: () => `${++id}`,
+		get mode() {
+			return currentMode;
+		},
+		set mode(newMode) {
+			if (newMode !== currentMode) {
+				if (newMode !== "auto" && newMode !== "manual") {
+					throw new Error(`Unsupported mockFetch mode: ${newMode}.`);
+				}
 
-		// TODO: Build request editing module
-		//
-		// Normal mode:
-		//
-		// Only keep one timeout for when the next request will need to resolved. When
-		// it expires, loop through all requests and resolve all that have completed.
-		// When a new request arrives, check if it will expire before the current
-		// timeout. If so, replace the current timeout with a new one for the new
-		// request.
-		//
-		// Interactive mode:
-		//
-		// If the UI control is displayed, instead of relying to timers to resolve
-		// requests, we will run a animation loop to animate the UI control and expire
-		// requests in progress.
+				currentMode = newMode;
+				scheduleUpdate(this);
+			}
+		},
+
+		newId: () => `${++id}`,
 
 		timer: null,
 
@@ -78,6 +47,15 @@ export function createMockFetchConfig() {
 
 			request.elapsedTime = request.duration - (request.expiresAt - now);
 			request.expiresAt = null;
+
+			// Reset the timer if necessary
+			if (this.mode == "auto") {
+				// Ensure timer is properly set with the request with the next expiration
+				// which could be the request we just updated
+				resolveRequests(this, now);
+			}
+
+			this._emit("update");
 		},
 
 		resume(id) {
@@ -94,19 +72,40 @@ export function createMockFetchConfig() {
 			const remainingTime = request.duration - request.elapsedTime;
 			request.expiresAt = now + remainingTime;
 
-			// Ensure timer is properly set with the request with the next expiration
-			// which could be the request we just updated
-			resolveRequests(this);
+			if (this.mode == "auto") {
+				// Ensure timer is properly set with the request with the next expiration
+				// which could be the request we just updated
+				resolveRequests(this, now);
+			}
+
+			this._emit("update");
 		},
 
-		log(...msg) {}
+		on(type, handler) {
+			events.on(type, handler);
+		},
+
+		off(type, handler) {
+			events.off(type, handler);
+		},
+
+		_emit(type) {
+			events.emit(type);
+		},
+
+		log() {
+			// By default, log nothing?
+		}
 	};
 }
 
 /**
- * @param {Config} config
+ * @param {import('./mockFetch').Config} config
+ * @returns {(url: string, options?: RequestInit) => Promise<void>}
  */
 export function createMockFetch(config) {
+	// Actual fetch signature:
+	// declare function fetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response>;
 	/**
 	 * @param {string} url Mock URL
 	 * @param {RequestInit} [options] Mock request options
@@ -115,7 +114,9 @@ export function createMockFetch(config) {
 	function mockFetch(url, options = { method: "GET" }) {
 		const name = `${options.method} ${url}`;
 
-		let resolver, rejecter;
+		let resolver = () => {};
+		let rejecter = () => {};
+		/** @type {Promise<void>} */
 		const promise = new Promise((resolve, reject) => {
 			resolver = () => {
 				config.log(`Resolving ${name}`);
@@ -129,7 +130,7 @@ export function createMockFetch(config) {
 			// };
 		});
 
-		/** @type {Request} */
+		/** @type {import('./mockFetch').Request} */
 		const request = {
 			id: config.newId(),
 			duration: config.durationMs,
@@ -146,17 +147,11 @@ export function createMockFetch(config) {
 		config.requests.set(request.id, request);
 
 		if (!config.areNewRequestsPaused) {
-			const now = Date.now();
-			const expiresAt = now + request.duration;
-			request.expiresAt = expiresAt;
-
-			// If there is no timer or this request finishes faster than the current
-			// timer, setup a new timer
-			if (config.timer == null || request.expiresAt < config.timer.expiresAt) {
-				setTimer(config, request, now);
-			}
+			request.expiresAt = Date.now() + request.duration;
+			scheduleUpdate(config);
 		}
 
+		config._emit("update");
 		return promise;
 	}
 
@@ -164,32 +159,64 @@ export function createMockFetch(config) {
 }
 
 /**
- * @param {Config} config
- * @param {Request} request
- * @param {number} now
+ * @param {import('./mockFetch').Config} config
  */
-function setTimer(config, request, now) {
-	if (config.timer) {
+function scheduleUpdate(config) {
+	if (config.requests.size > 0 && config.mode == "auto") {
+		setTimer(config);
+	}
+}
+
+/**
+ * @param {import('./mockFetch').Config} config
+ */
+function setTimer(config) {
+	/** @type {number | null} The expiration time of the request that will expire soonest */
+	let nextExpiration = null;
+	for (let request of config.requests.values()) {
+		if (
+			request.expiresAt != null &&
+			(nextExpiration == null || request.expiresAt < nextExpiration)
+		) {
+			nextExpiration = request.expiresAt;
+		}
+	}
+
+	if (
+		config.timer &&
+		(nextExpiration == null || nextExpiration !== config.timer.expiresAt)
+	) {
+		// If there is an existing timer, and no next request or the timer expires a
+		// different time than the next request, clear the exiting timer.
 		window.clearTimeout(config.timer.timeoutId);
 		config.timer = null;
 	}
 
-	const timeoutId = window.setTimeout(
-		() => resolveRequests(config),
-		request.expiresAt - now
-	);
-	config.timer = { timeoutId, expiresAt: request.expiresAt };
+	if (
+		nextExpiration == null ||
+		(config.timer && nextExpiration === config.timer.expiresAt)
+	) {
+		return;
+	}
+
+	const timeout = nextExpiration - Date.now();
+	const timeoutId = window.setTimeout(() => {
+		config.timer = null;
+		resolveRequests(config, Date.now());
+		config._emit("update");
+	}, timeout);
+	config.timer = { timeoutId, expiresAt: nextExpiration };
 }
 
 /**
- * @param {Config} config
+ * `now` is a paramter to assist in debugging so that time doesn't continue when
+ * debugging. If it did, requests could "expire" while stepping through code
+ * @param {import('./mockFetch').Config} config
+ * @param {number} now
  */
-function resolveRequests(config) {
-	const now = Date.now();
+function resolveRequests(config, now) {
 	const toRemove = [];
 
-	/** @type {Request} Request with the next expiration */
-	let nextRequest = null;
 	for (let [id, request] of config.requests.entries()) {
 		if (request.expiresAt == null) {
 			continue;
@@ -198,11 +225,6 @@ function resolveRequests(config) {
 			// then go ahead and resolve it
 			request.resolve();
 			toRemove.push(id);
-		} else if (
-			nextRequest == null ||
-			request.expiresAt < nextRequest.expiresAt
-		) {
-			nextRequest = request;
 		}
 	}
 
@@ -210,9 +232,5 @@ function resolveRequests(config) {
 		config.requests.delete(id);
 	}
 
-	if (nextRequest) {
-		setTimer(config, nextRequest, now);
-	} else {
-		config.timer = null;
-	}
+	scheduleUpdate(config);
 }
