@@ -11,7 +11,7 @@
     "vue": "3.3.4"
   },
   "devDependencies": {
-    "postcss": "^8.4.0",
+    "postcss": "^8.4.31",
     "@rollup/plugin-commonjs": "^25.0.0",
     "@rollup/plugin-replace": "^5.0.0",
     "@vue/compiler-sfc": "^3.3.4",
