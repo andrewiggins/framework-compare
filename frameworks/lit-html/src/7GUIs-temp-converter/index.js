@@ -10,14 +10,14 @@ const TempConverter = (c, f, setBothFromC, setBothFromF) => html`
 const container = document.getElementById("app");
 
 function update(c, f) {
-	/** @param {Event} e */
+	/** @param {Event & {target: HTMLInputElement}} e */
 	function setBothFromC(e) {
 		c = e.target.value;
 		f = +(32 + (9 / 5) * c).toFixed(1);
 		update(c, f);
 	}
 
-	/** @param {Event} e */
+	/** @param {Event & {target: HTMLInputElement}} e */
 	function setBothFromF(e) {
 		f = e.target.value;
 		c = +((5 / 9) * (f - 32)).toFixed(1);

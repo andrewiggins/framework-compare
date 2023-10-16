@@ -13,7 +13,7 @@ export function TripType({ tripType, setTripType }) {
 				id="trip-type"
 				class="form-select"
 				value={tripType}
-				onInput={e => setTripType(e.target.value)}
+				onInput={e => setTripType(e.currentTarget.value)}
 			>
 				<option value={oneWayFlight}>one-way flight</option>
 				<option value={returnFlight}>return flight</option>

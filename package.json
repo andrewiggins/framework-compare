@@ -13,7 +13,8 @@
     "test:debug": "cross-env PPTR_DEBUG=true jest --runInBand",
     "prepare": "husky install",
     "lint-staged": "lint-staged",
-    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,html,vue}\""
+    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,html,vue}\"",
+    "tsc": "tsc -p jsconfig.json && npm run tsc -ws --if-present"
   },
   "repository": {
     "type": "git",
@@ -63,5 +64,8 @@
   "prettier": {
     "arrowParens": "avoid",
     "trailingComma": "none"
+  },
+  "volta": {
+    "node": "20.8.1"
   }
 }

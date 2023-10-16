@@ -18,7 +18,7 @@ export function DateEntry({
 				class="form-input"
 				type="text"
 				value={date}
-				onInput={e => setDate(e.target.value)}
+				onInput={e => setDate(e.currentTarget.value)}
 				disabled={disabled}
 			/>
 			{errorMsg && <p class="form-input-hint">{errorMsg}</p>}

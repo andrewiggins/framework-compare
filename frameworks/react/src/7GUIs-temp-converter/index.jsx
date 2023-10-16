@@ -26,13 +26,13 @@ class App extends React.Component {
 			<>
 				<input
 					value={this.state.c}
-					onInput={e => this.setBothFromC(e.target.value)}
+					onInput={e => this.setBothFromC(e.currentTarget.value)}
 					type="number"
 				/>{" "}
 				°c ={" "}
 				<input
 					value={this.state.f}
-					onInput={e => this.setBothFromF(e.target.value)}
+					onInput={e => this.setBothFromF(e.currentTarget.value)}
 					type="number"
 				/>{" "}
 				°f

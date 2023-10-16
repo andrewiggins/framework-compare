@@ -1,7 +1,7 @@
 import { createElement } from "preact";
 
 /**
- * @param {{ value: string; onInput: (e: InputEvent) => void; }} props
+ * @param {{ value: string; onInput: preact.JSX.GenericEventHandler<HTMLInputElement>; }} props
  */
 export function FilterInput({ value, onInput }) {
 	return (

@@ -37,7 +37,7 @@ function App() {
 					min="1"
 					max="20000"
 					value={duration}
-					onInput={e => setDuration(e.target.value)}
+					onInput={e => setDuration(e.currentTarget.valueAsNumber)}
 				/>
 			</label>
 			<div>
