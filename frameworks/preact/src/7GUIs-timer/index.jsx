@@ -55,7 +55,7 @@ class App extends Component {
 						min="1"
 						max="20000"
 						value={state.duration}
-						onInput={e => this.setState({ duration: e.target.value })}
+						onInput={e => this.setState({ duration: e.currentTarget.value })}
 					/>
 				</label>
 				<div>

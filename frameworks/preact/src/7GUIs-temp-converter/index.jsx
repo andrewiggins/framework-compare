@@ -25,13 +25,13 @@ class App extends Component {
 			<>
 				<input
 					value={state.c}
-					onInput={e => this.setBothFromC(e.target.value)}
+					onInput={e => this.setBothFromC(e.currentTarget.value)}
 					type="number"
 				/>{" "}
 				°c ={" "}
 				<input
 					value={state.f}
-					onInput={e => this.setBothFromF(e.target.value)}
+					onInput={e => this.setBothFromF(e.currentTarget.value)}
 					type="number"
 				/>{" "}
 				°f

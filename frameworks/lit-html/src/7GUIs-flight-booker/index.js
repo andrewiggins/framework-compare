@@ -86,7 +86,7 @@ function update(tripType, departing, returning) {
 		returningError = "Returning date must be on or after departing date.";
 	}
 
-	const isBookDisabled = departingError || returningError;
+	const isBookDisabled = Boolean(departingError || returningError);
 
 	const setTripType = newTripType => update(newTripType, departing, returning);
 	const setDeparting = newDate => update(tripType, newDate, returning);

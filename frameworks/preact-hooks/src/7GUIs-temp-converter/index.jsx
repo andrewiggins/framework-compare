@@ -19,13 +19,13 @@ function App() {
 		<>
 			<input
 				value={c}
-				onInput={e => setBothFromC(e.target.value)}
+				onInput={e => setBothFromC(e.currentTarget.value)}
 				type="number"
 			/>{" "}
 			°c ={" "}
 			<input
 				value={f}
-				onInput={e => setBothFromF(e.target.value)}
+				onInput={e => setBothFromF(e.currentTarget.value)}
 				type="number"
 			/>{" "}
 			°f

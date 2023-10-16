@@ -12,9 +12,7 @@ import { render } from "preact-render-to-string";
 import postcss from "postcss";
 import formatter from "postcss-reporter/lib/formatter.js";
 import cssnano from "cssnano";
-import autoprefixer from "autoprefixer";
-import scssParser from "postcss-scss";
-import sass from "@csstools/postcss-sass";
+import sass from "sass";
 import { rimraf } from "rimraf";
 
 import { buildFrameworkData } from "./data.js";
@@ -67,14 +65,11 @@ async function compileComponents() {
  */
 const createRenderer = (components, frameworkData) => (page, layoutProps) => {
 	const { Layout } = components;
-	const markup = h(
-		Layout,
-		{
-			...layoutProps,
-			data: frameworkData
-		},
-		page
-	);
+	const markup = h(Layout, {
+		...layoutProps,
+		data: frameworkData,
+		children: [page]
+	});
 
 	return "<!DOCTYPE html>\n" + render(markup, {});
 };
@@ -85,6 +80,7 @@ const createRenderer = (components, frameworkData) => (page, layoutProps) => {
  * @param {import('postcss').ProcessOptions} [options]
  */
 async function runPostCss(plugins, css, options) {
+	/** @type {postcss.Result<postcss.Document | postcss.Root>} */
 	let result;
 	try {
 		result = await postcss(plugins).process(css, options);
@@ -101,7 +97,8 @@ async function runPostCss(plugins, css, options) {
 		console.warn(
 			reporter({
 				...result,
-				messages
+				messages,
+				source: css
 			})
 		);
 	}
@@ -120,17 +117,17 @@ async function buildSassBundles() {
 			const packageName = path.basename(from).split(".").shift();
 			const to = outputPath(`${packageName}-bundle.min.css`);
 
-			const source = await readFile(from, "utf8");
-			const result = await runPostCss(
-				[sass(), autoprefixer(), cssnano()],
-				source,
-				{
-					from,
-					to,
-					syntax: scssParser
+			const sassResult = await sass.compileAsync(from);
+			const cssResult = await runPostCss([cssnano()], sassResult.css, {
+				from,
+				to,
+				map: {
+					inline: false,
+					sourcesContent: true,
+					prev: sassResult.sourceMap
 				}
-			);
-			await writeFile(to, result.css, "utf8");
+			});
+			await writeFile(to, cssResult.css, "utf8");
 		})
 	);
 }
@@ -232,9 +229,13 @@ async function build(requests) {
 
 	const cmd = process.platform == "win32" ? "npm.cmd" : "npm";
 	if (workspaceNames == null) {
-		const { stdout, stderr } = spawnSync(cmd, ["run", "build", "-ws"], {
-			encoding: "utf8"
-		});
+		const { stdout, stderr } = spawnSync(
+			cmd,
+			["run", "build", "-ws", "--if-present"],
+			{
+				encoding: "utf8"
+			}
+		);
 
 		console.log(stdout);
 		console.log(stderr);

@@ -43,7 +43,7 @@ function App() {
 					min="1"
 					max="20000"
 					value={duration}
-					onChange={e => setDuration(e.target.value)}
+					onChange={e => setDuration(e.currentTarget.valueAsNumber)}
 				/>
 			</label>
 			<div>

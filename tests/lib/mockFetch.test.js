@@ -18,7 +18,7 @@ describe("mockFetch library", () => {
 	let updateCallback;
 
 	beforeEach(() => {
-		jest.useFakeTimers("modern");
+		jest.useFakeTimers();
 
 		updateCallback = jest.fn();
 

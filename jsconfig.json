@@ -1,0 +1,15 @@
+{
+	"compilerOptions": {
+		"checkJs": true,
+		"target": "ES2022",
+		"module": "ES2022",
+		"moduleResolution": "node",
+		"esModuleInterop": true,
+		"noEmit": true,
+		"baseUrl": ".",
+		"paths": {
+			"lib/*": ["lib/*"]
+		}
+	},
+	"exclude": ["frameworks", "scripts", "tests", "node_modules", "dist"]
+}

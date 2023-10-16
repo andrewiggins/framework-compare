@@ -1,38 +1,4 @@
-/// <reference path="jsx.d.ts" />
-
-/** @jsx h */
-
-const hasOwn = Object.prototype.hasOwnProperty;
-
-/**
- * @param {string} tag
- * @param {Record<string, string>} attributes
- * @param  {Array<HTMLElement | string>} children
- * @returns {HTMLElement}
- */
-function h(tag, attributes, ...children) {
-	const element = document.createElement(tag);
-
-	for (let attr in attributes) {
-		if (hasOwn.call(attributes, attr)) {
-			if (attr in element) {
-				element[attr] = attributes[attr];
-			} else {
-				element.setAttribute(attr, attributes[attr]);
-			}
-		}
-	}
-
-	for (let child of children) {
-		if (typeof child == "string") {
-			element.appendChild(document.createTextNode(child));
-		} else {
-			element.appendChild(child);
-		}
-	}
-
-	return element;
-}
+import { h } from "./jsx";
 
 class DraggableDialog extends HTMLElement {
 	constructor() {
@@ -502,7 +468,7 @@ class MockFetchDebugger extends HTMLElement {
 		}
 
 		// Move finished requests
-		/** @type {JSX.Element[]} */
+		/** @type {h.JSX.Element[]} */
 		const finishedItems = [];
 		const completedList = this.shadowRoot.getElementById("completed");
 		for (let request of finished) {

@@ -1,0 +1,8 @@
+{
+  "name": "tests",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "tsc": "tsc -p jsconfig.json --noEmit"
+  }
+}

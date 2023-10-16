@@ -4,12 +4,13 @@ const babel = require("@rollup/plugin-babel").default;
 const { generateConfigs } = require("../bundleHelpers");
 
 const plugins = () => [
+	// @ts-expect-error Bad mixing of COMMONJS and ESM
 	svelte({
 		extensions: [".html"]
 	}),
 	babel({
 		babelHelpers: "bundled",
-		extensions: DEFAULT_EXTENSIONS.concat([".html"])
+		extensions: [...DEFAULT_EXTENSIONS, ".html", ".svelte"]
 	})
 ];
 

@@ -12,7 +12,7 @@ function Loading() {
 }
 
 /**
- * @typedef {{ id: number; name: string; surname: string; }} Person
+ * @typedef {import('lib/crud').Person} Person
  * @typedef { "initial" | "create" | "update" | "delete" | null } LoadingState;
  * @typedef {{ filter: string; name: string; surname: string; selectedPersonId: number; persons: Person[]; loading: LoadingState; }} State
  * @returns {State}
