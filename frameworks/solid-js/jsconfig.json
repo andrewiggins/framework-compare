@@ -1,0 +1,9 @@
+{
+	"extends": "../../jsconfig.json",
+	"compilerOptions": {
+		"jsx": "preserve",
+		"jsxImportSource": "solid-js"
+	},
+	"exclude": ["node_modules", "dist"],
+	"include": ["./**/*"]
+}

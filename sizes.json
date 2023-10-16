@@ -165,6 +165,38 @@
       "brotli": 37254
     }
   },
+  "solid-js": {
+    "hello-world": {
+      "raw": 14249,
+      "minified": 5825,
+      "gzip": 2381,
+      "brotli": 2175
+    },
+    "7GUIs-counter": {
+      "raw": 17377,
+      "minified": 7330,
+      "gzip": 3014,
+      "brotli": 2724
+    },
+    "7GUIs-temp-converter": {
+      "raw": 17709,
+      "minified": 7429,
+      "gzip": 3021,
+      "brotli": 2736
+    },
+    "7GUIs-flight-booker": {
+      "raw": 24511,
+      "minified": 10295,
+      "gzip": 4085,
+      "brotli": 3669
+    },
+    "7GUIs-timer": {
+      "raw": 19713,
+      "minified": 8099,
+      "gzip": 3348,
+      "brotli": 3028
+    }
+  },
   "svelte": {
     "hello-world": {
       "raw": 11997,

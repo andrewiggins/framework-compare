@@ -1,0 +1,20 @@
+{
+  "name": "solid-js-apps",
+  "private": true,
+  "version": "0.0.1",
+  "license": "MIT",
+  "scripts": {
+    "build": "rollup -c rollup.config.js",
+    "watch": "rollup -c rollup.config.js --watch",
+    "tsc": "tsc -p ./jsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "solid-js": "^1.8.1"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.12.10",
+    "@babel/preset-env": "^7.12.11",
+    "@rollup/plugin-babel": "6.0.0",
+    "babel-preset-solid": "^1.8.0"
+  }
+}
