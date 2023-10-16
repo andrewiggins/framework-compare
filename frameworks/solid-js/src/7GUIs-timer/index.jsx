@@ -16,7 +16,9 @@ function App() {
 	/** @type {number | null} */
 	let frame = null;
 	function requestFrame() {
-		if (frame == null && elapsed() < duration()) {
+		// Always access signals first so Solid can track the dependencies,
+		// regardless of if the frame is null or not.
+		if (elapsed() < duration() && frame == null) {
 			frame = requestAnimationFrame(now => {
 				frame = null;
 				const timeToAdd = Math.min(
