@@ -1,4 +1,4 @@
-const babelJest = require("babel-jest");
+import { createTransformer } from "babel-jest";
 
 // By default, babel-jest looks for a babel.config.js to determine the configuration
 // to use to run tests. We don't want to add a babel.config.js at the root of this project
@@ -8,7 +8,7 @@ const babelJest = require("babel-jest");
 // files which didn't intuitively work (specifically the date.test.js file cuz it imports a file
 // outside of the "tests" directory where we could put a babel config), we are manually specifying
 // a Babel config here
-module.exports = babelJest.createTransformer({
+export default createTransformer({
 	presets: [
 		[
 			"@babel/preset-env",

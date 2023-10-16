@@ -1,12 +1,12 @@
-const replace = require("@rollup/plugin-replace");
-const commonjs = require("@rollup/plugin-commonjs");
-const vue = require("rollup-plugin-vue");
-const { generateConfigs } = require("../bundleHelpers");
+import replace from "@rollup/plugin-replace";
+import commonjs from "@rollup/plugin-commonjs";
+import vue from "rollup-plugin-vue";
+import { generateConfigs } from "../bundleHelpers.js";
 
 // Guide to setting up bundler:
 // https://github.com/vuejs/vue-next/tree/master/packages/vue#bundler-build-feature-flags
 
-module.exports = generateConfigs("vue", environment => [
+export default generateConfigs("vue", environment => [
 	// @ts-ignore
 	vue(),
 	// @ts-ignore

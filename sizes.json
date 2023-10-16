@@ -185,10 +185,10 @@
       "brotli": 2736
     },
     "7GUIs-flight-booker": {
-      "raw": 24511,
-      "minified": 10295,
-      "gzip": 4085,
-      "brotli": 3669
+      "raw": 24422,
+      "minified": 10265,
+      "gzip": 4078,
+      "brotli": 3662
     },
     "7GUIs-timer": {
       "raw": 19713,
