@@ -96,10 +96,17 @@ export default function run(frameworkName, appSetup) {
 			[progress, elapsed] = await getProgress(page);
 			expect(progress).toBeLessThanOrEqual(0.1);
 			expect(elapsed).toBeLessThanOrEqual(0.1);
+
+			// Should continue running
+			await delay(600);
+
+			[progress, elapsed] = await getProgress(page);
+			expect(progress).toBeGreaterThanOrEqual(0.05);
+			expect(elapsed).toBeGreaterThanOrEqual(0.5);
 		});
 
 		it("decreasing the duration immediately updates the progress", async () => {
-			let [progress] = await getProgress(page);
+			let [progress, elapsed] = await getProgress(page);
 			expect(progress).toBeLessThanOrEqual(0.1);
 
 			await delay(1100);
@@ -111,10 +118,15 @@ export default function run(frameworkName, appSetup) {
 
 			[progress] = await getProgress(page);
 			expect(progress).toBeGreaterThan(0.5);
+
+			await delay(1100);
+
+			[progress, elapsed] = await getProgress(page);
+			expect(elapsed).toBeGreaterThan(1.3);
 		});
 
 		it("increasing the duration immediately updates the progress", async () => {
-			let [progress] = await getProgress(page);
+			let [progress, elapsed] = await getProgress(page);
 			expect(progress).toBeLessThanOrEqual(0.1);
 
 			await delay(1100);
@@ -126,6 +138,12 @@ export default function run(frameworkName, appSetup) {
 
 			[progress] = await getProgress(page);
 			expect(progress).toBeLessThanOrEqual(0.1);
+
+			// Should continue running
+			await delay(1100);
+
+			[progress, elapsed] = await getProgress(page);
+			expect(elapsed).toBeGreaterThan(1.5);
 		});
 	});
 }

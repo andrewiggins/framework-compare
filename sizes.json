@@ -165,6 +165,32 @@
       "brotli": 37254
     }
   },
+  "solid-js": {
+    "hello-world": {
+      "raw": 14249,
+      "minified": 5825,
+      "gzip": 2381,
+      "brotli": 2175
+    },
+    "7GUIs-counter": {
+      "raw": 17377,
+      "minified": 7330,
+      "gzip": 3014,
+      "brotli": 2724
+    },
+    "7GUIs-temp-converter": {
+      "raw": 17709,
+      "minified": 7429,
+      "gzip": 3021,
+      "brotli": 2736
+    },
+    "7GUIs-timer": {
+      "raw": 20167,
+      "minified": 8336,
+      "gzip": 3447,
+      "brotli": 3108
+    }
+  },
   "svelte": {
     "hello-world": {
       "raw": 11997,
