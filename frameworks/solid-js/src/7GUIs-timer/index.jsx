@@ -1,6 +1,5 @@
 import {
 	createSignal,
-	onMount,
 	onCleanup,
 	createMemo,
 	createRenderEffect

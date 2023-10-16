@@ -184,11 +184,17 @@
       "gzip": 3021,
       "brotli": 2736
     },
+    "7GUIs-flight-booker": {
+      "raw": 24511,
+      "minified": 10295,
+      "gzip": 4085,
+      "brotli": 3669
+    },
     "7GUIs-timer": {
-      "raw": 20167,
-      "minified": 8336,
-      "gzip": 3447,
-      "brotli": 3108
+      "raw": 19713,
+      "minified": 8099,
+      "gzip": 3348,
+      "brotli": 3028
     }
   },
   "svelte": {
