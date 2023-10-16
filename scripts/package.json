@@ -16,9 +16,9 @@
     "spectre.css": "^0.5.9"
   },
   "devDependencies": {
-    "@rollup/plugin-commonjs": "25.0.4",
-    "@rollup/plugin-sucrase": "5.0.0",
-    "@rollup/plugin-terser": "^0.4.3",
+    "@rollup/plugin-commonjs": "25.0.7",
+    "@rollup/plugin-sucrase": "5.0.2",
+    "@rollup/plugin-terser": "^0.4.4",
     "@types/postcss-reporter": "^7.0.2",
     "@types/prismjs": "1.26.1",
     "brotli-size": "^4.0.0",
@@ -29,7 +29,7 @@
     "postcss-reporter": "^7.0.5",
     "preact-render-to-string": "^5.1.12",
     "pretty-bytes": "^6.1.0",
-    "rollup": "^3.28.0",
+    "rollup": "^4.1.4",
     "sass": "^1.69.3",
     "sirv-cli": "2.0.0"
   },

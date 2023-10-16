@@ -15,6 +15,6 @@
   "devDependencies": {
     "@babel/core": "^7.12.10",
     "@babel/preset-react": "^7.12.10",
-    "@rollup/plugin-babel": "^6.0.0"
+    "@rollup/plugin-babel": "^6.0.4"
   }
 }

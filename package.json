@@ -39,8 +39,8 @@
   },
   "devDependencies": {
     "@babel/core": "^7.12.10",
-    "@rollup/plugin-node-resolve": "15.0.0",
-    "@rollup/plugin-terser": "^0.4.3",
+    "@rollup/plugin-node-resolve": "15.2.3",
+    "@rollup/plugin-terser": "^0.4.4",
     "@types/html-minifier": "^4.0.3",
     "@types/jest": "^29.0.0",
     "babel-jest": "^29.6.2",
@@ -55,7 +55,7 @@
     "prettier": "^3.0.2",
     "puppeteer": "^21.0.3",
     "rimraf": "^5.0.1",
-    "rollup": "^3.28.0",
+    "rollup": "^4.1.4",
     "rollup-plugin-visualizer": "^5.9.2"
   },
   "jest": {
