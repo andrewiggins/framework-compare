@@ -1,7 +1,7 @@
 const hasOwn = Object.prototype.hasOwnProperty;
 
 /** @type {import('./jsx').h} */
-function h(tag, attributes, ...children) {
+export function h(tag, attributes, ...children) {
 	const element = document.createElement(tag);
 
 	for (let attr in attributes) {

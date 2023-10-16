@@ -16,23 +16,21 @@
     "spectre.css": "^0.5.9"
   },
   "devDependencies": {
-    "@csstools/postcss-sass": "^5.0.0",
     "@rollup/plugin-commonjs": "25.0.4",
     "@rollup/plugin-sucrase": "5.0.0",
     "@rollup/plugin-terser": "^0.4.3",
     "@types/postcss-reporter": "^7.0.2",
     "@types/prismjs": "1.26.1",
-    "autoprefixer": "^10.0.0",
     "brotli-size": "^4.0.0",
     "cssnano": "^6.0.0",
     "gzip-size": "^7.0.0",
     "nodemon": "^3.0.0",
     "postcss": "^8.0.0",
     "postcss-reporter": "^7.0.5",
-    "postcss-scss": "^4.0.0",
     "preact-render-to-string": "^5.1.12",
     "pretty-bytes": "^6.1.0",
     "rollup": "^3.28.0",
+    "sass": "^1.69.3",
     "sirv-cli": "2.0.0"
   },
   "browserslist": [

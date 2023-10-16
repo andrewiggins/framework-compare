@@ -12,9 +12,7 @@ import { render } from "preact-render-to-string";
 import postcss from "postcss";
 import formatter from "postcss-reporter/lib/formatter.js";
 import cssnano from "cssnano";
-import autoprefixer from "autoprefixer";
-import scssParser from "postcss-scss";
-import sass from "@csstools/postcss-sass";
+import sass from "sass";
 import { rimraf } from "rimraf";
 
 import { buildFrameworkData } from "./data.js";
@@ -119,17 +117,17 @@ async function buildSassBundles() {
 			const packageName = path.basename(from).split(".").shift();
 			const to = outputPath(`${packageName}-bundle.min.css`);
 
-			const source = await readFile(from, "utf8");
-			const result = await runPostCss(
-				[sass(), autoprefixer(), cssnano()],
-				source,
-				{
-					from,
-					to,
-					syntax: scssParser
+			const sassResult = await sass.compileAsync(from);
+			const cssResult = await runPostCss([cssnano()], sassResult.css, {
+				from,
+				to,
+				map: {
+					inline: false,
+					sourcesContent: true,
+					prev: sassResult.sourceMap
 				}
-			);
-			await writeFile(to, result.css, "utf8");
+			});
+			await writeFile(to, cssResult.css, "utf8");
 		})
 	);
 }
