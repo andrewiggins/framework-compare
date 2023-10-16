@@ -5,7 +5,8 @@
   "license": "MIT",
   "scripts": {
     "build": "rollup -c rollup.config.js",
-    "watch": "rollup -c rollup.config.js --watch"
+    "watch": "rollup -c rollup.config.js --watch",
+    "tsc": "tsc -p ./jsconfig.json --noEmit"
   },
   "dependencies": {
     "svelte": "^3.31.0"
