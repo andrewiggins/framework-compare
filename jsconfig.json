@@ -11,7 +11,7 @@
 			"lib/*": ["lib/*"]
 		}
 	},
-	"exclude": ["**/*.jsx", "test", "node_modules", "dist"],
+	"exclude": ["**/*.jsx", "test", "scripts", "node_modules", "dist"],
 	"include": [
 		"frameworks/lit-html",
 		"frameworks/preact",
@@ -20,6 +20,5 @@
 		"frameworks/react-hooks",
 		"frameworks/svelte",
 		"frameworks/vue"
-		// "scripts",
 	]
 }

@@ -5,7 +5,7 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "build": "echo Okay"
+    "tsc": "tsc -p jsconfig.json --noEmit"
   },
   "dependencies": {
     "classcat": "^4.1.0",
@@ -20,6 +20,8 @@
     "@rollup/plugin-commonjs": "25.0.4",
     "@rollup/plugin-sucrase": "5.0.0",
     "@rollup/plugin-terser": "^0.4.3",
+    "@types/postcss-reporter": "^7.0.2",
+    "@types/prismjs": "1.26.1",
     "autoprefixer": "^10.0.0",
     "brotli-size": "^4.0.0",
     "cssnano": "^6.0.0",

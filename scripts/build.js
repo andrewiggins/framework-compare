@@ -67,14 +67,11 @@ async function compileComponents() {
  */
 const createRenderer = (components, frameworkData) => (page, layoutProps) => {
 	const { Layout } = components;
-	const markup = h(
-		Layout,
-		{
-			...layoutProps,
-			data: frameworkData
-		},
-		page
-	);
+	const markup = h(Layout, {
+		...layoutProps,
+		data: frameworkData,
+		children: [page]
+	});
 
 	return "<!DOCTYPE html>\n" + render(markup, {});
 };
@@ -85,6 +82,7 @@ const createRenderer = (components, frameworkData) => (page, layoutProps) => {
  * @param {import('postcss').ProcessOptions} [options]
  */
 async function runPostCss(plugins, css, options) {
+	/** @type {postcss.Result<postcss.Document | postcss.Root>} */
 	let result;
 	try {
 		result = await postcss(plugins).process(css, options);
@@ -101,7 +99,8 @@ async function runPostCss(plugins, css, options) {
 		console.warn(
 			reporter({
 				...result,
-				messages
+				messages,
+				source: css
 			})
 		);
 	}
@@ -232,9 +231,13 @@ async function build(requests) {
 
 	const cmd = process.platform == "win32" ? "npm.cmd" : "npm";
 	if (workspaceNames == null) {
-		const { stdout, stderr } = spawnSync(cmd, ["run", "build", "-ws"], {
-			encoding: "utf8"
-		});
+		const { stdout, stderr } = spawnSync(
+			cmd,
+			["run", "build", "-ws", "--if-present"],
+			{
+				encoding: "utf8"
+			}
+		);
 
 		console.log(stdout);
 		console.log(stderr);

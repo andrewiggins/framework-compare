@@ -64,7 +64,8 @@ function toggleDetails(summary) {
  */
 function clickHandler(e) {
 	e.preventDefault();
-	const summary = getParentNode(e.target, "summary");
+	const target = /** @type {Node} */ (e.target);
+	const summary = getParentNode(target, "summary");
 	toggleDetails(summary);
 }
 
@@ -74,7 +75,8 @@ function clickHandler(e) {
 function keydownHandler(e) {
 	if (e.key === "Enter" || e.key === " ") {
 		e.preventDefault();
-		const summary = getParentNode(e.target, "summary");
+		const target = /** @type {Node} */ (e.target);
+		const summary = getParentNode(target, "summary");
 		toggleDetails(summary);
 	}
 }

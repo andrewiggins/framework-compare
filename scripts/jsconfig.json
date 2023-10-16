@@ -1,0 +1,11 @@
+{
+	"extends": "../jsconfig.json",
+	"compilerOptions": {
+		"baseUrl": ".",
+		"jsx": "react",
+		"jsxFactory": "h",
+		"jsxFragmentFactory": "Fragment"
+	},
+	"exclude": ["./components/index.js", "node_modules", "dist"],
+	"include": ["./**/*.js", "./**/*.jsx"]
+}
