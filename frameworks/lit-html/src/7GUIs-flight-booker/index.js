@@ -1,4 +1,4 @@
-import { html, render } from "lit-html";
+import { html, render } from "lit";
 import { today, validateDate } from "../../../../lib/date";
 import { DateEntry } from "./DateEntry";
 import { TripType, returnFlight, oneWayFlight } from "./TripType";

@@ -10,6 +10,6 @@
     "tsc": "tsc -p ./jsconfig.json --noEmit"
   },
   "dependencies": {
-    "lit-html": "^1.4.1"
+    "lit": "^3.0.0"
   }
 }

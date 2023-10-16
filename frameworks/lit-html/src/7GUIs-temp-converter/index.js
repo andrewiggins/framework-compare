@@ -1,4 +1,4 @@
-import { html, render } from "lit-html";
+import { html, render } from "lit";
 
 const TempConverter = (c, f, setBothFromC, setBothFromF) => html`
 	<input .value=${c} @input=${setBothFromC} type="number" />
