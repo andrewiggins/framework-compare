@@ -1,8 +1,10 @@
-const path = require("path");
-const { readdirSync, existsSync } = require("fs");
-const nodeResolve = require("@rollup/plugin-node-resolve").default;
-const { default: terser } = require("@rollup/plugin-terser");
-const visualizer = require("rollup-plugin-visualizer").default;
+import path from "path";
+import { readdirSync, existsSync } from "fs";
+import nodeResolve from "@rollup/plugin-node-resolve";
+import terser from "@rollup/plugin-terser";
+import { visualizer } from "rollup-plugin-visualizer";
+
+const __dirname = new URL(".", import.meta.url).pathname;
 
 const frameworkOutput = (...args) =>
 	path.join(__dirname, "../dist/frameworks", ...args);
@@ -16,7 +18,7 @@ const listDirsSync = source =>
  * @param {string} frameworkName
  * @param {(environment: Environment) => any[]} plugins
  */
-function generateConfigs(frameworkName, plugins) {
+export function generateConfigs(frameworkName, plugins) {
 	return listDirsSync("./src")
 		.map(appFolder => {
 			const jsIndexPath = `./src/${appFolder}/index.js`;
@@ -86,5 +88,3 @@ function generateConfig(
 		}
 	};
 }
-
-module.exports = { generateConfigs };

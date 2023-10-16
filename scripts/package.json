@@ -1,9 +1,9 @@
 {
   "name": "scripts",
+  "type": "module",
   "private": true,
   "version": "0.0.1",
   "license": "MIT",
-  "type": "module",
   "scripts": {
     "tsc": "tsc -p jsconfig.json --noEmit"
   },

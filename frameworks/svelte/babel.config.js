@@ -1,5 +1,5 @@
 // Use babel.config.js to override local .babelrc in Svelte
-module.exports = function (api) {
+export default function (api) {
 	api.cache(true);
 
 	return {
@@ -13,4 +13,4 @@ module.exports = function (api) {
 			]
 		]
 	};
-};
+}

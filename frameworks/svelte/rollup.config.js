@@ -1,10 +1,9 @@
-const { DEFAULT_EXTENSIONS } = require("@babel/core");
-const svelte = require("rollup-plugin-svelte");
-const babel = require("@rollup/plugin-babel").default;
-const { generateConfigs } = require("../bundleHelpers");
+import { DEFAULT_EXTENSIONS } from "@babel/core";
+import svelte from "rollup-plugin-svelte";
+import babel from "@rollup/plugin-babel";
+import { generateConfigs } from "../bundleHelpers.js";
 
 const plugins = () => [
-	// @ts-expect-error Bad mixing of COMMONJS and ESM
 	svelte({
 		extensions: [".html"]
 	}),
@@ -14,4 +13,4 @@ const plugins = () => [
 	})
 ];
 
-module.exports = generateConfigs("svelte", plugins);
+export default generateConfigs("svelte", plugins);
