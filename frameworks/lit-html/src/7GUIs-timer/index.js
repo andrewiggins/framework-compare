@@ -1,4 +1,4 @@
-import { html, render } from "lit-html";
+import { html, render } from "lit";
 
 const Timer = (elapsed, duration, setDuration, reset) => html`
 	<label>
@@ -16,9 +16,7 @@ const Timer = (elapsed, duration, setDuration, reset) => html`
 		/>
 	</label>
 	<div>
-		<button class="btn btn-primary" @click=${reset}>
-			Reset
-		</button>
+		<button class="btn btn-primary" @click=${reset}>Reset</button>
 	</div>
 `;
 

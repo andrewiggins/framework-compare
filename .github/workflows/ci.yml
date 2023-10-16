@@ -21,7 +21,7 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 16
-      - run: npm i --legacy-peer-deps
+      - run: npm i
       - name: build
         run: npm run build
       - name: test

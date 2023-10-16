@@ -1,34 +1,34 @@
 {
   "lit-html": {
     "hello-world": {
-      "raw": 52041,
-      "minified": 13743,
-      "gzip": 3660,
-      "brotli": 3205
+      "raw": 15012,
+      "minified": 14729,
+      "gzip": 5541,
+      "brotli": 5014
     },
     "7GUIs-counter": {
-      "raw": 52356,
-      "minified": 13896,
-      "gzip": 3754,
-      "brotli": 3282
+      "raw": 15309,
+      "minified": 14880,
+      "gzip": 5628,
+      "brotli": 5085
     },
     "7GUIs-temp-converter": {
-      "raw": 52725,
-      "minified": 14012,
-      "gzip": 3788,
-      "brotli": 3316
+      "raw": 15645,
+      "minified": 14996,
+      "gzip": 5660,
+      "brotli": 5118
     },
     "7GUIs-flight-booker": {
-      "raw": 57314,
-      "minified": 15959,
-      "gzip": 4506,
-      "brotli": 3945
+      "raw": 19853,
+      "minified": 16961,
+      "gzip": 6386,
+      "brotli": 5743
     },
     "7GUIs-timer": {
-      "raw": 52970,
-      "minified": 14235,
-      "gzip": 3937,
-      "brotli": 3445
+      "raw": 15886,
+      "minified": 15212,
+      "gzip": 5804,
+      "brotli": 5246
     }
   },
   "preact": {
@@ -103,66 +103,66 @@
   },
   "react": {
     "hello-world": {
-      "raw": 138574,
-      "minified": 131640,
-      "gzip": 42165,
-      "brotli": 37095
+      "raw": 147278,
+      "minified": 141148,
+      "gzip": 44999,
+      "brotli": 39297
     },
     "7GUIs-counter": {
-      "raw": 139084,
-      "minified": 131662,
-      "gzip": 42288,
-      "brotli": 37184
+      "raw": 147788,
+      "minified": 141264,
+      "gzip": 45121,
+      "brotli": 39350
     },
     "7GUIs-temp-converter": {
-      "raw": 139503,
-      "minified": 131861,
-      "gzip": 42360,
-      "brotli": 37257
+      "raw": 148207,
+      "minified": 141463,
+      "gzip": 45190,
+      "brotli": 39399
     },
     "7GUIs-flight-booker": {
-      "raw": 143861,
-      "minified": 134120,
-      "gzip": 43112,
-      "brotli": 37968
+      "raw": 152565,
+      "minified": 143722,
+      "gzip": 45958,
+      "brotli": 40068
     },
     "7GUIs-timer": {
-      "raw": 140754,
-      "minified": 132622,
-      "gzip": 42572,
-      "brotli": 37473
+      "raw": 149458,
+      "minified": 142224,
+      "gzip": 45414,
+      "brotli": 39620
     }
   },
   "react-hooks": {
     "hello-world": {
-      "raw": 138574,
-      "minified": 131640,
-      "gzip": 42165,
-      "brotli": 37095
+      "raw": 147278,
+      "minified": 141148,
+      "gzip": 44999,
+      "brotli": 39297
     },
     "7GUIs-counter": {
-      "raw": 138861,
-      "minified": 131784,
-      "gzip": 42254,
-      "brotli": 37134
+      "raw": 147565,
+      "minified": 141390,
+      "gzip": 45093,
+      "brotli": 39348
     },
     "7GUIs-temp-converter": {
-      "raw": 139799,
-      "minified": 131988,
-      "gzip": 42315,
-      "brotli": 37193
+      "raw": 148503,
+      "minified": 141594,
+      "gzip": 45153,
+      "brotli": 39415
     },
     "7GUIs-flight-booker": {
-      "raw": 143633,
-      "minified": 134075,
-      "gzip": 43055,
-      "brotli": 37880
+      "raw": 152337,
+      "minified": 143681,
+      "gzip": 45910,
+      "brotli": 39985
     },
     "7GUIs-timer": {
-      "raw": 140407,
-      "minified": 132413,
-      "gzip": 42521,
-      "brotli": 37375
+      "raw": 149111,
+      "minified": 142019,
+      "gzip": 45366,
+      "brotli": 39591
     }
   },
   "solid-js": {
@@ -199,34 +199,34 @@
   },
   "svelte": {
     "hello-world": {
-      "raw": 11617,
-      "minified": 2943,
-      "gzip": 1403,
-      "brotli": 1283
+      "raw": 13065,
+      "minified": 3038,
+      "gzip": 1447,
+      "brotli": 1326
     },
     "7GUIs-counter": {
-      "raw": 13425,
-      "minified": 3549,
-      "gzip": 1691,
-      "brotli": 1534
+      "raw": 15238,
+      "minified": 3644,
+      "gzip": 1738,
+      "brotli": 1573
     },
     "7GUIs-temp-converter": {
-      "raw": 13722,
-      "minified": 3667,
-      "gzip": 1713,
-      "brotli": 1548
+      "raw": 15313,
+      "minified": 3755,
+      "gzip": 1758,
+      "brotli": 1595
     },
     "7GUIs-flight-booker": {
-      "raw": 28367,
-      "minified": 8325,
-      "gzip": 3458,
-      "brotli": 3099
+      "raw": 28901,
+      "minified": 8407,
+      "gzip": 3492,
+      "brotli": 3134
     },
     "7GUIs-timer": {
-      "raw": 16526,
-      "minified": 4447,
-      "gzip": 2106,
-      "brotli": 1904
+      "raw": 18076,
+      "minified": 4526,
+      "gzip": 2152,
+      "brotli": 1946
     }
   },
   "vue": {
