@@ -1,17 +1,10 @@
 {
   "presets": [
     [
-      "@babel/preset-env",
-      {
-        "loose": true,
-        "modules": false
-      }
-    ],
-    [
       "@babel/preset-react",
       {
-        "pragma": "createElement",
-        "pragmaFrag": "Fragment"
+        "runtime": "automatic",
+        "importSource": "preact"
       }
     ]
   ]

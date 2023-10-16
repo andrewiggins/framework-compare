@@ -1,4 +1,4 @@
-import React, { useState, Fragment } from "react";
+import { useState } from "react";
 import ReactDOM from "react-dom";
 import { today, validateDate } from "../../../../lib/date";
 import { TripType, oneWayFlight, returnFlight } from "./TripType";

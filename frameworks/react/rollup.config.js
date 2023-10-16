@@ -8,14 +8,12 @@ const plugins = environment => [
 		babelHelpers: "bundled",
 		exclude: /node_modules/
 	}),
-	// @ts-ignore
 	replace({
 		preventAssignment: true,
 		values: {
 			"process.env.NODE_ENV": JSON.stringify(environment)
 		}
 	}),
-	// @ts-ignore
 	commonjs()
 ];
 

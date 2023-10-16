@@ -5,6 +5,8 @@ import { pathToFileURL } from "url";
 // For debugging
 // jest.setTimeout(5 * 60 * 1000);
 
+const __dirname = new URL(".", import.meta.url).pathname;
+
 /**
  * @typedef {import('../../scripts/bundles/controls/mockFetch').Config} MockFetchConfig
  * @typedef {import('../../scripts/bundles/controls/mockFetch').MockFetchDebugger} MockFetchDebugger

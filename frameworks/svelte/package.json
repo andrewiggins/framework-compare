@@ -10,12 +10,9 @@
     "tsc": "tsc -p ./jsconfig.json --noEmit"
   },
   "dependencies": {
-    "svelte": "^3.31.0"
+    "svelte": "^3.59.2"
   },
   "devDependencies": {
-    "@babel/core": "^7.12.10",
-    "@babel/preset-env": "^7.12.11",
-    "@rollup/plugin-babel": "6.0.0",
-    "rollup-plugin-svelte": "^7.1.0"
+    "rollup-plugin-svelte": "^7.1.6"
   }
 }

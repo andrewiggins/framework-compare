@@ -1,10 +1,4 @@
-import React, {
-	useEffect,
-	useLayoutEffect,
-	useState,
-	useRef,
-	Fragment
-} from "react";
+import { useLayoutEffect, useState, useRef } from "react";
 import ReactDOM from "react-dom";
 
 function App() {

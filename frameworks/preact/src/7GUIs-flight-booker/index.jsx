@@ -1,4 +1,4 @@
-import { createElement, render, Fragment, Component } from "preact";
+import { render, Component } from "preact";
 import { today, validateDate } from "../../../../lib/date";
 import { TripType, oneWayFlight, returnFlight } from "./TripType";
 import { DateEntry } from "./DateEntry";
