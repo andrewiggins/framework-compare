@@ -17,13 +17,19 @@ export function minifyHtml(html) {
 	});
 }
 
+const appId = "#app";
+
 /**
- * @param {string} [sel]
+ * @param {T} sel
+ * @template {string} T
+ * @returns {`#app ${T}`}
  */
-export const appSel = sel => (sel ? `#app ${sel}` : "#app");
+export function appSel(sel) {
+	return `${appId} ${sel}`;
+}
 
 export async function getAppHtml() {
-	const html = await page.$eval(appSel(), el => el.innerHTML);
+	const html = await page.$eval(appId, el => el.innerHTML);
 	return minifyHtml(html.replace(/ value="[0-9a-zA-z_\-\.]*"/g, ""));
 }
 
@@ -43,7 +49,7 @@ export async function backspaceInput(selector) {
 /**
  * @param {keyof HTMLElementTagNameMap} tagName
  * @param {Record<string, any>} [attrs]
- * @param {string[]} [children]
+ * @param {string[]} children
  */
 export function toHtmlString(tagName, attrs, ...children) {
 	if (tagName === toHtmlString.Fragment) {

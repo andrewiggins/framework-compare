@@ -12,9 +12,9 @@ import {
  */
 export default function run(frameworkName, appSetup) {
 	describe("7GUIs Flight Booker", () => {
-		const tripTypeSel = appSel("#trip-type");
-		const departingSel = appSel("#Departing-date");
-		const returningSel = appSel("#Returning-date");
+		const tripTypeSel = appSel("select#trip-type");
+		const departingSel = appSel("input#Departing-date");
+		const returningSel = appSel("input#Returning-date");
 		const bookSel = appSel("button");
 		const departingErrorSel = appSel(
 			".form-group.has-error #Departing-date+.form-input-hint"
@@ -73,18 +73,18 @@ export default function run(frameworkName, appSetup) {
 			expect(tripType).toEqual(oneWayType);
 
 			// departing is enabled and non-empty
-			const [
-				departingValue,
-				isDepartingDisabled
-			] = await page.$eval(departingSel, el => [el.value, el.disabled]);
+			const [departingValue, isDepartingDisabled] = await page.$eval(
+				departingSel,
+				el => [el.value, el.disabled]
+			);
 			expect(departingValue).not.toEqual("");
 			expect(isDepartingDisabled).toEqual(false);
 
 			// returning is disabled and non-empty (same as departing)
-			const [
-				returningValue,
-				isReturningDisabled
-			] = await page.$eval(returningSel, el => [el.value, el.disabled]);
+			const [returningValue, isReturningDisabled] = await page.$eval(
+				returningSel,
+				el => [el.value, el.disabled]
+			);
 			expect(returningValue).toEqual(departingValue);
 			expect(isReturningDisabled).toEqual(true);
 
