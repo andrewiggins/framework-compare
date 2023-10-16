@@ -7,15 +7,12 @@ import { generateConfigs } from "../bundleHelpers.js";
 // https://github.com/vuejs/vue-next/tree/master/packages/vue#bundler-build-feature-flags
 
 export default generateConfigs("vue", environment => [
-	// @ts-ignore
 	vue(),
-	// @ts-ignore
 	replace({
 		preventAssignment: true,
 		values: {
 			"process.env.NODE_ENV": JSON.stringify(environment)
 		}
 	}),
-	// @ts-ignore
 	commonjs()
 ]);

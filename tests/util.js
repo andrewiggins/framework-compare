@@ -33,6 +33,8 @@ export async function getAppHtml() {
 	return minifyHtml(html.replace(/ value="[0-9a-zA-z_\-\.]*"/g, ""));
 }
 
+const __dirname = new URL(".", import.meta.url).pathname;
+
 export function repoRoot(...args) {
 	return path.join(__dirname, "..", ...args);
 }

@@ -10,7 +10,7 @@
     "build": "node ./scripts/build.js",
     "dev": "node ./scripts/dev.js",
     "serve": "sirv --dev dist",
-    "test": "jest",
+    "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest",
     "test:debug": "cross-env PPTR_DEBUG=true jest --runInBand",
     "prepare": "husky install",
     "lint-staged": "lint-staged",

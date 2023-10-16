@@ -2,7 +2,6 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { stat, mkdir, readdir } from "fs/promises";
 
-// @ts-ignore
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export const listDirs = async source =>

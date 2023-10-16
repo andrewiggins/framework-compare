@@ -1,12 +1,3 @@
 {
-  "presets": [
-    [
-      "@babel/preset-env",
-      {
-        "loose": true,
-        "modules": false
-      }
-    ],
-    ["solid"]
-  ]
+  "presets": [["solid"]]
 }
