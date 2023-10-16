@@ -1,4 +1,4 @@
-import { createElement, render, Fragment } from "preact";
+import { render } from "preact";
 import { useState } from "preact/hooks";
 import { today, validateDate } from "../../../../lib/date";
 import { TripType, returnFlight, oneWayFlight } from "./TripType";

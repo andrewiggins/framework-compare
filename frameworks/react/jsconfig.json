@@ -1,9 +1,7 @@
 {
 	"extends": "../../jsconfig.json",
 	"compilerOptions": {
-		"jsx": "react",
-		"jsxFactory": "React.createElement",
-		"jsxFragmentFactory": "React.Fragment"
+		"jsx": "react-jsx"
 	},
 	"exclude": ["node_modules", "dist"],
 	"include": ["./**/*"]

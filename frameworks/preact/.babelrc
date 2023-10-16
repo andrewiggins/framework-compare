@@ -3,8 +3,8 @@
     [
       "@babel/preset-react",
       {
-        "pragma": "createElement",
-        "pragmaFrag": "Fragment"
+        "runtime": "automatic",
+        "importSource": "preact"
       }
     ]
   ]

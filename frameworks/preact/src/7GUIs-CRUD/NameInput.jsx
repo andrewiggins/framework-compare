@@ -1,5 +1,3 @@
-import { createElement } from "preact";
-
 /**
  * @param {{ id: string; value: string; onInput: preact.JSX.GenericEventHandler<HTMLInputElement>; label: string; required?: boolean; }} props
  */

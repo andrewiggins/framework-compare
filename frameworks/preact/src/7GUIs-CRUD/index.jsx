@@ -1,4 +1,4 @@
-import { createElement, render, Component } from "preact";
+import { render, Component } from "preact";
 import { createApi } from "../../../../lib/crud";
 import { NameInput } from "./NameInput";
 import { FilterInput } from "./FilterInput";

@@ -1,5 +1,3 @@
-import { createElement } from "preact";
-
 export function DateEntry({
 	label,
 	date,

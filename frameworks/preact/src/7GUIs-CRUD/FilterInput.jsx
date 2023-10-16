@@ -1,5 +1,3 @@
-import { createElement } from "preact";
-
 /**
  * @param {{ value: string; onInput: preact.JSX.GenericEventHandler<HTMLInputElement>; }} props
  */
