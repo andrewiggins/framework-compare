@@ -10,9 +10,9 @@
     "tsc": "tsc -p ./jsconfig.json --noEmit"
   },
   "dependencies": {
-    "svelte": "^3.31.0"
+    "svelte": "^3.59.2"
   },
   "devDependencies": {
-    "rollup-plugin-svelte": "^7.1.0"
+    "rollup-plugin-svelte": "^7.1.6"
   }
 }

@@ -4,7 +4,7 @@
       "raw": 52041,
       "minified": 13743,
       "gzip": 3660,
-      "brotli": 3207
+      "brotli": 3205
     },
     "7GUIs-counter": {
       "raw": 52356,
@@ -16,19 +16,19 @@
       "raw": 52725,
       "minified": 14012,
       "gzip": 3788,
-      "brotli": 3315
+      "brotli": 3316
     },
     "7GUIs-flight-booker": {
       "raw": 57314,
       "minified": 15959,
       "gzip": 4506,
-      "brotli": 3942
+      "brotli": 3945
     },
     "7GUIs-timer": {
       "raw": 52970,
       "minified": 14235,
       "gzip": 3937,
-      "brotli": 3444
+      "brotli": 3445
     }
   },
   "preact": {
