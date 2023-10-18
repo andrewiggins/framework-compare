@@ -8,6 +8,10 @@ Implement a set of webpages of increasing complexity in a couple different frame
 - ember/glimmer
 - inferno
 - lit-element?
+- qwik
+- astro
+- stencil
+- alpine.js
 
 ## Webpages
 
