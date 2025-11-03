@@ -1,7 +1,7 @@
 <template>
 	<button
 		class="btn badge"
-		style="margin-top: 0.5rem;"
+		style="margin-top: 0.5rem"
 		v-on:click="count += 1"
 		v-bind:data-badge="count"
 	>

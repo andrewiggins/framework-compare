@@ -44,13 +44,8 @@ class App extends React.Component {
 	}
 
 	render() {
-		let {
-			tripType,
-			departing,
-			departingError,
-			returning,
-			returningError
-		} = this.state;
+		let { tripType, departing, departingError, returning, returningError } =
+			this.state;
 
 		if (
 			departingError == null &&
