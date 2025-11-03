@@ -1,0 +1,9 @@
+{
+  "extends": "../../jsconfig.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact"
+  },
+  "exclude": ["node_modules", "dist"],
+  "include": ["./**/*", "../../lib/createModelFactory.ts"]
+}

@@ -1,0 +1,21 @@
+{
+  "name": "preact-signals-apps",
+  "type": "module",
+  "private": true,
+  "version": "0.0.1",
+  "license": "MIT",
+  "scripts": {
+    "build": "rollup -c rollup.config.js",
+    "watch": "rollup -c rollup.config.js --watch",
+    "tsc": "tsc -p jsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@preact/signals": "^2.3.2",
+    "preact": "^10.27.2"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.12.10",
+    "@babel/preset-react": "^7.12.10",
+    "@rollup/plugin-babel": "^6.0.4"
+  }
+}
