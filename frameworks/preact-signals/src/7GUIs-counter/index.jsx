@@ -1,25 +1,21 @@
 import { signal } from "@preact/signals";
 import { render } from "preact";
-import {
-	action,
-	createModelFactory,
-	useModel
-} from "../../../../lib/createModelFactory";
+import { createModel, useModel } from "../../../../lib/model/createModel.js";
 
-const createCounter = createModelFactory(() => {
+const Counter = createModel(() => {
 	const count = signal(0);
-	const increment = action(() => {
+	const increment = () => {
 		count.value += 1;
-	});
+	};
 
 	return {
-		state: { count },
-		actions: { increment }
+		count,
+		increment
 	};
 });
 
 function App() {
-	const model = useModel(() => createCounter());
+	const model = useModel(Counter);
 
 	return (
 		<button

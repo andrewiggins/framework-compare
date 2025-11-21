@@ -1,12 +1,8 @@
 import { signal, computed, effect } from "@preact/signals";
 import { render } from "preact";
-import {
-	action,
-	createModelFactory,
-	useModel
-} from "../../../../lib/createModelFactory";
+import { createModel, useModel } from "../../../../lib/model/createModel.js";
 
-const createTimerModel = createModelFactory(() => {
+const TimerModel = createModel(() => {
 	const elapsed = signal(0);
 	const duration = signal(5000);
 	const lastRenderTime = signal(performance.now());
@@ -15,16 +11,16 @@ const createTimerModel = createModelFactory(() => {
 	const progress = computed(() => elapsed.value / duration.value);
 	const elapsedLabel = computed(() => (elapsed.value / 1000).toFixed(1));
 
-	const setDuration = action(value => {
+	const setDuration = value => {
 		duration.value = value;
-	});
+	};
 
-	const reset = action(() => {
+	const reset = () => {
 		elapsed.value = 0;
 		lastRenderTime.value = performance.now();
-	});
+	};
 
-	const advanceFrame = action(now => {
+	const advanceFrame = now => {
 		frame.value = null;
 		const timeToAdd = Math.min(
 			now - lastRenderTime.value,
@@ -32,32 +28,35 @@ const createTimerModel = createModelFactory(() => {
 		);
 		elapsed.value += timeToAdd;
 		lastRenderTime.value = now;
+	};
+
+	effect(() => {
+		if (frame.value == null && elapsed.value < duration.value) {
+			frame.value = requestAnimationFrame(advanceFrame);
+		}
+
+		// TODO: What are the rules for cleanup here? Is effect the tool for this?
+		return () => {
+			if (frame.value) {
+				// cancelAnimationFrame(frame.value);
+				// frame.value = null;
+			}
+		};
 	});
 
 	return {
-		views: { elapsed, duration, progress, elapsedLabel },
-		actions: { setDuration, reset },
-		effects: {
-			tick: effect(() => {
-				if (frame.value == null && elapsed.value < duration.value) {
-					frame.value = requestAnimationFrame(advanceFrame);
-				}
-
-				// TODO: What are the rules for cleanup here? Is effect the tool for this?
-				return () => {
-					if (frame.value) {
-						// cancelAnimationFrame(frame.value);
-						// frame.value = null;
-					}
-				};
-			})
-		}
+		elapsed,
+		duration,
+		progress,
+		elapsedLabel,
+		setDuration,
+		reset
 	};
 });
 
 function App() {
 	const { duration, progress, elapsedLabel, setDuration, reset } =
-		useModel(createTimerModel);
+		useModel(TimerModel);
 
 	return (
 		<>

@@ -1,23 +1,17 @@
 import { render } from "preact";
 import { today, validateDate } from "../../../../lib/date";
-import {
-	action,
-	createModelFactory,
-	useModel
-} from "../../../../lib/createModelFactory";
+import { createModel, useModel } from "../../../../lib/model/createModel.js";
 import { TripType, returnFlight, oneWayFlight } from "./TripType";
 import { DateEntry } from "./DateEntry";
 import { computed, signal } from "@preact/signals";
 
-/** @import { Action } from "../../../../lib/createModelFactory" */
-
 const initialDate = today();
 
-const createDateModel = createModelFactory(() => {
+const DateModel = createModel(() => {
 	const date = signal(initialDate);
 	const error = signal(null);
 
-	const setDate = action(newDate => {
+	const setDate = newDate => {
 		date.value = newDate;
 
 		try {
@@ -26,18 +20,19 @@ const createDateModel = createModelFactory(() => {
 		} catch (e) {
 			error.value = e.message;
 		}
-	});
+	};
 
 	return {
-		views: { date, error },
-		actions: { setDate }
+		date,
+		error,
+		setDate
 	};
 });
 
-const createFlightBookerModel = createModelFactory(() => {
+const FlightBookerModel = createModel(() => {
 	const tripType = signal(oneWayFlight);
-	const departing = createDateModel();
-	const returning = createDateModel();
+	const departing = new DateModel();
+	const returning = new DateModel();
 
 	const returningError = computed(() => {
 		if (returning.error.value != null) {
@@ -53,36 +48,39 @@ const createFlightBookerModel = createModelFactory(() => {
 		}
 	});
 
-	return {
-		views: {
-			tripType,
-			departing: departing.date,
-			departingError: departing.error,
-			returning: returning.date,
-			returningError,
-			isBookDisabled: computed(() => {
-				return Boolean(departing.error.value || returningError.value);
-			}),
-			isReturnDisabled: computed(() => tripType.value !== returnFlight)
-		},
-		actions: {
-			/** @type {Action<[string], void>} */
-			setTripType: action(value => {
-				tripType.value = value;
-			}),
-			setDeparting: departing.setDate,
-			setReturning: returning.setDate,
-			bookFlight: action(() => {
-				const type = tripType.value === returnFlight ? "return" : "one-way";
+	const isBookDisabled = computed(() => {
+		return Boolean(departing.error.value || returningError.value);
+	});
 
-				let message = `You have booked a ${type} flight, departing ${departing.date.value}`;
-				if (tripType.value == returnFlight) {
-					message += ` and returning ${returning.date.value}`;
-				}
+	const isReturnDisabled = computed(() => tripType.value !== returnFlight);
 
-				alert(message);
-			})
+	const setTripType = value => {
+		tripType.value = value;
+	};
+
+	const bookFlight = () => {
+		const type = tripType.value === returnFlight ? "return" : "one-way";
+
+		let message = `You have booked a ${type} flight, departing ${departing.date.value}`;
+		if (tripType.value == returnFlight) {
+			message += ` and returning ${returning.date.value}`;
 		}
+
+		alert(message);
+	};
+
+	return {
+		tripType,
+		departing: departing.date,
+		departingError: departing.error,
+		returning: returning.date,
+		returningError,
+		isBookDisabled,
+		isReturnDisabled,
+		setTripType,
+		setDeparting: departing.setDate,
+		setReturning: returning.setDate,
+		bookFlight
 	};
 });
 
@@ -99,7 +97,7 @@ function App() {
 		setDeparting,
 		setReturning,
 		bookFlight
-	} = useModel(() => createFlightBookerModel());
+	} = useModel(FlightBookerModel);
 
 	return (
 		<>

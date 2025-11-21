@@ -103,34 +103,34 @@
   },
   "preact-signals": {
     "hello-world": {
-      "raw": 24685,
-      "minified": 21037,
-      "gzip": 7999,
-      "brotli": 7326
+      "raw": 26234,
+      "minified": 21923,
+      "gzip": 8297,
+      "brotli": 7589
     },
     "7GUIs-counter": {
-      "raw": 25889,
-      "minified": 21567,
-      "gzip": 8179,
-      "brotli": 7478
+      "raw": 27020,
+      "minified": 22346,
+      "gzip": 8435,
+      "brotli": 7712
     },
     "7GUIs-temp-converter": {
-      "raw": 26419,
-      "minified": 21825,
-      "gzip": 8255,
-      "brotli": 7559
+      "raw": 27526,
+      "minified": 22565,
+      "gzip": 8530,
+      "brotli": 7848
     },
     "7GUIs-flight-booker": {
-      "raw": 31390,
-      "minified": 24245,
-      "gzip": 9098,
-      "brotli": 8312
+      "raw": 32360,
+      "minified": 24990,
+      "gzip": 9337,
+      "brotli": 8553
     },
     "7GUIs-timer": {
-      "raw": 27420,
-      "minified": 22262,
-      "gzip": 8454,
-      "brotli": 7730
+      "raw": 28558,
+      "minified": 23002,
+      "gzip": 8691,
+      "brotli": 7943
     }
   },
   "react": {

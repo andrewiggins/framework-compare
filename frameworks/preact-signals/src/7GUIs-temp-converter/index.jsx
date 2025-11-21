@@ -1,34 +1,31 @@
 import { render } from "preact";
-import { useState } from "preact/hooks";
-import {
-	action,
-	createModelFactory,
-	useModel
-} from "../../../../lib/createModelFactory";
+import { createModel, useModel } from "../../../../lib/model/createModel.js";
 import { signal } from "@preact/signals";
 
-const createTempConverter = createModelFactory(() => {
+const TempConverter = createModel(() => {
 	const celsius = signal("");
 	const fahrenheit = signal("");
 
-	const setCelsius = action(value => {
+	const setCelsius = value => {
 		celsius.value = value;
 		fahrenheit.value = value === "" ? "" : (32 + (9 / 5) * +value).toFixed(1);
-	});
+	};
 
-	const setFahrenheit = action(value => {
+	const setFahrenheit = value => {
 		fahrenheit.value = value;
 		celsius.value = value === "" ? "" : ((5 / 9) * (+value - 32)).toFixed(1);
-	});
+	};
 
 	return {
-		state: { celsius, fahrenheit },
-		actions: { setCelsius, setFahrenheit }
+		celsius,
+		fahrenheit,
+		setCelsius,
+		setFahrenheit
 	};
 });
 
 function App() {
-	const tempConverter = useModel(() => createTempConverter());
+	const tempConverter = useModel(TempConverter);
 
 	return (
 		<>
