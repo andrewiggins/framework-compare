@@ -1,11 +1,11 @@
 {
-	"extends": "../jsconfig.json",
-	"compilerOptions": {
-		"jsx": "react",
-		"jsxFactory": "toHtmlString",
-		"jsxFragmentFactory": "toHtmlString.Fragment",
-		"types": ["jest", "jest-puppeteer"]
-	},
-	"exclude": ["node_modules", "dist"],
-	"include": ["**/*.js"]
+  "extends": "../jsconfig.json",
+  "compilerOptions": {
+    "jsx": "react",
+    "jsxFactory": "toHtmlString",
+    "jsxFragmentFactory": "toHtmlString.Fragment",
+    "types": ["jest", "jest-puppeteer"]
+  },
+  "exclude": ["node_modules", "dist"],
+  "include": ["**/*.js"]
 }

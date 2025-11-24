@@ -196,7 +196,11 @@ async function buildSiteAssets() {
 		}
 	}
 
-	await writeFile(p("sizes.json"), JSON.stringify(sizeData, null, 2), "utf8");
+	await writeFile(
+		p("sizes.json"),
+		JSON.stringify(sizeData, null, 2) + "\n",
+		"utf8"
+	);
 }
 
 /**

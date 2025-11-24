@@ -32,6 +32,7 @@ This project compares implementations of webpages with increasing complexity acr
 ## Common Commands
 
 ### Development
+
 ```bash
 npm start                    # Start dev server with no watchers
 npm run dev [framework...]   # Start dev server and watch specific framework(s)
@@ -41,6 +42,7 @@ npm run dev react preact    # Watch only React and Preact frameworks
 ```
 
 ### Building
+
 ```bash
 npm run build               # Build all frameworks and generate comparison site
 npm run build [framework]   # Build specific framework(s) by package name prefix
@@ -48,6 +50,7 @@ npm run serve              # Serve built site from dist/ directory
 ```
 
 ### Testing and Type Checking
+
 ```bash
 npm test                   # Run all Puppeteer tests (requires built site)
 npm run test:debug        # Run tests with Puppeteer debug output
@@ -55,6 +58,7 @@ npm run tsc               # Type check all workspaces with TypeScript
 ```
 
 ### Code Quality
+
 ```bash
 npm run format            # Format all code with Prettier
 npm run lint-staged       # Run pre-commit hooks manually

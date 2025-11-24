@@ -14,7 +14,7 @@
     "test:debug": "cross-env PPTR_DEBUG=true jest --runInBand",
     "prepare": "husky install",
     "lint-staged": "lint-staged",
-    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,html,vue}\"",
+    "format": "prettier --ignore-unknown --write .",
     "tsc": "tsc -p jsconfig.json && npm run tsc -ws --if-present"
   },
   "repository": {
@@ -33,7 +33,7 @@
     "./tests"
   ],
   "lint-staged": {
-    "**/*.{js,jsx,ts,tsx,html,vue}": [
+    "**/*.{js,jsx,ts,tsx,html,vue,md,json}": [
       "prettier --write"
     ]
   },

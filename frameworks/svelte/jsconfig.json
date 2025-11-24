@@ -1,4 +1,4 @@
 {
-	"extends": "../../jsconfig.json",
-	"exclude": ["node_modules", "dist"]
+  "extends": "../../jsconfig.json",
+  "exclude": ["node_modules", "dist"]
 }
