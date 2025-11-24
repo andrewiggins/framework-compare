@@ -40,6 +40,7 @@ export function repoRoot(...args) {
 }
 
 export async function backspaceInput(selector) {
+	// @ts-expect-error el is HTMLInputElement
 	const charCount = await page.$eval(selector, el => el.value.length);
 	await page.click(selector);
 
