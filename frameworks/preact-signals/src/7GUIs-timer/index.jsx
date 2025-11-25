@@ -1,6 +1,10 @@
 import { signal, computed, effect } from "@preact/signals";
 import { render } from "preact";
-import { createModel, useModel } from "../../../../lib/model/createModel.js";
+import {
+	action,
+	createModel,
+	useModel
+} from "../../../../lib/model/createModel.js";
 
 const TimerModel = createModel(() => {
 	const elapsed = signal(0);
@@ -20,7 +24,8 @@ const TimerModel = createModel(() => {
 		lastRenderTime.value = performance.now();
 	};
 
-	const advanceFrame = now => {
+	/** @type {(now: number) => void} */
+	const advanceTime = action(now => {
 		frame.value = null;
 		const timeToAdd = Math.min(
 			now - lastRenderTime.value,
@@ -28,18 +33,18 @@ const TimerModel = createModel(() => {
 		);
 		elapsed.value += timeToAdd;
 		lastRenderTime.value = now;
-	};
+	});
 
 	effect(() => {
-		if (frame.value == null && elapsed.value < duration.value) {
-			frame.value = requestAnimationFrame(advanceFrame);
+		// Hmm being reactive to a signal you also write to maybe is an
+		// anti-pattern? Particularly if your cleanup also writes to it?
+		if (frame.peek() == null && elapsed.value < duration.value) {
+			frame.value = requestAnimationFrame(advanceTime);
 		}
-
-		// TODO: What are the rules for cleanup here? Is effect the tool for this?
 		return () => {
 			if (frame.value) {
-				// cancelAnimationFrame(frame.value);
-				// frame.value = null;
+				cancelAnimationFrame(frame.value);
+				frame.value = null;
 			}
 		};
 	});
